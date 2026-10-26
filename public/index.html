@@ -8,8 +8,8 @@
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- GigaPub Ads SDK (Project ID: 8830) -->
-  <script src="https://ad.gigapub.tech/script?id=8830"></script>
+  <!-- GigaPub Ads SDK (Project ID: 8839) -->
+  <script src="https://ad.gigapub.tech/script?id=8839"></script>
 
   <!-- LibTL Monetag Ads SDK (Zone ID: 12128125) -->
   <script src="//libtl.com/sdk.js" data-zone="12128125" data-sdk="show_12128125"></script>
@@ -314,24 +314,18 @@
       </div>
     </section>
 
-    <!-- Referral Template Box -->
+    <!-- Referral Link Box -->
     <section class="card" style="margin-bottom:16px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <span class="text-xs font-semibold text-muted">Your Share & Invite Template</span>
+        <span class="text-xs font-semibold text-muted">Your Unique Referral Link</span>
         <span class="text-xs text-primary font-bold">1-Click Share</span>
       </div>
 
-      <!-- Live Template Preview Box -->
-      <div style="background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:12px 14px; margin-bottom:12px; font-size:0.85rem; line-height:1.5;">
-        <div id="ref-template-link" style="color:#60a5fa; font-weight:700; word-break:break-all;">Loading link...</div>
-        <div id="ref-template-msg" style="color:#f8fafc; margin-top:4px; font-weight:600;">Maine iss bot se ₹ <span class="user-balance">0.00</span> kamaye. Aap bhi try karein.</div>
-      </div>
-
-      <input id="ref-link-display" type="hidden" value="Loading link...">
+      <input id="ref-link-display" type="text" readonly class="input" style="font-size:0.8rem; margin-bottom:12px; background:rgba(0,0,0,0.35);" value="Loading link...">
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
         <button id="copy-ref-btn" class="btn btn-secondary">
-          📋 Copy Invite
+          📋 Copy Link
         </button>
         <button id="share-ref-btn" class="btn btn-primary">
           📢 Share on Telegram

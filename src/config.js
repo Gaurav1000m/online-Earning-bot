@@ -16,7 +16,7 @@ const botToken = (rawToken && rawToken.includes(':') && !rawToken.includes('YOUR
 const rawGiga = (process.env.GIGAPUB_PROJECT_ID || '').trim();
 const gigaPubProjectId = (rawGiga && !rawGiga.includes('YOUR_') && rawGiga !== '')
   ? rawGiga
-  : '8830';
+  : '8839';
 
 export const config = {
   // Bot & Server

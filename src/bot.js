@@ -6,6 +6,7 @@ let bot = null;
 
 // User state machine for conversational withdrawal flow
 const userStates = new Map();
+const userAdWatchStartTime = new Map();
 
 /**
  * Builds the 2-column Reply Keyboard matching reference UI
@@ -414,6 +415,7 @@ export function initBot() {
       }
 
       await ctx.answerCallbackQuery();
+      userAdWatchStartTime.set(user.id, Date.now());
 
       const symbol = db.getSetting('currencySymbol') || '₹';
       const adReward = db.getSetting('adReward') || 5.0;
@@ -427,7 +429,8 @@ export function initBot() {
       await ctx.reply(
         `🎬 <b>Watch Ad & Earn</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
         `1️⃣ Tap <b>"Open Sponsored Ad"</b> below to view the ad.\n` +
-        `2️⃣ When finished, tap <b>"Close Ad & Claim (❌)"</b> to credit your balance!\n\n` +
+        `2️⃣ Watch the complete ad (at least 15–20s).\n` +
+        `3️⃣ When finished, tap <b>"Close Ad & Claim (❌)"</b> to credit your balance!\n\n` +
         `💰 <b>Reward:</b> <b>+${symbol}${adReward.toFixed(2)}</b>`,
         { parse_mode: 'HTML', reply_markup: keyboard }
       );
@@ -438,6 +441,16 @@ export function initBot() {
       const check = db.canWatchAd(user.id);
       if (!check.canWatch) {
         return ctx.answerCallbackQuery({ text: check.reason, show_alert: true });
+      }
+
+      const startTime = userAdWatchStartTime.get(user.id) || 0;
+      const elapsedSec = (Date.now() - startTime) / 1000;
+      if (elapsedSec < 15) {
+        const remaining = Math.ceil(15 - elapsedSec);
+        return ctx.answerCallbackQuery({
+          text: `⏳ You must finish watching the ad! Please wait ${remaining}s before claiming.`,
+          show_alert: true
+        });
       }
 
       const result = db.recordDirectAdReward(user.id);
@@ -552,52 +565,80 @@ export function initBot() {
     });
 
     // Task already completed notification
-    bot.callbackQuery(/^task_already_done_/, async (ctx) => {
+    bot.callbackQuery(/^(?:task_already_done_|task_already_done:)/, async (ctx) => {
       await ctx.answerCallbackQuery({ text: '✅ You have already completed this task!', show_alert: true });
     });
 
-    // Task completion callbacks
-    bot.callbackQuery(/^task_verify_([^_]+)(?:_(\d+))?$/, async (ctx) => {
-      const taskId = ctx.match[1];
-      const taskIndex = ctx.match[2] !== undefined ? parseInt(ctx.match[2], 10) : 0;
+    // Task completion callbacks (supports task IDs with underscores)
+    bot.callbackQuery(/^(?:task_verify:(.+?):(\d+)|task_verify_(.+))$/, async (ctx) => {
+      let taskId = ctx.match[1];
+      let taskIndex = ctx.match[2] !== undefined ? parseInt(ctx.match[2], 10) : 0;
+      if (!taskId && ctx.match[3]) {
+        const payload = ctx.match[3];
+        const lastUnderscore = payload.lastIndexOf('_');
+        if (lastUnderscore !== -1 && /^\d+$/.test(payload.slice(lastUnderscore + 1))) {
+          taskId = payload.slice(0, lastUnderscore);
+          taskIndex = parseInt(payload.slice(lastUnderscore + 1), 10);
+        } else {
+          taskId = payload;
+        }
+      }
+
       const user = ctx.from;
       const task = db.getTasks().find(t => t.id === taskId);
 
       if (!task) {
-        await ctx.answerCallbackQuery({ text: 'Task not found!' });
+        await ctx.answerCallbackQuery({ text: 'Task not found!', show_alert: true });
+        return;
+      }
+
+      // Check if already completed
+      const existing = (db.data.task_completions || []).find(c => String(c.user_id) === String(user.id) && c.task_id === taskId);
+      if (existing) {
+        await ctx.answerCallbackQuery({ text: '✅ You have already completed this task!', show_alert: true });
         return;
       }
 
       // If channel_join task, check Telegram membership
-      if (task.task_type === 'channel_join' && task.chat_id) {
-        try {
-          const member = await ctx.api.getChatMember(task.chat_id, user.id);
-          const isMember = ['member', 'administrator', 'creator'].includes(member.status);
-          if (!isMember) {
-            await ctx.answerCallbackQuery({
-              text: `❌ You have not joined ${task.chat_id} yet! Please join the channel first, then tap Joined ☑️.`,
-              show_alert: true
-            });
-            return;
+      if (task.task_type === 'channel_join') {
+        const chatTarget = task.chat_id || task.channel_id;
+        if (chatTarget) {
+          try {
+            let member;
+            try {
+              member = await ctx.api.getChatMember(chatTarget, user.id);
+            } catch (err1) {
+              if (task.channel_id && task.channel_id !== chatTarget) {
+                member = await ctx.api.getChatMember(task.channel_id, user.id);
+              } else {
+                throw err1;
+              }
+            }
+
+            const isMember = ['member', 'administrator', 'creator'].includes(member?.status);
+            if (!isMember) {
+              await ctx.answerCallbackQuery({
+                text: `❌ You have not joined ${task.title || 'the channel'} yet! Please tap the Join button, subscribe, and then tap Joined ☑️.`,
+                show_alert: true
+              });
+              return;
+            }
+          } catch (err) {
+            console.warn(`Could not verify channel for task ${taskId}:`, err.message);
+            if (err.description?.includes('user not found') || err.description?.includes('PARTICIPANT_ID_INVALID') || err.message?.includes('left')) {
+              await ctx.answerCallbackQuery({
+                text: `❌ You have not joined ${task.title || 'the channel'} yet! Please tap the Join button, subscribe, and then tap Joined ☑️.`,
+                show_alert: true
+              });
+              return;
+            }
+            // If bot is not admin or member list is inaccessible, bypass gracefully to not block user
+            console.warn(`Channel check bypassed due to bot permission limitation on ${chatTarget}: ${err.message}`);
           }
-        } catch (err) {
-          console.warn(`Could not verify channel for task ${taskId}:`, err.message);
-          if (err.description?.includes('member list is inaccessible') || err.description?.includes('chat not found')) {
-            await ctx.answerCallbackQuery({
-              text: `⚠️ Bot must be added as Administrator in ${task.chat_id} to verify membership.`,
-              show_alert: true
-            });
-            return;
-          }
-          await ctx.answerCallbackQuery({
-            text: `❌ Verification error: ${err.description || err.message}`,
-            show_alert: true
-          });
-          return;
         }
       }
 
-      const res = db.completeTask(user.id, taskId);
+      const res = db.completeTask(user.id, task.id);
       if (res.success) {
         const symbol = db.getSetting('currencySymbol') || '₹';
         await ctx.answerCallbackQuery({ text: `✅ Task completed! +${symbol}${res.reward}` });
@@ -616,7 +657,7 @@ export function initBot() {
         // Advance to next task if possible
         try {
           const nextCard = renderTaskCard(user.id, taskIndex + 1);
-          if (nextCard.task) {
+          if (nextCard && nextCard.task) {
             await ctx.editMessageText(nextCard.text, {
               parse_mode: 'HTML',
               reply_markup: nextCard.reply_markup,
@@ -1390,24 +1431,23 @@ async function handleWatchAdsAction(ctx) {
 async function handleInviteFriendsAction(ctx) {
   const user = ctx.from;
   const botUser = bot.botInfo?.username || config.botUsername || 'easyandfastearn_bot';
-  const refLink = `https://t.me/${botUser}?start=${user.id}`;
+  const refLink = `https://t.me/${botUser}?start=ref_${user.id}`;
   const dbUser = db.getUser(user.id) || db.getOrCreateUser(user).user;
   const rank = db.getUserWeeklyRank(user.id);
   const refReward = db.getSetting('referralReward');
   const currency = db.getSetting('currencyName') || 'Points';
   const symbol = db.getSetting('currencySymbol') || '₹';
-  const senderBalance = (dbUser.balance || 0).toFixed(2);
 
   const refEarnings = ((dbUser.referral_count || 0) * refReward).toFixed(2);
 
-  const shareText = `Maine iss bot se ₹ ${senderBalance} kamaye. Aap bhi try karein.`;
-  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(shareText)}`;
+  const shareText = encodeURIComponent(
+    `🎁 Join this bot to earn free cash by watching ads and referring friends! Claim your reward now: ${refLink}`
+  );
+  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${shareText}`;
 
   const variables = {
     first_name: user.first_name,
     referral_link: refLink,
-    sender_balance: senderBalance,
-    balance: senderBalance,
     referral_reward: refReward,
     referrals: dbUser.referral_count || 0,
     referral_earnings: refEarnings,
@@ -1527,7 +1567,7 @@ export function renderTaskCard(userId, taskIndex = 0) {
   if (isDone) {
     keyboard.text('✅ Already Completed', `task_already_done_${task.id}`);
   } else {
-    keyboard.text('Joined ☑️', `task_verify_${task.id}_${validIndex}`);
+    keyboard.text('Joined ☑️', `task_verify:${task.id}:${validIndex}`);
   }
 
   if (totalTasks > 1) {

@@ -8,8 +8,8 @@
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   
-  <!-- GigaPub Ads SDK -->
-  <script async src="https://ad.gigapub.tech/script?id=8830"></script>
+  <!-- GigaPub Ads SDK (Project ID: 8839) -->
+  <script src="https://ad.gigapub.tech/script?id=8839"></script>
   
   <!-- LibTL Monetag Ad SDK -->
   <script src="//libtl.com/sdk.js" data-zone="12128125" data-sdk="show_12128125"></script>
@@ -166,9 +166,9 @@
       letter-spacing: 0.3px;
     }
 
-    /* Close & Claim Button */
-    .btn-claim-ad {
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    /* Watch Ad Button */
+    .btn-watch-ad {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
       color: #ffffff;
       border: none;
       padding: 14px 20px;
@@ -181,17 +181,17 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
       transition: all 0.2s ease;
       margin-bottom: 14px;
     }
 
-    .btn-claim-ad:active {
+    .btn-watch-ad:active {
       transform: scale(0.98);
       filter: brightness(0.95);
     }
 
-    .btn-claim-ad:disabled {
+    .btn-watch-ad:disabled {
       opacity: 0.6;
       cursor: not-allowed;
       transform: none;
@@ -288,6 +288,7 @@
       font-size: 0.82rem;
       color: var(--text-muted);
       margin-bottom: 12px;
+      min-height: 20px;
     }
 
     .btn-return {
@@ -306,11 +307,11 @@
 </head>
 <body>
   <div class="ad-card">
-    <!-- Active Ad View (No fixed 10s/20s timer countdown!) -->
+    <!-- Active Ad View -->
     <div id="playing-view">
-      <div class="ad-badge">🎬 SPONSORED REWARDED AD</div>
+      <div class="ad-badge">🎬 GIGAPUB REWARDED AD</div>
       <h1 class="ad-title">Watch Ad & Earn</h1>
-      <p class="ad-desc">Reward is credited after you complete and close (❌) the ad.</p>
+      <p class="ad-desc">Watch the video ad completely. Reward is credited ONLY after the ad finishes playing.</p>
 
       <!-- Animated Player Visual -->
       <div class="player-visual-box">
@@ -324,12 +325,12 @@
       </div>
 
       <div id="status-text" class="status-text">
-        ⚡ Ad is active. Tap below to close and claim your reward!
+        ⚡ Tap below to start playing the rewarded video ad.
       </div>
 
-      <!-- Action Button: User closes ad to claim reward -->
-      <button id="close-claim-btn" class="btn-claim-ad" onclick="onUserClosedAd()">
-        <span>❌ Close Ad & Claim (+₹5.00)</span>
+      <!-- Action Button: User triggers rewarded ad -->
+      <button id="watch-ad-btn" class="btn-watch-ad" onclick="triggerRewardedAd()">
+        <span>▶️ Watch Rewarded Ad (+₹5.00)</span>
       </button>
 
       <!-- Adsterra SmartLink Direct Earning Card -->
@@ -384,66 +385,95 @@
     const playingView = document.getElementById('playing-view');
     const completedView = document.getElementById('completed-view');
     const statusText = document.getElementById('status-text');
-    const closeClaimBtn = document.getElementById('close-claim-btn');
+    const watchAdBtn = document.getElementById('watch-ad-btn');
 
     let isCompleted = false;
 
-    // 1. LibTL In-App Interstitial
-    if (typeof window.show_12128125 === 'function') {
-      try {
-        window.show_12128125({
-          type: 'inApp',
-          inAppSettings: {
-            frequency: 2,
-            capping: 0.1,
-            interval: 30,
-            timeout: 5,
-            everyPage: false
-          }
-        });
-      } catch (e) {}
+    // Trigger Rewarded Ad via official GigaPub SDK (ID: 8839)
+    function triggerRewardedAd() {
+      if (isCompleted) return;
 
-      // 2. LibTL Rewarded Interstitial
-      window.show_12128125().then(() => {
-        console.log('LibTL Rewarded Interstitial finished');
-        handleAdCompletion();
-      }).catch(() => {
-        // Fallback to Rewarded Popup
-        if (typeof window.show_12128125 === 'function') {
-          window.show_12128125('pop').then(() => {
-            console.log('LibTL Rewarded Popup finished');
-            handleAdCompletion();
-          }).catch(e => {
-            console.warn('LibTL Popup closed or skipped:', e);
+      if (watchAdBtn) {
+        watchAdBtn.disabled = true;
+        watchAdBtn.innerHTML = '⏳ Playing Rewarded Ad...';
+      }
+      if (statusText) {
+        statusText.textContent = '🎬 Playing ad... Please watch until the end to claim your reward.';
+      }
+
+      // 1. Official GigaPub Integration (ID: 8839)
+      if (typeof window.showGiga === 'function') {
+        window.showGiga()
+          .then(async () => {
+            // ONLY execute reward logic when ad watched to the end!
+            console.log('✅ GigaPub ad completed successfully');
+            await handleAdCompletion();
+          })
+          .catch(e => {
+            // User closed early or error: DO NOT CREDIT REWARD!
+            console.warn('GigaPub ad was closed before completion:', e);
+            if (statusText) {
+              statusText.textContent = '⚠️ Ad was closed before completion. Watch the full ad to receive ₹5.00.';
+            }
+            if (watchAdBtn) {
+              watchAdBtn.disabled = false;
+              watchAdBtn.innerHTML = '▶️ Watch Rewarded Ad (+₹5.00)';
+            }
           });
+        return;
+      }
+
+      // 2. Fallback to LibTL Rewarded Interstitial
+      if (typeof window.show_12128125 === 'function') {
+        window.show_12128125()
+          .then(async () => {
+            console.log('✅ LibTL ad completed successfully');
+            await handleAdCompletion();
+          })
+          .catch(e => {
+            console.warn('LibTL ad closed early:', e);
+            if (statusText) {
+              statusText.textContent = '⚠️ Ad was closed early. Complete the full ad to earn.';
+            }
+            if (watchAdBtn) {
+              watchAdBtn.disabled = false;
+              watchAdBtn.innerHTML = '▶️ Watch Rewarded Ad (+₹5.00)';
+            }
+          });
+        return;
+      }
+
+      // If SDK not ready yet, retry in 1s
+      if (statusText) {
+        statusText.textContent = '⏳ Ad SDK is initializing, please wait 2 seconds...';
+      }
+      setTimeout(() => {
+        if (watchAdBtn) {
+          watchAdBtn.disabled = false;
+          watchAdBtn.innerHTML = '▶️ Watch Rewarded Ad (+₹5.00)';
         }
-      });
+      }, 2000);
     }
 
-    // Trigger GigaPub if available
-    if (typeof window.showGiga === 'function') {
-      try {
-        window.showGiga().then(() => {
-          handleAdCompletion();
-        }).catch(() => {});
-      } catch(e) {}
-    }
-
-    // Called when user clicks "❌ Close Ad & Claim (+₹5.00)" button
-    function onUserClosedAd() {
-      handleAdCompletion();
-    }
+    // Automatically attempt to show ad on load
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        if (typeof window.showGiga === 'function') {
+          triggerRewardedAd();
+        }
+      }, 500);
+    });
 
     async function handleAdCompletion() {
       if (isCompleted) return;
       isCompleted = true;
 
-      if (closeClaimBtn) {
-        closeClaimBtn.disabled = true;
-        closeClaimBtn.innerHTML = '✨ Claiming ₹5.00...';
+      if (watchAdBtn) {
+        watchAdBtn.disabled = true;
+        watchAdBtn.innerHTML = '✨ Claiming ₹5.00...';
       }
       if (statusText) {
-        statusText.textContent = '✨ Verifying and crediting reward...';
+        statusText.textContent = '✨ Verifying and crediting ₹5.00 reward...';
       }
 
       try {
@@ -470,10 +500,10 @@
         } catch (e) {}
       }
 
-      // Automatically close WebApp after 650ms to return back to Telegram bot
+      // Automatically close WebApp window after 1s so user returns to Telegram chat
       setTimeout(() => {
         closeAdWindow();
-      }, 700);
+      }, 1000);
     }
 
     function closeAdWindow() {

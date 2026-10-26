@@ -16,7 +16,7 @@ class GigaPubManager {
   async init(projectId) {
     if (typeof window.showGiga === 'function') {
       this.isLoaded = true;
-      this.projectId = projectId || '8830';
+      this.projectId = projectId || '8839';
       console.log('✅ GigaPub official SDK detected and active!');
       return;
     }

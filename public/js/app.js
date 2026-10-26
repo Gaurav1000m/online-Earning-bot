@@ -458,22 +458,20 @@ async function handleWatchAd() {
       return;
     }
 
-    // 2. Call Ad SDKs: prioritize LibTL Rewarded Interstitial/Popup, fallback to GigaPub
+    // 2. Call official GigaPub SDK (ID: 8839), fallback to LibTL
     const triggerAd = () => {
-      if (typeof window.show_12128125 === 'function') {
-        return window.show_12128125().catch(() => {
-          if (typeof window.show_12128125 === 'function') {
-            return window.show_12128125('pop');
-          }
-        });
-      }
       if (typeof window.showGiga === 'function') {
         return window.showGiga();
+      }
+      if (typeof window.show_12128125 === 'function') {
+        return window.show_12128125();
       }
       if (window.GigaPub && typeof window.GigaPub.showRewardedAd === 'function') {
         return window.GigaPub.showRewardedAd();
       }
-      return Promise.resolve();
+      // If no SDK is initialized in current view, navigate to ad player
+      window.location.href = `/ad.html?userId=${state.user?.id || ''}`;
+      return new Promise(() => {});
     };
 
     await triggerAd()
@@ -574,21 +572,14 @@ window.completeTaskAction = async function(taskId, targetUrl) {
 function getReferralLinks() {
   const userId = state.user?.id || '';
   const botUser = state.config?.botUsername || 'easyandfastearn_bot';
-  const botLink = `https://t.me/${botUser.replace(/^@/, '')}?start=${userId}`;
-  const senderBalance = (state.user?.balance || 0).toFixed(2);
-  const shareText = `Maine iss bot se ₹ ${senderBalance} kamaye. Aap bhi try karein.`;
-  const shareTemplate = `${botLink}\n${shareText}`;
-  return { botLink, senderBalance, shareText, shareTemplate };
+  const botLink = `https://t.me/${botUser.replace(/^@/, '')}?start=ref_${userId}`;
+  return { botLink };
 }
 
 async function loadReferralData() {
-  const { botLink, senderBalance } = getReferralLinks();
+  const { botLink } = getReferralLinks();
   const linkInput = document.getElementById('ref-link-display');
   if (linkInput) linkInput.value = botLink;
-  const templateLinkEl = document.getElementById('ref-template-link');
-  if (templateLinkEl) templateLinkEl.textContent = botLink;
-  const templateMsgEl = document.getElementById('ref-template-msg');
-  if (templateMsgEl) templateMsgEl.textContent = `Maine iss bot se ₹ ${senderBalance} kamaye. Aap bhi try karein.`;
 
   const res = await apiRequest('/api/referrals/list');
   if (res.success) {
@@ -680,16 +671,19 @@ async function loadReferralData() {
 }
 
 function handleCopyRefLink() {
-  const { shareTemplate } = getReferralLinks();
-  navigator.clipboard.writeText(shareTemplate).then(() => {
-    showToast('📋 Invite template copied!', 'success');
+  const { botLink } = getReferralLinks();
+  navigator.clipboard.writeText(botLink).then(() => {
+    showToast('📋 Referral link copied!', 'success');
     hapticNotification('success');
   });
 }
 
 function handleShareRefLink() {
-  const { botLink, shareText } = getReferralLinks();
-  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(shareText)}`;
+  const { botLink } = getReferralLinks();
+  const shareText = encodeURIComponent(
+    `🎁 Join this bot to earn cash by watching ads and inviting friends! Join here: ${botLink}`
+  );
+  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${shareText}`;
 
   if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
   else window.open(shareUrl, '_blank');

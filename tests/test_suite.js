@@ -209,10 +209,12 @@ async function runTestSuite() {
 
     // Test 14e: Referral invite template contains required format
     const refRendered = db.renderTemplate('REFERRAL_MESSAGE', {
-      referral_link: 'https://t.me/easyandfastearn_bot?start=6656939308',
-      sender_balance: '248.50'
+      referral_link: 'https://t.me/easyandfastearn_bot?start=ref_6656939308'
     });
-    assert(refRendered.text.includes('Maine iss bot se ₹ 248.50 kamaye. Aap bhi try karein.'), 'Test 14e: Referral template renders Hindi sender balance template');
+    assert(refRendered.text.includes('INVITE & EARN') && refRendered.text.includes('ref_6656939308'), 'Test 14e: Referral template renders original invite template');
+
+    // Test 14f: GigaPub Project ID is set to 8839
+    assert(config.gigaPubProjectId === '8839', 'Test 14f: GigaPub Project ID is 8839');
 
     // ----------------------------------------------------
     // TEST 15: Daily Streak Bonus Claim

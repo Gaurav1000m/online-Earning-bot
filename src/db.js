@@ -59,7 +59,7 @@ export const DEFAULT_TEMPLATES = {
     inline_buttons: []
   },
   REFERRAL_MESSAGE: {
-    text: `{{referral_link}}\nMaine iss bot se ₹ {{sender_balance}} kamaye. Aap bhi try karein.\n\n━━━━━━━━━━━━━━━━━━\n👥 <b>INVITE & EARN</b>\n💰 <b>Reward:</b> {{currency_symbol}}{{referral_reward}} per referral\n👥 <b>Your Referrals:</b> {{referrals}}\n💵 <b>Referral Earnings:</b> {{currency_symbol}}{{referral_earnings}}\n🏆 <b>Weekly Rank:</b> #{{weekly_rank}}`,
+    text: `👥 <b>INVITE & EARN</b>\n━━━━━━━━━━━━━━━━━━\n\n💰 <b>Earn {{currency_symbol}}{{referral_reward}}</b> for every valid referral!\n\n🔗 <b>YOUR REFERRAL LINK:</b>\n<code>{{referral_link}}</code>\n\n━━━━━━━━━━━━━━━━━━\n📊 <b>YOUR STATS</b>\n👥 Total Referrals: <b>{{referrals}}</b>\n💰 Referral Earnings: <b>{{currency_symbol}}{{referral_earnings}}</b>\n🏆 Weekly Rank: <b>#{{weekly_rank}}</b>\n\n━━━━━━━━━━━━━━━━━━\n🎁 <b>WEEKLY LEADERBOARD PRIZES</b>\n🥇 1st Place: <b>{{currency_symbol}}50</b>\n🥈 2nd Place: <b>{{currency_symbol}}30</b>\n🥉 3rd Place: <b>{{currency_symbol}}20</b>\n4️⃣–🔟 4th–10th: <b>{{currency_symbol}}10 each</b>\n🔟–2️⃣0️⃣ 11th–20th: <b>{{currency_symbol}}5 each</b>\n\nShare your link and start climbing the leaderboard! 🚀`,
     media_type: 'none',
     media_url: '',
     inline_buttons: []

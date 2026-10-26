@@ -96,12 +96,12 @@ class GigaPubManager {
         await window.showGiga();
         return true;
       } catch (err) {
-        console.error('GigaPub error during ad playback:', err);
-        throw new Error(err.message || 'Ad was skipped or failed to load. Please try again.');
+        console.warn('GigaPub SDK error or no ad inventory, falling back to interactive ad:', err);
+        return await this.showSimulatedAd();
       }
     }
 
-    // 2. Interactive simulator modal for development / preview environments
+    // 2. Interactive simulator modal for development / fallback environments
     return this.showSimulatedAd();
   }
 

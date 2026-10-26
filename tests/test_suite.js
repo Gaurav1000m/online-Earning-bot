@@ -219,20 +219,21 @@ async function runTestSuite() {
     assert(dupTaskRes.success === false, 'Test 18: Duplicate task completion prevented by idempotency');
 
     // ----------------------------------------------------
-    // TEST 19: Withdrawal Below Minimum Threshold
+    // TEST 19: Withdrawal Lock (Requires 10 Referrals & 30 Ads)
     // ----------------------------------------------------
     console.log('\n--- Phase 6: Multi-Method Withdrawals & Approvals ---');
-    const belowMinRes = db.createWithdrawal(testUserAId, {
+    const lockedWdRes = db.createWithdrawal(testUserAId, {
       method: 'upi',
-      amount: 0.50,
+      amount: 5.00,
       details: 'alice@okhdfcbank'
     });
-    assert(belowMinRes.success === false, 'Test 19: Withdrawal below minimum threshold rejected');
+    assert(lockedWdRes.success === false && lockedWdRes.locked === true, 'Test 19: Withdrawal locked before completing 10 referrals and 30 ads');
 
     // ----------------------------------------------------
-    // TEST 20: Valid Withdrawal Request & Balance Debit
+    // TEST 20: Valid Withdrawal Request & Balance Debit (Unlocked)
     // ----------------------------------------------------
-    // Ensure User A has sufficient balance for valid test
+    // Unlock User A by meeting 10 referrals and 30 ads watched milestones
+    db.updateUser(testUserAId, { referral_count: 10, ads_watched: 30 });
     db.addBalance(testUserAId, 25.0, 'Test setup balance');
     const balBeforeWD = db.getUser(testUserAId).balance;
     const validWdRes = db.createWithdrawal(testUserAId, {
@@ -240,7 +241,7 @@ async function runTestSuite() {
       amount: 10.0,
       details: 'alice@okhdfcbank'
     });
-    assert(validWdRes.success === true, 'Test 20: Valid withdrawal request accepted');
+    assert(validWdRes.success === true, 'Test 20: Valid withdrawal request accepted once unlocked');
     assert(validWdRes.withdrawal.status === 'pending', 'Test 20: Initial withdrawal status is pending');
     const balAfterWD = db.getUser(testUserAId).balance;
     assert(balAfterWD === balBeforeWD - 10.0, 'Test 20: User balance immediately debited on withdrawal request');

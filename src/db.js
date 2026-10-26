@@ -56,28 +56,19 @@ export const DEFAULT_TEMPLATES = {
     text: `╔══════════════════╗\n💰 <b>YOUR BALANCE</b>\n╚══════════════════╝\n\n💵 <b>Balance:</b> {{currency_symbol}}{{balance}}\n👥 <b>Referrals:</b> {{referrals}}\n🎬 <b>Ads Watched:</b> {{ads_watched}}\n🎁 <b>Daily Bonuses:</b> {{bonuses_claimed}}\n🏆 <b>Weekly Rank:</b> #{{weekly_rank}}\n\n━━━━━━━━━━━━━━━━━━\n🚀 <i>Keep earning and grow your balance!</i>`,
     media_type: 'none',
     media_url: '',
-    inline_buttons: [
-      [
-        { text: '💸 Withdraw', callback_data: 'menu_withdraw' },
-        { text: '👥 Invite Friends', callback_data: 'menu_refer' }
-      ]
-    ]
+    inline_buttons: []
   },
   REFERRAL_MESSAGE: {
     text: `👥 <b>INVITE & EARN</b>\n━━━━━━━━━━━━━━━━━━\n\n💰 <b>Earn {{currency_symbol}}{{referral_reward}}</b> for every valid referral!\n\n🔗 <b>YOUR REFERRAL LINK:</b>\n<code>{{referral_link}}</code>\n\n━━━━━━━━━━━━━━━━━━\n📊 <b>YOUR STATS</b>\n👥 Total Referrals: <b>{{referrals}}</b>\n💰 Referral Earnings: <b>{{currency_symbol}}{{referral_earnings}}</b>\n🏆 Weekly Rank: <b>#{{weekly_rank}}</b>\n\n━━━━━━━━━━━━━━━━━━\n🎁 <b>WEEKLY REFERRAL PRIZES</b>\n🥇 1st: {{currency_symbol}}10\n🥈 2nd: {{currency_symbol}}10\n🥉 3rd: {{currency_symbol}}10\n4️⃣–🔟: {{currency_symbol}}5\n🔟–2️⃣0️⃣: {{currency_symbol}}3\n\nShare your link and earn more! 🚀`,
     media_type: 'none',
     media_url: '',
-    inline_buttons: [
-      [{ text: '📤 Share Referral Link', url: 'https://t.me/share/url?url={{referral_link}}&text=🎁+Join+now+and+earn+free+money!' }]
-    ]
+    inline_buttons: []
   },
   WATCH_AD_MESSAGE: {
     text: `🎬 <b>WATCH ADS</b>\n━━━━━━━━━━━━━━━━━━\n\n💰 Earn money by watching advertisements.\n\n💵 <b>Reward per completed ad:</b>\n{{currency_symbol}}{{ad_reward}}\n📺 <b>Ads watched today:</b>\n{{ads_today}} / {{daily_ad_limit}}\n💰 <b>Today's ad earnings:</b>\n{{currency_symbol}}{{today_ad_earnings}}\n\n━━━━━━━━━━━━━━━━━━\n👇 Watch an advertisement and earn your reward.`,
     media_type: 'none',
     media_url: '',
-    inline_buttons: [
-      [{ text: '▶️ Watch Ad', web_app: true, url: '' }]
-    ]
+    inline_buttons: []
   },
   AD_SUCCESS_MESSAGE: {
     text: `🎉 <b>AD COMPLETED!</b>\n━━━━━━━━━━━━━━━━━━\n\n💰 <b>Reward:</b> +{{currency_symbol}}{{ad_reward}}\n💵 <b>New Balance:</b> {{currency_symbol}}{{balance}}\n🎬 <b>Ads Watched Today:</b> {{ads_today}} / {{daily_ad_limit}}\n\n━━━━━━━━━━━━━━━━━━\n🔥 Keep watching and earning!`,
@@ -92,14 +83,10 @@ export const DEFAULT_TEMPLATES = {
     inline_buttons: []
   },
   WITHDRAW_MESSAGE: {
-    text: `💸 <b>WITHDRAWAL</b>\n━━━━━━━━━━━━━━━━━━\n\n💰 <b>Available Balance:</b> {{currency_symbol}}{{balance}}\n📌 <b>Minimum Withdrawal:</b> {{currency_symbol}}{{minimum_withdrawal}}\n\nSelect your withdrawal method below:`,
+    text: `💸 <b>WITHDRAWAL</b>\n━━━━━━━━━━━━━━━━━━\n\n💰 <b>Available Balance:</b> {{currency_symbol}}{{balance}}\n\nSelect your withdrawal method below:`,
     media_type: 'none',
     media_url: '',
-    inline_buttons: [
-      [{ text: '🇮🇳 UPI', callback_data: 'wd_method_upi' }],
-      [{ text: '💳 PayPal', callback_data: 'wd_method_paypal' }],
-      [{ text: '🏦 Bank', callback_data: 'wd_method_bank' }]
-    ]
+    inline_buttons: []
   },
   WITHDRAW_SUCCESS: {
     text: `⏳ <b>WITHDRAWAL REQUESTED</b>\n━━━━━━━━━━━━━━━━━━\n\n💰 <b>Amount:</b> {{currency_symbol}}{{withdrawal_amount}}\n💳 <b>Method:</b> {{withdrawal_method}}\n🆔 <b>Request ID:</b> <code>{{withdrawal_id}}</code>\n📌 <b>Status:</b> Pending\n\nOur admin team will review and process your request.`,
@@ -117,9 +104,7 @@ export const DEFAULT_TEMPLATES = {
     text: `╔══════════════════╗\n🎁 <b>DAILY BONUS</b>\n╚══════════════════╝\n\n🎉 Congratulations!\nYour daily bonus is waiting:\n💰 <b>+{{currency_symbol}}{{daily_bonus}}</b>\n\nClaim your bonus and keep earning every day! 🚀`,
     media_type: 'none',
     media_url: '',
-    inline_buttons: [
-      [{ text: '🎁 Claim Bonus', callback_data: 'claim_daily_bonus' }]
-    ]
+    inline_buttons: []
   },
   BONUS_ALREADY_CLAIMED: {
     text: `⏰ <b>BONUS ALREADY CLAIMED</b>\n\nYou have already received today's bonus.\n💰 <b>Today's bonus:</b> {{currency_symbol}}{{daily_bonus}}\n🎁 Come back tomorrow!\nNext available: in {{wait_time}}`,
@@ -1263,27 +1248,74 @@ class Database {
   // 10. WITHDRAWAL SYSTEM (MULTI-METHOD)
   // =======================================================
 
-  createWithdrawal(userId, { method = 'upi', amount, details }) {
+  getWithdrawalEligibility(userId) {
+    const id = String(userId);
+    const user = this.getUser(id);
+    if (!user) {
+      return {
+        eligible: false,
+        reason: 'User not found',
+        requiredReferrals: 10,
+        requiredAds: 30,
+        currentReferrals: 0,
+        currentAds: 0,
+        remainingReferrals: 10,
+        remainingAds: 30,
+        balance: 0
+      };
+    }
+
+    const REQUIRED_REFERRALS = 10;
+    const REQUIRED_ADS = 30;
+    const currentReferrals = user.referral_count || 0;
+    const currentAds = user.ads_watched || 0;
+
+    const remainingReferrals = Math.max(0, REQUIRED_REFERRALS - currentReferrals);
+    const remainingAds = Math.max(0, REQUIRED_ADS - currentAds);
+    const eligible = currentReferrals >= REQUIRED_REFERRALS && currentAds >= REQUIRED_ADS;
+
+    return {
+      eligible,
+      requiredReferrals: REQUIRED_REFERRALS,
+      requiredAds: REQUIRED_ADS,
+      currentReferrals,
+      currentAds,
+      remainingReferrals,
+      remainingAds,
+      balance: user.balance || 0,
+      minWithdrawal: eligible ? 0.01 : (this.getSetting('minWithdrawal') || 1)
+    };
+  }
+
+  createWithdrawal(userId, { method = 'upi', amount, details, bypassRules = false }) {
     const id = String(userId);
     const user = this.getUser(id);
     if (!user) return { success: false, message: 'User not found' };
     if (user.is_banned) return { success: false, message: 'Your account is banned' };
 
-    const minWith = this.getSetting('minWithdrawal');
-    const maxWith = this.getSetting('maxWithdrawal');
-    const amt = parseFloat(amount);
+    const eligibility = this.getWithdrawalEligibility(id);
+    if (!eligibility.eligible && !bypassRules) {
+      const parts = [];
+      if (eligibility.remainingReferrals > 0) parts.push(`${eligibility.remainingReferrals} more referral(s)`);
+      if (eligibility.remainingAds > 0) parts.push(`${eligibility.remainingAds} more ad(s)`);
+      return {
+        success: false,
+        locked: true,
+        message: `🔒 Withdrawal Locked: You must complete at least 10 referrals (${eligibility.currentReferrals}/10) and watch 30 ads (${eligibility.currentAds}/30) to unlock withdrawals. You still need ${parts.join(' and ')}.`,
+        eligibility
+      };
+    }
 
+    const amt = parseFloat(amount);
     if (isNaN(amt) || amt <= 0) {
       return { success: false, message: 'Please enter a valid amount' };
     }
-    if (amt < minWith) {
-      return { success: false, message: `Minimum withdrawal is ${this.getSetting('currencySymbol')}${minWith}` };
-    }
-    if (amt > maxWith) {
-      return { success: false, message: `Maximum withdrawal is ${this.getSetting('currencySymbol')}${maxWith}` };
-    }
     if (amt > user.balance) {
-      return { success: false, message: `Insufficient balance! You have ${this.getSetting('currencySymbol')}${user.balance}` };
+      return { success: false, message: `Insufficient balance! You have ${this.getSetting('currencySymbol')}${user.balance.toFixed(2)}` };
+    }
+    const maxWith = this.getSetting('maxWithdrawal');
+    if (maxWith && amt > maxWith) {
+      return { success: false, message: `Maximum withdrawal limit is ${this.getSetting('currencySymbol')}${maxWith}` };
     }
 
     let walletLabel = '';

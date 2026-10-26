@@ -218,6 +218,7 @@ app.post('/api/user/sync', telegramAuthMiddleware, (req, res) => {
       dailyLimit: db.getSetting('dailyAdLimit'),
       cooldownSeconds: db.getSetting('adCooldownSeconds')
     },
+    withdrawalEligibility: db.getWithdrawalEligibility(user.id),
     isAdmin,
     isDevMode: req.isDevMode || false
   });

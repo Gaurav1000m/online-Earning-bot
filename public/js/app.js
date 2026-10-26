@@ -52,6 +52,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   startTimers();
+
+  // Handle URL deep links from Telegram Bot buttons
+  const urlParams = new URLSearchParams(window.location.search);
+  const actionParam = urlParams.get('action');
+  const tabParam = urlParams.get('tab');
+
+  if (tabParam) {
+    switchTab(tabParam);
+  }
+
+  if (actionParam === 'watch_ad') {
+    switchTab('earn');
+    setTimeout(() => {
+      handleWatchAd();
+    }, 600);
+  }
 });
 
 function showDemoBanner() {
@@ -94,6 +110,7 @@ async function syncUserData() {
   if (res.success) {
     state.user = res.user;
     state.isAdmin = res.isAdmin;
+    state.withdrawalEligibility = res.withdrawalEligibility;
 
     if (res.bonus) {
       state.nextClaimAt = res.bonus.nextClaimAt || 0;
@@ -104,6 +121,7 @@ async function syncUserData() {
     }
 
     updateUserUI();
+    updateWithdrawalUI();
 
     // Show Admin Quick Button if admin
     const adminBtn = document.getElementById('admin-quick-btn');
@@ -174,6 +192,62 @@ function updateUserUI() {
   if (adsProgressBar) {
     const pct = Math.min(100, Math.round((u.adsToday / maxAds) * 100));
     adsProgressBar.style.width = `${pct}%`;
+  }
+}
+
+function updateWithdrawalUI() {
+  const elig = state.withdrawalEligibility || {
+    eligible: false,
+    requiredReferrals: 10,
+    requiredAds: 30,
+    currentReferrals: 0,
+    currentAds: 0,
+    remainingReferrals: 10,
+    remainingAds: 30
+  };
+
+  const lockCard = document.getElementById('wd-lock-card');
+  const submitBtn = document.getElementById('submit-withdraw-btn');
+  const minNotice = document.getElementById('wd-min-notice');
+  const unlockBanner = document.getElementById('wd-unlocked-banner');
+
+  if (!elig.eligible) {
+    if (lockCard) lockCard.style.display = 'block';
+    if (unlockBanner) unlockBanner.style.display = 'none';
+
+    const refProgText = document.getElementById('wd-ref-progress-text');
+    const refBar = document.getElementById('wd-ref-progress-bar');
+    const adProgText = document.getElementById('wd-ad-progress-text');
+    const adBar = document.getElementById('wd-ad-progress-bar');
+
+    if (refProgText) refProgText.textContent = `${elig.currentReferrals} / ${elig.requiredReferrals}`;
+    if (refBar) refBar.style.width = `${Math.min(100, Math.round((elig.currentReferrals / elig.requiredReferrals) * 100))}%`;
+
+    if (adProgText) adProgText.textContent = `${elig.currentAds} / ${elig.requiredAds}`;
+    if (adBar) adBar.style.width = `${Math.min(100, Math.round((elig.currentAds / elig.requiredAds) * 100))}%`;
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '🔒 Complete 10 Referrals & 30 Ads to Unlock';
+      submitBtn.className = 'btn btn-secondary';
+    }
+
+    if (minNotice) {
+      minNotice.innerHTML = `⚠️ Unlock requirement: <b>10 Referrals & 30 Ads</b> &bull; Payout Time: <b>1-12 Hours</b>`;
+    }
+  } else {
+    if (lockCard) lockCard.style.display = 'none';
+    if (unlockBanner) unlockBanner.style.display = 'flex';
+
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '💸 Submit Withdrawal Request';
+      submitBtn.className = 'btn btn-primary';
+    }
+
+    if (minNotice) {
+      minNotice.innerHTML = `🎉 <b>Unlocked:</b> You can withdraw ANY amount! &bull; Payout Time: <b>1-12 Hours</b>`;
+    }
   }
 }
 
@@ -501,6 +575,11 @@ function handleShareRefLink() {
 
 // 5. Withdrawal Submission
 async function handleSubmitWithdrawal() {
+  const elig = state.withdrawalEligibility || {};
+  if (!elig.eligible) {
+    return showToast(`🔒 Locked: Complete 10 referrals and 30 ads before requesting a withdrawal!`, 'warning');
+  }
+
   const amountInput = document.getElementById('withdraw-amount-input');
   const amount = parseFloat(amountInput.value);
   const method = state.selectedWdMethod;
@@ -520,13 +599,12 @@ async function handleSubmitWithdrawal() {
     details = { bank_name: bankName, account_number: accNumber, ifsc };
   }
 
-  const minWith = state.config?.minWithdrawal || 5;
-  if (isNaN(amount) || amount < minWith) {
-    return showToast(`Minimum withdrawal is ${state.config.currencySymbol}${minWith}`, 'warning');
+  if (isNaN(amount) || amount <= 0) {
+    return showToast('Please enter a valid amount to withdraw', 'warning');
   }
 
   if (amount > state.user.balance) {
-    return showToast('Insufficient balance', 'error');
+    return showToast(`Insufficient balance! Available: ${state.config?.currencySymbol || '₹'}${state.user.balance.toFixed(2)}`, 'error');
   }
 
   const btn = document.getElementById('submit-withdraw-btn');
@@ -544,7 +622,9 @@ async function handleSubmitWithdrawal() {
 
   if (res.success) {
     state.user.balance = res.remainingBalance;
+    if (res.eligibility) state.withdrawalEligibility = res.eligibility;
     updateUserUI();
+    updateWithdrawalUI();
     amountInput.value = '';
     showToast(`✅ Withdrawal #${res.withdrawal.id} submitted for review!`, 'success');
     hapticNotification('success');

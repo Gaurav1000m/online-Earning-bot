@@ -282,6 +282,59 @@
       </div>
     </section>
 
+    <!-- Withdrawal Milestone Lock Card (Requirement: 10 Referrals + 30 Ads) -->
+    <section id="wd-lock-card" class="card" style="margin-bottom:16px; border-color:rgba(245,158,11,0.35); background:linear-gradient(135deg, rgba(245,158,11,0.08), rgba(239,68,68,0.05));">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <div style="font-size:1.8rem; background:rgba(245,158,11,0.15); width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+          🔒
+        </div>
+        <div>
+          <div class="text-sm font-black" style="color:#fbbf24;">Withdrawal Locked</div>
+          <div class="text-xs text-muted">Complete milestones below to unlock instant payouts</div>
+        </div>
+      </div>
+
+      <!-- Milestone 1: 10 Referrals -->
+      <div style="margin-bottom:12px; background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span class="text-xs font-semibold">👥 10 Referrals Required</span>
+          <span id="wd-ref-progress-text" class="text-xs font-bold text-primary">0 / 10</span>
+        </div>
+        <div class="progress-bar">
+          <div id="wd-ref-progress-bar" class="progress-fill" style="width:0%; background:linear-gradient(90deg, #3b82f6, #06b6d4);"></div>
+        </div>
+      </div>
+
+      <!-- Milestone 2: 30 Ads Watched -->
+      <div style="margin-bottom:14px; background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span class="text-xs font-semibold">🎬 30 Ads Watched Required</span>
+          <span id="wd-ad-progress-text" class="text-xs font-bold text-success">0 / 30</span>
+        </div>
+        <div class="progress-bar">
+          <div id="wd-ad-progress-bar" class="progress-fill" style="width:0%; background:linear-gradient(90deg, #10b981, #34d399);"></div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <button class="btn btn-secondary btn-sm" data-switch-tab="refer" style="gap:6px;">
+          👥 Invite Friends
+        </button>
+        <button class="btn btn-secondary btn-sm" data-switch-tab="earn" style="gap:6px;">
+          🎬 Watch Ads
+        </button>
+      </div>
+    </section>
+
+    <!-- Withdrawal Unlocked Banner -->
+    <div id="wd-unlocked-banner" style="display:none; align-items:center; gap:10px; padding:12px 16px; border-radius:16px; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); margin-bottom:16px;">
+      <span style="font-size:1.6rem;">🎉</span>
+      <div>
+        <div class="text-sm font-bold text-success">Withdrawals Fully Unlocked!</div>
+        <div class="text-xs text-muted">You have met the requirements and can withdraw any amount.</div>
+      </div>
+    </div>
+
     <!-- Payout Method Selector -->
     <section class="card" style="margin-bottom:16px;">
       <label class="text-xs text-muted" style="display:block; margin-bottom:8px;">Choose Withdrawal Method</label>
@@ -317,7 +370,7 @@
 
       <div style="margin-bottom:12px;">
         <label class="text-xs text-muted" style="display:block; margin-bottom:4px;">Withdrawal Amount</label>
-        <input id="withdraw-amount-input" type="number" class="input" placeholder="e.g. 10">
+        <input id="withdraw-amount-input" type="number" step="any" class="input" placeholder="Enter amount to withdraw">
       </div>
 
       <!-- Quick Amount Buttons -->
@@ -329,12 +382,12 @@
         <button class="btn btn-secondary btn-sm quick-amt-btn" data-amt="all">MAX</button>
       </div>
 
-      <div class="text-xs text-muted" style="margin-bottom:14px;">
-        ⚠️ Min Withdrawal: <b><span class="val-currency-symbol">₹</span><span class="val-min-withdrawal">10</span></b> &bull; Payout Time: <b>1-12 Hours</b>
+      <div id="wd-min-notice" class="text-xs text-muted" style="margin-bottom:14px;">
+        ⚠️ Unlock requirement: <b>10 Referrals & 30 Ads</b> &bull; Payout Time: <b>1-12 Hours</b>
       </div>
 
-      <button id="submit-withdraw-btn" class="btn btn-primary">
-        Submit Withdrawal Request
+      <button id="submit-withdraw-btn" class="btn btn-secondary" disabled>
+        🔒 Complete Requirements to Unlock
       </button>
     </section>
 

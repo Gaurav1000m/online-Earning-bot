@@ -8,9 +8,19 @@ const __dirname = path.dirname(__filename);
 // Load .env from project root
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
+const rawToken = (process.env.BOT_TOKEN || '').trim();
+const botToken = (rawToken && rawToken.includes(':') && !rawToken.includes('YOUR_'))
+  ? rawToken
+  : '7651918317:AAH1zEwWXZQxJFrkJ9rZ3Q86fubk8ODMmnw';
+
+const rawGiga = (process.env.GIGAPUB_PROJECT_ID || '').trim();
+const gigaPubProjectId = (rawGiga && !rawGiga.includes('YOUR_') && rawGiga !== '')
+  ? rawGiga
+  : '8830';
+
 export const config = {
   // Bot & Server
-  botToken: process.env.BOT_TOKEN || '7651918317:AAH1zEwWXZQxJFrkJ9rZ3Q86fubk8ODMmnw',
+  botToken,
   adminId: String(process.env.ADMIN_ID || '6656939308').trim(),
   adminSecret: process.env.ADMIN_SECRET || 'admin123456',
   port: parseInt(process.env.PORT || '3000', 10),
@@ -19,7 +29,7 @@ export const config = {
   supportUsername: (process.env.SUPPORT_USERNAME || 'gaurav_tnwr00').replace(/^@/, '').trim(),
 
   // GigaPub Ads
-  gigaPubProjectId: process.env.GIGAPUB_PROJECT_ID || '8830',
+  gigaPubProjectId,
   gigaPubApiKey: process.env.GIGAPUB_API_KEY || '',
   gigaPubAppId: process.env.GIGAPUB_APP_ID || '',
 

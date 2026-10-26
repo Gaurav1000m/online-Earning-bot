@@ -55,12 +55,16 @@ export function requireAdmin(req, res, next) {
 // =======================================================
 
 // Telegram Webhook Update Handler
-app.post('/api/webhook', (req, res, next) => {
-  const activeBot = getBot() || initBot();
-  if (activeBot) {
-    return webhookCallback(activeBot, 'express')(req, res, next);
+app.post('/api/webhook', async (req, res) => {
+  try {
+    const activeBot = getBot() || initBot();
+    if (activeBot && req.body && req.body.update_id) {
+      await activeBot.handleUpdate(req.body);
+    }
+  } catch (err) {
+    console.error('Webhook error:', err);
   }
-  res.status(200).send('OK');
+  return res.status(200).send('OK');
 });
 
 // Setup or Check Webhook URL with Telegram API

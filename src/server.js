@@ -59,6 +59,9 @@ app.post('/api/webhook', async (req, res) => {
   try {
     const activeBot = getBot() || initBot();
     if (activeBot && req.body && req.body.update_id) {
+      if (!activeBot.botInfo) {
+        await activeBot.init().catch(() => {});
+      }
       await activeBot.handleUpdate(req.body);
     }
   } catch (err) {

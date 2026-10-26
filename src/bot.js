@@ -161,7 +161,16 @@ export function initBot() {
   }
 
   try {
-    bot = new Bot(config.botToken);
+    const botInfo = {
+      id: 7651918317,
+      is_bot: true,
+      first_name: 'easyandfastearn',
+      username: config.botUsername || 'easyandfastearn_bot',
+      can_join_groups: true,
+      can_read_all_group_messages: false,
+      supports_inline_queries: false
+    };
+    bot = new Bot(config.botToken, { botInfo });
 
     // =======================================================
     // Middleware: Maintenance Mode Check
@@ -799,8 +808,7 @@ export function initBot() {
  * Sends the welcome start message and renders the persistent 2-column Reply Keyboard
  */
 async function showWelcomeAndMainMenu(ctx, user) {
-  const me = await bot.api.getMe();
-  const botUser = me.username;
+  const botUser = bot.botInfo?.username || config.botUsername || 'easyandfastearn_bot';
   const refLink = `https://t.me/${botUser}?start=ref_${user.id}`;
   const rank = db.getUserWeeklyRank(user.id);
 
@@ -910,8 +918,7 @@ async function handleWatchAdsAction(ctx) {
  */
 async function handleInviteFriendsAction(ctx) {
   const user = ctx.from;
-  const me = await bot.api.getMe();
-  const botUser = me.username;
+  const botUser = bot.botInfo?.username || config.botUsername || 'easyandfastearn_bot';
   const refLink = `https://t.me/${botUser}?start=ref_${user.id}`;
   const dbUser = db.getUser(user.id) || db.getOrCreateUser(user).user;
   const rank = db.getUserWeeklyRank(user.id);

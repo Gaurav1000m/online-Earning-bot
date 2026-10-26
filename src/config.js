@@ -38,20 +38,27 @@ export const config = {
   channelUrl: (process.env.CHANNEL_URL || 'https://t.me/allinonemodz4u').trim(),
 
   // Economy & Rewards
-  currencyName: process.env.CURRENCY_NAME || 'Points',
+  currencyName: process.env.CURRENCY_NAME || '₹',
   currencySymbol: process.env.CURRENCY_SYMBOL || '₹',
   pointsPerInr: parseFloat(process.env.POINTS_PER_INR || '1'),
 
-  referralReward: parseFloat(process.env.REFERRAL_REWARD || '1.0'),
+  referralReward: parseFloat(process.env.REFERRAL_REWARD || '20.0'),
   dailyBonus: parseFloat(process.env.DAILY_BONUS || '0.5'),
-  adReward: parseFloat(process.env.AD_REWARD || '0.2'),
+  adReward: parseFloat(process.env.AD_REWARD || '5.0'),
 
-  minWithdrawal: parseFloat(process.env.MIN_WITHDRAWAL || '10.0'),
-  maxWithdrawal: parseFloat(process.env.MAX_WITHDRAWAL || '1000.0'),
+  minWithdrawal: parseFloat(process.env.MIN_WITHDRAWAL || '500.0'),
+  maxWithdrawal: parseFloat(process.env.MAX_WITHDRAWAL || '10000.0'),
 
-  adCooldownSeconds: parseInt(process.env.AD_COOLDOWN_SECONDS || '30', 10),
-  dailyAdLimit: parseInt(process.env.DAILY_AD_LIMIT || '30', 10),
-  maxDailyAdEarnings: parseFloat(process.env.MAX_DAILY_AD_EARNINGS || '5.0'),
+  adCooldownSeconds: parseInt(process.env.AD_COOLDOWN_SECONDS || '10', 10),
+  dailyAdLimit: parseInt(process.env.DAILY_AD_LIMIT || '0', 10),
+  maxDailyAdEarnings: parseFloat(process.env.MAX_DAILY_AD_EARNINGS || '25.0'),
+
+  // LibTL / Monetag Ads & Direct Links
+  libtlZoneId: process.env.LIBTL_ZONE_ID || '12128125',
+  adDirectLinks: [
+    process.env.AD_DIRECT_LINK_1 || 'https://uplcm.com/4/11717959',
+    process.env.AD_DIRECT_LINK_2 || 'https://uplcm.com/4/11717884'
+  ],
 
   maintenanceMode: process.env.MAINTENANCE_MODE === 'true'
 };

@@ -176,17 +176,26 @@ async function runTestSuite() {
     assert(duplicateAdClaim.success === false, 'Test 13: Duplicate ad claim rejected by transaction idempotency');
 
     // ----------------------------------------------------
-    // TEST 14: Daily Ad Limit Enforcement
+    // TEST 14: Daily Ad Limit Enforcement & Unlimited Mode
     // ----------------------------------------------------
-    const dailyLimit = db.getSetting('dailyAdLimit');
+    const prevLimit = db.getSetting('dailyAdLimit');
+    // Test positive limit enforcement
+    db.updateSettings({ dailyAdLimit: 5 });
     db.updateUser(testUserCId, {
-      ads_today: dailyLimit,
-      ads_today_date: db.getTodayString()
+      ads_today: 5,
+      ads_today_date: db.getTodayString(),
+      last_ad_timestamp: 0
     });
     const limitedCheck = db.canWatchAd(testUserCId);
     assert(limitedCheck.canWatch === false, 'Test 14: Daily ad limit enforced; canWatchAd returns false');
     const limitedAdSession = db.createAdSession(testUserCId);
     assert(limitedAdSession.success === false, 'Test 14: Daily ad limit enforced; createAdSession rejected');
+
+    // Test unlimited mode (dailyAdLimit = 0)
+    db.updateSettings({ dailyAdLimit: 0 });
+    const unlimitedCheck = db.canWatchAd(testUserCId);
+    assert(unlimitedCheck.canWatch === true, 'Test 14b: Unlimited ads allowed when dailyAdLimit is 0');
+    db.updateSettings({ dailyAdLimit: prevLimit });
 
     // ----------------------------------------------------
     // TEST 15: Daily Streak Bonus Claim
@@ -224,7 +233,7 @@ async function runTestSuite() {
     console.log('\n--- Phase 6: Multi-Method Withdrawals & Approvals ---');
     const lockedWdRes = db.createWithdrawal(testUserAId, {
       method: 'upi',
-      amount: 5.00,
+      amount: 500.00,
       details: 'alice@okhdfcbank'
     });
     assert(lockedWdRes.success === false && lockedWdRes.locked === true, 'Test 19: Withdrawal locked before completing 10 referrals and 30 ads');
@@ -234,17 +243,26 @@ async function runTestSuite() {
     // ----------------------------------------------------
     // Unlock User A by meeting 10 referrals and 30 ads watched milestones
     db.updateUser(testUserAId, { referral_count: 10, ads_watched: 30 });
-    db.addBalance(testUserAId, 25.0, 'Test setup balance');
+    db.addBalance(testUserAId, 1500.0, 'Test setup balance');
+
+    // Check below minimum withdrawal threshold
+    const belowMinWd = db.createWithdrawal(testUserAId, {
+      method: 'upi',
+      amount: 100.0,
+      details: 'alice@okhdfcbank'
+    });
+    assert(belowMinWd.success === false, 'Test 20a: Withdrawal below minimum threshold (500 rs) rejected');
+
     const balBeforeWD = db.getUser(testUserAId).balance;
     const validWdRes = db.createWithdrawal(testUserAId, {
       method: 'upi',
-      amount: 10.0,
+      amount: 500.0,
       details: 'alice@okhdfcbank'
     });
     assert(validWdRes.success === true, 'Test 20: Valid withdrawal request accepted once unlocked');
     assert(validWdRes.withdrawal.status === 'pending', 'Test 20: Initial withdrawal status is pending');
     const balAfterWD = db.getUser(testUserAId).balance;
-    assert(balAfterWD === balBeforeWD - 10.0, 'Test 20: User balance immediately debited on withdrawal request');
+    assert(balAfterWD === balBeforeWD - 500.0, 'Test 20: User balance immediately debited on withdrawal request');
 
     // ----------------------------------------------------
     // TEST 21: Admin Withdrawal Approval
@@ -260,7 +278,7 @@ async function runTestSuite() {
     // ----------------------------------------------------
     const wd2Res = db.createWithdrawal(testUserAId, {
       method: 'paypal',
-      amount: 10.0,
+      amount: 500.0,
       details: 'alice@paypal.me'
     });
     assert(wd2Res.success === true, 'Test 22: Second withdrawal request created');
@@ -270,7 +288,7 @@ async function runTestSuite() {
     const rejectRes = db.reviewWithdrawal(wdId2, 'rejected', 'Invalid PayPal email provided');
     assert(rejectRes.success === true, 'Test 22: Admin rejected withdrawal request');
     const balPostReject = db.getUser(testUserAId).balance;
-    assert(balPostReject === balPreReject + 10.0, 'Test 22: User balance fully refunded upon rejection');
+    assert(balPostReject === balPreReject + 500.0, 'Test 22: User balance fully refunded upon rejection');
 
     // ----------------------------------------------------
     // TEST 23: Admin Balance Adjustment with Ledger Entry

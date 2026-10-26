@@ -35,7 +35,7 @@ export const DEFAULT_TEMPLATES = {
     ]
   },
   FORCE_JOIN_MESSAGE: {
-    text: `━━━━━━━━━━━━━━━━━━\n🔐 <b>JOIN REQUIRED CHANNELS</b>\n━━━━━━━━━━━━━━━━━━\n\nTo use this bot and withdraw rewards, please join all required channels below.\n\n👇 <i>Tap the channels to join, then click Verify Membership!</i>`,
+    text: `🔒 <b>Access Restricted</b>\n━━━━━━━━━━━━━━━━━━━━━\n⚠️ <b>You must join all our channels</b>\nto unlock bot features.\n\n📢 <b>Subscribe to every channel</b>\nusing the buttons below.\n\n✅ <b>After joining all channels,</b>\ntap the Verify Membership button.`,
     media_type: 'none',
     media_url: '',
     inline_buttons: []
@@ -65,13 +65,13 @@ export const DEFAULT_TEMPLATES = {
     inline_buttons: []
   },
   WATCH_AD_MESSAGE: {
-    text: `🎬 <b>WATCH ADS</b>\n━━━━━━━━━━━━━━━━━━\n\n💰 Earn money by watching advertisements.\n\n💵 <b>Reward per completed ad:</b>\n{{currency_symbol}}{{ad_reward}}\n📺 <b>Ads watched today:</b>\n{{ads_today}} / {{daily_ad_limit}}\n💰 <b>Today's ad earnings:</b>\n{{currency_symbol}}{{today_ad_earnings}}\n\n━━━━━━━━━━━━━━━━━━\n👇 Watch an advertisement and earn your reward.`,
+    text: `🎬 <b>Watch Ads & Earn</b>\n\nWatch a short 10-second ad and earn {{currency_symbol}}{{ad_reward}} for each completed ad. You can watch {{daily_ad_limit_text}} per day.\n\n📊 <b>Total ads watched:</b> {{total_ads_watched}}\n👀 <b>Ads watched today:</b> {{ads_today_display}}\n\nTap below to open the ad👇`,
     media_type: 'none',
     media_url: '',
     inline_buttons: []
   },
   AD_SUCCESS_MESSAGE: {
-    text: `🎉 <b>AD COMPLETED!</b>\n━━━━━━━━━━━━━━━━━━\n\n💰 <b>Reward:</b> +{{currency_symbol}}{{ad_reward}}\n💵 <b>New Balance:</b> {{currency_symbol}}{{balance}}\n🎬 <b>Ads Watched Today:</b> {{ads_today}} / {{daily_ad_limit}}\n\n━━━━━━━━━━━━━━━━━━\n🔥 Keep watching and earning!`,
+    text: `✅ <b>Ad completed!</b> {{currency_symbol}}{{ad_reward}} was added to your balance.\n\n💰 <b>Balance:</b> {{balance}}\n📅 <b>Ads watched today:</b> {{ads_today_display}}`,
     media_type: 'none',
     media_url: '',
     inline_buttons: []
@@ -113,7 +113,7 @@ export const DEFAULT_TEMPLATES = {
     inline_buttons: []
   },
   TASK_MESSAGE: {
-    text: `📋 <b>AVAILABLE TASKS</b>\n━━━━━━━━━━━━━━━━━━\n\nComplete simple tasks and earn rewards credited directly to your balance.\n\n👇 Select a task below to complete:`,
+    text: `📋 <b>Task #{{task_index}}</b>\n\n📌 <b>{{task_title}}</b>\n\n💰 <b>Reward:</b> {{currency_symbol}}{{task_reward}}\n\n{{task_description}}\nafter that click Joined ☑️ button to verify and continue.\n\n⚠️ <b>Important:</b> Task will be checked and reviewed by our team carefully. Only real and verified completions will be rewarded.\n\n📊 <b>Progress:</b> {{progress_text}}`,
     media_type: 'none',
     media_url: '',
     inline_buttons: []
@@ -159,12 +159,25 @@ const DEFAULT_STATE = {
   tasks: [
     {
       id: 'task_join_allinonemodz',
-      title: 'Join All in One Modz',
-      description: 'Join our official Telegram channel @allinonemodz4u to earn rewards',
+      title: 'Join Telegram Channel',
+      description: 'Join Telegram Channel 📢 and earn 0.5$ extra rewards,',
       reward: 0.50,
       task_type: 'channel_join',
       target_url: 'https://t.me/allinonemodz4u',
       chat_id: '@allinonemodz4u',
+      icon: '📢',
+      is_active: true,
+      max_completions: 100000,
+      completions_count: 0
+    },
+    {
+      id: 'task_join_channel_2',
+      title: 'Join Partner Channel',
+      description: 'Join Telegram Channel 📢 and earn 0.5$ extra rewards,',
+      reward: 0.50,
+      task_type: 'channel_join',
+      target_url: 'https://t.me/studywithgaurav0',
+      chat_id: '@studywithgaurav0',
       icon: '📢',
       is_active: true,
       max_completions: 100000,
@@ -273,10 +286,32 @@ class Database {
           settings: { ...DEFAULT_STATE.settings, ...(parsed.settings || {}) }
         };
 
+        // Ensure new requested templates are active
+        if (!state.message_templates.FORCE_JOIN_MESSAGE || state.message_templates.FORCE_JOIN_MESSAGE.text.includes('JOIN REQUIRED CHANNELS')) {
+          state.message_templates.FORCE_JOIN_MESSAGE = DEFAULT_TEMPLATES.FORCE_JOIN_MESSAGE;
+        }
+        if (!state.message_templates.WATCH_AD_MESSAGE || state.message_templates.WATCH_AD_MESSAGE.text.includes('today_ad_earnings') || state.message_templates.WATCH_AD_MESSAGE.text.includes('up to {{daily_ad_limit}} ads')) {
+          state.message_templates.WATCH_AD_MESSAGE = DEFAULT_TEMPLATES.WATCH_AD_MESSAGE;
+        }
+        if (!state.message_templates.AD_SUCCESS_MESSAGE || state.message_templates.AD_SUCCESS_MESSAGE.text.includes('🎉 You earned') || state.message_templates.AD_SUCCESS_MESSAGE.text.includes('{{ads_today}}/{{daily_ad_limit}}')) {
+          state.message_templates.AD_SUCCESS_MESSAGE = DEFAULT_TEMPLATES.AD_SUCCESS_MESSAGE;
+        }
+        if (!state.message_templates.TASK_MESSAGE || state.message_templates.TASK_MESSAGE.text.includes('Select a task below')) {
+          state.message_templates.TASK_MESSAGE = DEFAULT_TEMPLATES.TASK_MESSAGE;
+        }
+
         // Guarantee button label is exactly "🎁 Bonus"
         if (state.settings.btn_bonus === '🎁 Bonus System') {
           state.settings.btn_bonus = '🎁 Bonus';
         }
+
+        // Apply environment economy settings
+        state.settings.referralReward = config.referralReward;
+        state.settings.adReward = config.adReward;
+        state.settings.minWithdrawal = config.minWithdrawal;
+        state.settings.dailyAdLimit = config.dailyAdLimit;
+        state.settings.currencySymbol = config.currencySymbol;
+        state.settings.currencyName = config.currencyName;
 
         return state;
       }
@@ -1061,7 +1096,7 @@ class Database {
     }
 
     const dailyLimit = this.getSetting('dailyAdLimit');
-    if (user.ads_today >= dailyLimit) {
+    if (dailyLimit > 0 && user.ads_today >= dailyLimit) {
       return { canWatch: false, reason: `Daily limit of ${dailyLimit} ads reached. Resets tomorrow!` };
     }
 
@@ -1270,7 +1305,7 @@ class Database {
       remainingReferrals,
       remainingAds,
       balance: user.balance || 0,
-      minWithdrawal: eligible ? 0.01 : (this.getSetting('minWithdrawal') || 1)
+      minWithdrawal: this.getSetting('minWithdrawal') || 500
     };
   }
 
@@ -1296,6 +1331,10 @@ class Database {
     const amt = parseFloat(amount);
     if (isNaN(amt) || amt <= 0) {
       return { success: false, message: 'Please enter a valid amount' };
+    }
+    const minWith = this.getSetting('minWithdrawal') || 500;
+    if (amt < minWith && !bypassRules) {
+      return { success: false, message: `Minimum withdrawal amount is ${this.getSetting('currencySymbol')}${minWith}` };
     }
     if (amt > user.balance) {
       return { success: false, message: `Insufficient balance! You have ${this.getSetting('currencySymbol')}${user.balance.toFixed(2)}` };
@@ -1510,6 +1549,8 @@ class Database {
     const template = this.getTemplate(key);
     let renderedText = template.text || '';
 
+    const dailyLimit = parseInt(this.getSetting('dailyAdLimit') || '0', 10);
+    const adsTodayVal = variables.ads_today !== undefined ? variables.ads_today : (variables.adsToday !== undefined ? variables.adsToday : 0);
     const fullVars = {
       currency_symbol: this.getSetting('currencySymbol'),
       currency_name: this.getSetting('currencyName'),
@@ -1517,7 +1558,9 @@ class Database {
       ad_reward: this.getSetting('adReward'),
       daily_bonus: this.getSetting('dailyBonus'),
       minimum_withdrawal: this.getSetting('minWithdrawal'),
-      daily_ad_limit: this.getSetting('dailyAdLimit'),
+      daily_ad_limit: dailyLimit > 0 ? String(dailyLimit) : 'unlimited',
+      daily_ad_limit_text: dailyLimit > 0 ? `up to ${dailyLimit} ads` : 'unlimited ads',
+      ads_today_display: dailyLimit > 0 ? `${adsTodayVal}/${dailyLimit}` : `${adsTodayVal}`,
       ...variables
     };
 

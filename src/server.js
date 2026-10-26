@@ -249,6 +249,64 @@ app.post('/api/ads/claim', telegramAuthMiddleware, (req, res) => {
   if (!result.success) {
     return res.status(400).json(result);
   }
+
+  // Automatically notify user via Telegram Bot with exact required template:
+  // ✅ Ad completed! $0.50 was added to your balance.
+  // 💰 Balance: 2.48
+  // 📅 Ads watched today: 1/5
+  const activeBot = getBot();
+  if (activeBot) {
+    const symbol = db.getSetting('currencySymbol') || '₹';
+    const dailyLimit = parseInt(db.getSetting('dailyAdLimit') || '0', 10);
+    const limitSuffix = dailyLimit > 0 ? `/${dailyLimit}` : '';
+    const msg =
+      `✅ <b>Ad completed!</b> ${symbol}${result.reward.toFixed(2)} was added to your balance.\n\n` +
+      `💰 <b>Balance:</b> ${result.balance.toFixed(2)}\n` +
+      `📅 <b>Ads watched today:</b> ${result.adsToday}${limitSuffix}`;
+    activeBot.api.sendMessage(req.tgUser.id, msg, { parse_mode: 'HTML' }).catch(() => {});
+  }
+
+  res.json(result);
+});
+
+// Complete Ad from 10-second player (ad.html)
+app.post('/api/ads/complete', async (req, res) => {
+  let userId = null;
+  const initData = req.headers['x-telegram-init-data'] || req.body?.initData;
+  if (initData) {
+    const authResult = validateTelegramInitData(initData);
+    if (authResult.valid && authResult.user?.id) {
+      userId = authResult.user.id;
+    }
+  }
+  if (!userId && req.body?.userId) {
+    userId = req.body.userId;
+  }
+  if (!userId && req.query?.userId) {
+    userId = req.query.userId;
+  }
+
+  if (!userId) {
+    return res.status(400).json({ success: false, message: 'Missing user identification' });
+  }
+
+  const result = db.recordDirectAdReward(userId);
+  if (!result.success) {
+    return res.status(400).json(result);
+  }
+
+  const activeBot = getBot();
+  if (activeBot) {
+    const symbol = db.getSetting('currencySymbol') || '₹';
+    const dailyLimit = parseInt(db.getSetting('dailyAdLimit') || '0', 10);
+    const limitSuffix = dailyLimit > 0 ? `/${dailyLimit}` : '';
+    const msg =
+      `✅ <b>Ad completed!</b> ${symbol}${result.reward.toFixed(2)} was added to your balance.\n\n` +
+      `💰 <b>Balance:</b> ${result.balance.toFixed(2)}\n` +
+      `📅 <b>Ads watched today:</b> ${result.adsToday}${limitSuffix}`;
+    activeBot.api.sendMessage(userId, msg, { parse_mode: 'HTML' }).catch(() => {});
+  }
+
   res.json(result);
 });
 

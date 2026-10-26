@@ -123,17 +123,17 @@ async function promptForceJoin(ctx, missingChannels) {
     keyboard.url(label, url).row();
   });
 
-  keyboard.text('🔐 VERIFY MEMBERSHIP', 'verify_channels');
-
-  let listText = missingChannels.map((c, i) => `${i + 1}️⃣ <b>${c.name}</b> (${c.username || 'Official'})`).join('\n');
+  keyboard.text('✅ Verify Membership', 'verify_channels');
 
   await ctx.reply(
-    `━━━━━━━━━━━━━━━━━━\n` +
-    `🔐 <b>ACCESS REQUIRED</b>\n` +
-    `━━━━━━━━━━━━━━━━━━\n\n` +
-    `To use this bot and start earning, you must join all required Telegram channels below:\n\n` +
-    `${listText}\n\n` +
-    `👇 <i>Tap the channels to join, then click Verify Membership!</i>`,
+    `🔒 <b>Access Restricted</b>\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `⚠️ <b>You must join all our channels</b>\n` +
+    `to unlock bot features.\n\n` +
+    `📢 <b>Subscribe to every channel</b>\n` +
+    `using the buttons below.\n\n` +
+    `✅ <b>After joining all channels,</b>\n` +
+    `tap the Verify Membership button.`,
     {
       parse_mode: 'HTML',
       reply_markup: keyboard,
@@ -385,7 +385,7 @@ export function initBot() {
       await handleInviteFriendsAction(ctx);
     });
 
-    // In-Bot Ad Viewing Callback -> Directly Opens Mini App Window for GigaPub Ad
+    // In-Bot Ad Viewing Callback -> Plays 10-second Ad and credits automatically
     bot.callbackQuery('bot_watch_ad', async (ctx) => {
       const user = ctx.from;
       const canWatch = db.canWatchAd(user.id);
@@ -393,20 +393,36 @@ export function initBot() {
         return ctx.answerCallbackQuery({ text: canWatch.reason, show_alert: true });
       }
 
-      await ctx.answerCallbackQuery();
-      const webAppAdUrl = `${config.webAppUrl}?action=watch_ad`;
+      await ctx.answerCallbackQuery({ text: '🎬 Watching 10s ad...' });
 
-      await ctx.reply(
-        `🎬 <b>WATCH GIGAPUB REWARDED AD</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `Click the button below to watch the video ad in the Mini App window and claim your reward:`,
-        {
-          parse_mode: 'HTML',
-          reply_markup: new InlineKeyboard()
-            .webApp('🎬 Open Ad Window Now', webAppAdUrl)
-            .row()
-            .text('💰 My Balance', 'menu_balance')
-        }
+      const symbol = db.getSetting('currencySymbol') || '₹';
+      const adReward = db.getSetting('adReward') || 5.0;
+      const dailyLimit = parseInt(db.getSetting('dailyAdLimit') || '0', 10);
+
+      const adMsg = await ctx.reply(
+        `🎬 <b>Watching 10-second Ad...</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `⏳ Please wait <b>10 seconds</b> while the advertisement plays.\n` +
+        `Your <b>+${symbol}${adReward.toFixed(2)}</b> reward will be credited automatically.`,
+        { parse_mode: 'HTML' }
       );
+
+      // Automatically credit reward after 10 seconds
+      setTimeout(async () => {
+        const result = db.recordDirectAdReward(user.id);
+        if (result.success) {
+          try {
+            await ctx.api.deleteMessage(ctx.chat.id, adMsg.message_id);
+          } catch {}
+
+          const limitSuffix = dailyLimit > 0 ? `/${dailyLimit}` : '';
+          const completionText =
+            `✅ <b>Ad completed!</b> ${symbol}${result.reward.toFixed(2)} was added to your balance.\n\n` +
+            `💰 <b>Balance:</b> ${result.balance.toFixed(2)}\n` +
+            `📅 <b>Ads watched today:</b> ${result.adsToday}${limitSuffix}`;
+
+          await ctx.reply(completionText, { parse_mode: 'HTML' });
+        }
+      }, 10000);
     });
 
     bot.callbackQuery('claim_daily_bonus', async (ctx) => {
@@ -486,9 +502,29 @@ export function initBot() {
       });
     });
 
+    // Task navigation callbacks (Task #1, #2, etc.)
+    bot.callbackQuery(/^task_nav_(\d+)$/, async (ctx) => {
+      await ctx.answerCallbackQuery();
+      const taskIndex = parseInt(ctx.match[1], 10);
+      const card = renderTaskCard(ctx.from.id, taskIndex);
+      try {
+        await ctx.editMessageText(card.text, {
+          parse_mode: 'HTML',
+          reply_markup: card.reply_markup,
+          disable_web_page_preview: true
+        });
+      } catch {}
+    });
+
+    // Task already completed notification
+    bot.callbackQuery(/^task_already_done_/, async (ctx) => {
+      await ctx.answerCallbackQuery({ text: '✅ You have already completed this task!', show_alert: true });
+    });
+
     // Task completion callbacks
-    bot.callbackQuery(/^task_verify_(.+)$/, async (ctx) => {
+    bot.callbackQuery(/^task_verify_([^_]+)(?:_(\d+))?$/, async (ctx) => {
       const taskId = ctx.match[1];
+      const taskIndex = ctx.match[2] !== undefined ? parseInt(ctx.match[2], 10) : 0;
       const user = ctx.from;
       const task = db.getTasks().find(t => t.id === taskId);
 
@@ -504,16 +540,16 @@ export function initBot() {
           const isMember = ['member', 'administrator', 'creator'].includes(member.status);
           if (!isMember) {
             await ctx.answerCallbackQuery({
-              text: `❌ You have not joined ${task.chat_id} yet! Please join the channel first.`,
+              text: `❌ You have not joined ${task.chat_id} yet! Please join the channel first, then tap Joined ☑️.`,
               show_alert: true
             });
             return;
           }
         } catch (err) {
           console.warn(`Could not verify channel for task ${taskId}:`, err.message);
-          if (err.description?.includes('member list is inaccessible')) {
+          if (err.description?.includes('member list is inaccessible') || err.description?.includes('chat not found')) {
             await ctx.answerCallbackQuery({
-              text: '⚠️ Bot must be added as Administrator in @allinonemodz4u to verify membership. Please add @easyandfastearn_bot as Admin.',
+              text: `⚠️ Bot must be added as Administrator in ${task.chat_id} to verify membership.`,
               show_alert: true
             });
             return;
@@ -528,18 +564,31 @@ export function initBot() {
 
       const res = db.completeTask(user.id, taskId);
       if (res.success) {
-        const symbol = db.getSetting('currencySymbol');
+        const symbol = db.getSetting('currencySymbol') || '₹';
         await ctx.answerCallbackQuery({ text: `✅ Task completed! +${symbol}${res.reward}` });
+
         const taskKeyboard = new InlineKeyboard()
           .text('💰 My Balance', 'menu_balance')
-          .webApp('🚀 Open Mini App', config.webAppUrl);
+          .text('📋 Next Task', `task_nav_${taskIndex + 1}`);
 
         await ctx.reply(
           `🎉 <b>Task Completed: ${res.taskTitle}</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
-          `💰 You earned: <b>+${symbol}${res.reward}</b>\n` +
+          `💰 You earned: <b>+${symbol}${res.reward.toFixed(2)}</b>\n` +
           `💳 New Balance: <b>${symbol}${res.balance.toFixed(2)}</b>`,
           { parse_mode: 'HTML', reply_markup: taskKeyboard }
         );
+
+        // Advance to next task if possible
+        try {
+          const nextCard = renderTaskCard(user.id, taskIndex + 1);
+          if (nextCard.task) {
+            await ctx.editMessageText(nextCard.text, {
+              parse_mode: 'HTML',
+              reply_markup: nextCard.reply_markup,
+              disable_web_page_preview: true
+            });
+          }
+        } catch {}
       } else {
         await ctx.answerCallbackQuery({ text: res.message, show_alert: true });
       }
@@ -1211,27 +1260,55 @@ async function handleWatchAdsAction(ctx) {
 
   const todayStr = db.getTodayString();
   const adsToday = dbUser.ads_today_date === todayStr ? (dbUser.ads_today || 0) : 0;
-  const adReward = db.getSetting('adReward');
-  const todayEarnings = (adsToday * adReward).toFixed(2);
-  const dailyLimit = db.getSetting('dailyAdLimit');
-
+  const adReward = db.getSetting('adReward') || 5.0;
+  const dailyLimit = parseInt(db.getSetting('dailyAdLimit') || '0', 10);
+  const totalAds = dbUser.ads_watched || 0;
   const symbol = db.getSetting('currencySymbol') || '₹';
-  const webAppAdUrl = `${config.webAppUrl}?action=watch_ad`;
+
+  // 1. Check daily ad limit (only when dailyLimit > 0)
+  if (dailyLimit > 0 && adsToday >= dailyLimit) {
+    await ctx.reply(
+      `🚫 <b>Daily Limit Reached</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `You have watched all available ads for today.\n` +
+      `👀 <b>Ads watched today:</b> ${adsToday}/${dailyLimit}\n` +
+      `⏰ <i>Come back tomorrow for more ads!</i>`,
+      { parse_mode: 'HTML' }
+    );
+    return;
+  }
+
+  // 2. Check ad cooldown
+  const canWatch = db.canWatchAd(user.id);
+  if (!canWatch.canWatch && canWatch.remainingSeconds) {
+    await ctx.reply(
+      `⏳ <b>Ad Cooldown Active</b>\n\n` +
+      `Please wait <b>${canWatch.remainingSeconds}s</b> before watching another ad.`,
+      { parse_mode: 'HTML' }
+    );
+    return;
+  }
 
   const variables = {
     first_name: user.first_name,
     ads_today: adsToday,
-    daily_ad_limit: dailyLimit,
-    ad_reward: adReward,
-    today_ad_earnings: todayEarnings,
+    ads_today_display: dailyLimit > 0 ? `${adsToday}/${dailyLimit}` : `${adsToday}`,
+    daily_ad_limit: dailyLimit > 0 ? `${dailyLimit}` : 'unlimited',
+    daily_ad_limit_text: dailyLimit > 0 ? `up to ${dailyLimit} ads` : 'unlimited ads',
+    ad_reward: adReward.toFixed(2),
+    total_ads_watched: totalAds,
     currency_symbol: symbol
   };
 
-  const keyboard = new InlineKeyboard()
-    .webApp('🎬 Watch Quick Ad (GigaPub Window)', webAppAdUrl)
-    .row()
-    .webApp('🚀 Open Mini App', config.webAppUrl);
+  const keyboard = new InlineKeyboard();
+  if (config.webAppUrl && config.webAppUrl.startsWith('https://')) {
+    keyboard.webApp('🎬 Open Ad', `${config.webAppUrl}/ad.html?userId=${user.id}`).row();
+  } else {
+    keyboard.text('🎬 Open Ad', 'bot_watch_ad').row();
+  }
+  keyboard.url('🔥 Sponsor Offer 1', 'https://uplcm.com/4/11717959').row();
+  keyboard.url('💎 Sponsor Offer 2', 'https://uplcm.com/4/11717884');
 
+  // Note: Open Mini App button removed as requested
   await sendTemplatedMessage(ctx, 'WATCH_AD_MESSAGE', variables, keyboard);
 }
 
@@ -1327,39 +1404,96 @@ async function handleBonusAction(ctx) {
 }
 
 /**
+ * Renders individual task card matching requested template:
+ * 📋 Task #2
+ * 📌 Join Telegram Channel
+ * 💰 Reward: 0.50
+ * Join Telegram Channel 📢 and earn 0.5$ extra rewards,
+ * after that click Joined ☑️ button to verify and continue.
+ * ⚠️ Important: Task will be checked and reviewed by our team carefully. Only real and verified completions will be rewarded.
+ * 📊 Progress: 2/8 tasks
+ */
+export function renderTaskCard(userId, taskIndex = 0) {
+  const activeTasks = db.getTasks().filter(t => t.is_active);
+  if (activeTasks.length === 0) {
+    return {
+      text: '📋 <b>No tasks currently available.</b> Check back later for new earning tasks!',
+      reply_markup: undefined,
+      task: null
+    };
+  }
+
+  const userTasks = db.getUserTasks(userId);
+  const completedCount = userTasks.filter(t => t.is_completed).length;
+  const totalTasks = activeTasks.length;
+
+  const validIndex = Math.max(0, Math.min(taskIndex, totalTasks - 1));
+  const task = activeTasks[validIndex];
+  const isDone = userTasks.some(t => t.id === task.id && t.is_completed);
+  const taskNum = validIndex + 1;
+  const symbol = db.getSetting('currencySymbol') || '₹';
+
+  const desc = task.description || `Join ${task.title} 📢 and earn extra rewards,`;
+
+  const text =
+    `📋 <b>Task #${taskNum}</b>\n\n` +
+    `📌 <b>${task.title}</b>\n\n` +
+    `💰 <b>Reward:</b> ${symbol}${task.reward.toFixed(2)}\n\n` +
+    `${desc}\n` +
+    `after that click Joined ☑️ button to verify and continue.\n\n` +
+    `⚠️ <b>Important:</b> Task will be checked and reviewed by our team carefully. Only real and verified completions will be rewarded.\n\n` +
+    `📊 <b>Progress:</b> ${completedCount}/${totalTasks} tasks`;
+
+  const keyboard = new InlineKeyboard();
+
+  if (task.target_url) {
+    const btnLabel = task.task_type === 'channel_join' ? '📌 Join Telegram Channel' : '🚀 Open Task';
+    keyboard.url(btnLabel, task.target_url).row();
+  }
+
+  if (isDone) {
+    keyboard.text('✅ Already Completed', `task_already_done_${task.id}`);
+  } else {
+    keyboard.text('Joined ☑️', `task_verify_${task.id}_${validIndex}`);
+  }
+
+  if (totalTasks > 1) {
+    keyboard.row();
+    if (validIndex > 0) {
+      keyboard.text('⬅️ Prev', `task_nav_${validIndex - 1}`);
+    }
+    keyboard.text(`${taskNum}/${totalTasks}`, `task_nav_${validIndex}`);
+    if (validIndex < totalTasks - 1) {
+      keyboard.text('Next ➡️', `task_nav_${validIndex + 1}`);
+    }
+  }
+
+  // Note: Open Mini App button removed as requested
+  return { text, reply_markup: keyboard, task, validIndex, completedCount, totalTasks };
+}
+
+/**
  * Handle Tasks Action
  */
 async function handleTasksAction(ctx) {
   const user = ctx.from;
-  const userTasks = db.getUserTasks(user.id);
+  const activeTasks = db.getTasks().filter(t => t.is_active);
 
-  if (userTasks.length === 0) {
+  if (activeTasks.length === 0) {
     await ctx.reply('📋 <b>No tasks currently available.</b> Check back later for new earning tasks!', { parse_mode: 'HTML' });
     return;
   }
 
-  const symbol = db.getSetting('currencySymbol');
-  const keyboard = new InlineKeyboard();
+  const userTasks = db.getUserTasks(user.id);
+  // Default to first uncompleted task if available
+  let firstUnfinished = activeTasks.findIndex(t => !userTasks.find(ut => ut.id === t.id && ut.is_completed));
+  if (firstUnfinished === -1) firstUnfinished = 0;
 
-  let text = `📋 <b>AVAILABLE TASKS</b>\n━━━━━━━━━━━━━━━━━━━━━\n\nComplete tasks to earn instant rewards:\n\n`;
+  const card = renderTaskCard(user.id, firstUnfinished);
 
-  userTasks.forEach((t, i) => {
-    const statusIcon = t.is_completed ? '✅ [Completed]' : `💰 +${symbol}${t.reward}`;
-    text += `${i + 1}️⃣ <b>${t.title}</b>\n${t.description}\nReward: <b>${statusIcon}</b>\n\n`;
-
-    if (!t.is_completed) {
-      if (t.target_url) {
-        keyboard.url(`🚀 ${t.title}`, t.target_url);
-      }
-      keyboard.text(`✅ Verify #${i + 1}`, `task_verify_${t.id}`).row();
-    }
-  });
-
-  keyboard.webApp('🚀 Open Mini App Tasks', config.webAppUrl);
-
-  await ctx.reply(text, {
+  await ctx.reply(card.text, {
     parse_mode: 'HTML',
-    reply_markup: keyboard,
+    reply_markup: card.reply_markup,
     disable_web_page_preview: true
   });
 }

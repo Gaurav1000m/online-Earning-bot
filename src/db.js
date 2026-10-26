@@ -59,13 +59,13 @@ export const DEFAULT_TEMPLATES = {
     inline_buttons: []
   },
   REFERRAL_MESSAGE: {
-    text: `👥 <b>INVITE & EARN</b>\n━━━━━━━━━━━━━━━━━━\n\n💰 <b>Earn {{currency_symbol}}{{referral_reward}}</b> for every valid referral!\n\n🔗 <b>YOUR REFERRAL LINK:</b>\n<code>{{referral_link}}</code>\n\n━━━━━━━━━━━━━━━━━━\n📊 <b>YOUR STATS</b>\n👥 Total Referrals: <b>{{referrals}}</b>\n💰 Referral Earnings: <b>{{currency_symbol}}{{referral_earnings}}</b>\n🏆 Weekly Rank: <b>#{{weekly_rank}}</b>\n\n━━━━━━━━━━━━━━━━━━\n🎁 <b>WEEKLY LEADERBOARD PRIZES</b>\n🥇 1st Place: <b>{{currency_symbol}}50</b>\n🥈 2nd Place: <b>{{currency_symbol}}30</b>\n🥉 3rd Place: <b>{{currency_symbol}}20</b>\n4️⃣–🔟 4th–10th: <b>{{currency_symbol}}10 each</b>\n🔟–2️⃣0️⃣ 11th–20th: <b>{{currency_symbol}}5 each</b>\n\nShare your link and start climbing the leaderboard! 🚀`,
+    text: `{{referral_link}}\nMaine iss bot se ₹ {{sender_balance}} kamaye. Aap bhi try karein.\n\n━━━━━━━━━━━━━━━━━━\n👥 <b>INVITE & EARN</b>\n💰 <b>Reward:</b> {{currency_symbol}}{{referral_reward}} per referral\n👥 <b>Your Referrals:</b> {{referrals}}\n💵 <b>Referral Earnings:</b> {{currency_symbol}}{{referral_earnings}}\n🏆 <b>Weekly Rank:</b> #{{weekly_rank}}`,
     media_type: 'none',
     media_url: '',
     inline_buttons: []
   },
   WATCH_AD_MESSAGE: {
-    text: `🎬 <b>Watch Ads & Earn</b>\n\nWatch a short 20-second ad and earn {{currency_symbol}}{{ad_reward}} for each completed ad. You can watch {{daily_ad_limit_text}} per day.\n\n📊 <b>Total ads watched:</b> {{total_ads_watched}}\n👀 <b>Ads watched today:</b> {{ads_today_display}}\n\nTap below to open the ad👇`,
+    text: `🎬 <b>Watch Ads & Earn</b>\n\nWatch an advertisement and earn {{currency_symbol}}{{ad_reward}} for each completed ad. Reward is credited once you finish and close (❌) the ad. You can watch {{daily_ad_limit_text}} per day.\n\n📊 <b>Total ads watched:</b> {{total_ads_watched}}\n👀 <b>Ads watched today:</b> {{ads_today_display}}\n\nTap below to open the ad👇`,
     media_type: 'none',
     media_url: '',
     inline_buttons: []
@@ -290,7 +290,7 @@ class Database {
         if (!state.message_templates.FORCE_JOIN_MESSAGE || state.message_templates.FORCE_JOIN_MESSAGE.text.includes('JOIN REQUIRED CHANNELS')) {
           state.message_templates.FORCE_JOIN_MESSAGE = DEFAULT_TEMPLATES.FORCE_JOIN_MESSAGE;
         }
-        if (!state.message_templates.WATCH_AD_MESSAGE || !state.message_templates.WATCH_AD_MESSAGE.text.includes('20-second')) {
+        if (!state.message_templates.WATCH_AD_MESSAGE || !state.message_templates.WATCH_AD_MESSAGE.text.includes('close (❌) the ad')) {
           state.message_templates.WATCH_AD_MESSAGE = DEFAULT_TEMPLATES.WATCH_AD_MESSAGE;
         }
         if (!state.message_templates.AD_SUCCESS_MESSAGE || state.message_templates.AD_SUCCESS_MESSAGE.text.includes('🎉 You earned') || state.message_templates.AD_SUCCESS_MESSAGE.text.includes('{{ads_today}}/{{daily_ad_limit}}')) {
@@ -321,6 +321,10 @@ class Database {
             }
           });
         }
+
+        // Apply updated referral message template
+        if (!state.message_templates) state.message_templates = {};
+        state.message_templates.REFERRAL_MESSAGE = DEFAULT_TEMPLATES.REFERRAL_MESSAGE;
 
         // Apply environment economy settings
         state.settings.referralReward = config.referralReward;

@@ -197,6 +197,23 @@ async function runTestSuite() {
     assert(unlimitedCheck.canWatch === true, 'Test 14b: Unlimited ads allowed when dailyAdLimit is 0');
     db.updateSettings({ dailyAdLimit: prevLimit });
 
+    // Test 14c: Direct ad reward on crossing/closing ad (recordDirectAdReward)
+    const userForDirectAd = db.getUser(testUserAId);
+    userForDirectAd.last_ad_timestamp = 0;
+    const directRewardRes = db.recordDirectAdReward(testUserAId);
+    assert(directRewardRes.success === true, 'Test 14c: Direct ad completion on ad close succeeds');
+    assert(directRewardRes.reward === 5.0, 'Test 14c: Direct ad reward is exactly 5.00');
+
+    // Test 14d: Adsterra SmartLink URL configured correctly
+    assert(config.adsterraSmartLink === 'https://asiafilm.org/4/61f332a3515c3caef8635a0905b1f8e8', 'Test 14d: Adsterra SmartLink matches configured target URL');
+
+    // Test 14e: Referral invite template contains required format
+    const refRendered = db.renderTemplate('REFERRAL_MESSAGE', {
+      referral_link: 'https://t.me/easyandfastearn_bot?start=6656939308',
+      sender_balance: '248.50'
+    });
+    assert(refRendered.text.includes('Maine iss bot se ₹ 248.50 kamaye. Aap bhi try karein.'), 'Test 14e: Referral template renders Hindi sender balance template');
+
     // ----------------------------------------------------
     // TEST 15: Daily Streak Bonus Claim
     // ----------------------------------------------------

@@ -3,12 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Watch Ad & Earn</title>
+  <title>Watch Ad & Earn | Easy & Fast Earn</title>
+  
+  <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  
+  <!-- GigaPub Ads SDK -->
   <script async src="https://ad.gigapub.tech/script?id=8830"></script>
+  
   <!-- LibTL Monetag Ad SDK -->
   <script src="//libtl.com/sdk.js" data-zone="12128125" data-sdk="show_12128125"></script>
+
   <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(17, 24, 39, 0.95);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary: #3b82f6;
+      --primary-gradient: linear-gradient(135deg, #2563eb, #1d4ed8);
+      --success: #10b981;
+      --success-gradient: linear-gradient(135deg, #10b981, #059669);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -16,29 +34,43 @@
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #090d16;
-      color: #f8fafc;
+      background: radial-gradient(circle at 50% 20%, #172554 0%, #090d16 80%);
+      color: var(--text-main);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 20px 16px;
     }
+
     .ad-card {
-      background: radial-gradient(circle at top, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 24px;
-      padding: 28px 24px;
-      max-width: 380px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      padding: 28px 22px;
+      max-width: 390px;
       width: 100%;
       text-align: center;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
       position: relative;
       overflow: hidden;
     }
+
+    .ad-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #3b82f6, #10b981, #f59e0b);
+    }
+
     .ad-badge {
       display: inline-flex;
       align-items: center;
@@ -48,87 +80,219 @@
       color: #60a5fa;
       padding: 6px 14px;
       border-radius: 999px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      margin-bottom: 16px;
-    }
-    .ad-title {
-      font-size: 1.4rem;
+      font-size: 0.78rem;
       font-weight: 800;
-      margin-bottom: 8px;
-      background: linear-gradient(135deg, #ffffff, #94a3b8);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .ad-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
+
     .ad-desc {
       font-size: 0.88rem;
-      color: #94a3b8;
-      line-height: 1.4;
-      margin-bottom: 24px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      margin-bottom: 20px;
     }
-    .timer-circle-box {
+
+    /* Ad Player Animation Visual */
+    .player-visual-box {
       position: relative;
-      width: 130px;
-      height: 130px;
+      width: 110px;
+      height: 110px;
       margin: 0 auto 20px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    .timer-circle-svg {
-      transform: rotate(-90deg);
-      width: 130px;
-      height: 130px;
-    }
-    .timer-circle-bg {
-      fill: none;
-      stroke: rgba(255, 255, 255, 0.08);
-      stroke-width: 8;
-    }
-    .timer-circle-progress {
-      fill: none;
-      stroke: #3b82f6;
-      stroke-width: 8;
-      stroke-linecap: round;
-      stroke-dasharray: 364;
-      stroke-dashoffset: 0;
-      transition: stroke-dashoffset 1s linear;
-    }
-    .timer-text {
+
+    .pulse-ring {
       position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 2px solid rgba(59, 130, 246, 0.4);
+      animation: pulseAnim 2s infinite ease-out;
+    }
+
+    .pulse-ring:nth-child(2) {
+      animation-delay: 0.6s;
+    }
+
+    @keyframes pulseAnim {
+      0% {
+        transform: scale(0.85);
+        opacity: 0.8;
+      }
+      100% {
+        transform: scale(1.35);
+        opacity: 0;
+      }
+    }
+
+    .player-center-icon {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 2.2rem;
-      font-weight: 900;
-      color: #ffffff;
-      font-variant-numeric: tabular-nums;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.5);
+      z-index: 2;
     }
+
     .reward-pill {
-      background: rgba(16, 185, 129, 0.12);
-      border: 1px solid rgba(16, 185, 129, 0.25);
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
       color: #34d399;
-      padding: 8px 16px;
+      padding: 8px 18px;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 800;
+      margin-bottom: 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: 0.3px;
+    }
+
+    /* Close & Claim Button */
+    .btn-claim-ad {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: #ffffff;
+      border: none;
+      padding: 14px 20px;
+      border-radius: 16px;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
+      transition: all 0.2s ease;
+      margin-bottom: 14px;
+    }
+
+    .btn-claim-ad:active {
+      transform: scale(0.98);
+      filter: brightness(0.95);
+    }
+
+    .btn-claim-ad:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* SmartLink Card */
+    .smartlink-card {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(168, 85, 247, 0.12));
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: 16px;
+      padding: 12px;
+      margin-top: 14px;
+      text-align: left;
+    }
+
+    .smartlink-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .smartlink-title {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #fbbf24;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .smartlink-badge {
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 8px;
+      background: rgba(245, 158, 11, 0.25);
+      color: #fef08a;
+    }
+
+    .smartlink-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: 10px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      border: none;
       border-radius: 12px;
-      font-size: 0.95rem;
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+      cursor: pointer;
+    }
+
+    /* Direct Sponsor links grid */
+    .direct-links-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .direct-link-pill {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: #cbd5e1;
+      font-size: 0.75rem;
       font-weight: 700;
-      margin-bottom: 20px;
-      display: inline-block;
+      text-decoration: none;
     }
-    .status-text {
-      font-size: 0.85rem;
-      color: #64748b;
-      margin-top: 12px;
-    }
+
+    /* Completed View */
     .completed-box {
       display: none;
-      animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      padding: 10px 0;
     }
+
     @keyframes popIn {
       from { transform: scale(0.8); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
     }
+
+    .status-text {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
     .btn-return {
       margin-top: 18px;
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      background: var(--primary-gradient);
       color: #ffffff;
       border: none;
       padding: 12px 24px;
@@ -142,46 +306,62 @@
 </head>
 <body>
   <div class="ad-card">
+    <!-- Active Ad View (No fixed 10s/20s timer countdown!) -->
     <div id="playing-view">
-      <div class="ad-badge">🎬 SPONSORED AD</div>
-      <h1 class="ad-title">Watch Short 20s Ad</h1>
-      <p class="ad-desc">Watch this 20-second advertisement to automatically credit your reward.</p>
+      <div class="ad-badge">🎬 SPONSORED REWARDED AD</div>
+      <h1 class="ad-title">Watch Ad & Earn</h1>
+      <p class="ad-desc">Reward is credited after you complete and close (❌) the ad.</p>
 
-      <div class="timer-circle-box">
-        <svg class="timer-circle-svg" viewBox="0 0 130 130">
-          <circle class="timer-circle-bg" cx="65" cy="65" r="58"></circle>
-          <circle id="timer-bar" class="timer-circle-progress" cx="65" cy="65" r="58"></circle>
-        </svg>
-        <div id="timer-count" class="timer-text">20s</div>
+      <!-- Animated Player Visual -->
+      <div class="player-visual-box">
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring"></div>
+        <div class="player-center-icon">🎬</div>
       </div>
 
       <div class="reward-pill">
-        💰 Reward: ₹5.00
+        <span>💰 Reward:</span> <b>₹5.00</b>
       </div>
 
       <div id="status-text" class="status-text">
-        ⏳ Playing ad... Please wait 20 seconds.
+        ⚡ Ad is active. Tap below to close and claim your reward!
       </div>
 
-      <!-- Direct Links for High Monetization Revenue -->
-      <div style="margin-top: 18px; padding: 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; text-align: left;">
-        <div style="font-size: 0.72rem; font-weight: 800; color: #f59e0b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; text-align: center;">
-          🔥 High Earning Sponsor Offers
+      <!-- Action Button: User closes ad to claim reward -->
+      <button id="close-claim-btn" class="btn-claim-ad" onclick="onUserClosedAd()">
+        <span>❌ Close Ad & Claim (+₹5.00)</span>
+      </button>
+
+      <!-- Adsterra SmartLink Direct Earning Card -->
+      <div class="smartlink-card">
+        <div class="smartlink-header">
+          <span class="smartlink-title">🔥 Adsterra SmartLink</span>
+          <span class="smartlink-badge">HIGH REVENUE</span>
         </div>
-        <a href="https://uplcm.com/4/11717959" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 9px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 12px; color: #60a5fa; font-size: 0.8rem; font-weight: 700; text-decoration: none; margin-bottom: 8px; box-sizing: border-box;">
-          <span>🚀 Visit Sponsor Offer 1</span>
+        <a href="https://asiafilm.org/4/61f332a3515c3caef8635a0905b1f8e8" target="_blank" rel="noopener noreferrer" class="smartlink-btn">
+          <span>⚡ Visit High Earning SmartLink</span>
         </a>
-        <a href="https://uplcm.com/4/11717884" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 9px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 12px; color: #34d399; font-size: 0.8rem; font-weight: 700; text-decoration: none; box-sizing: border-box;">
-          <span>💎 Visit Sponsor Offer 2</span>
-        </a>
+
+        <!-- Extra Direct Sponsor Links -->
+        <div class="direct-links-grid">
+          <a href="https://uplcm.com/4/11717959" target="_blank" rel="noopener noreferrer" class="direct-link-pill">
+            <span>🚀 Sponsor Link 1</span>
+          </a>
+          <a href="https://uplcm.com/4/11717884" target="_blank" rel="noopener noreferrer" class="direct-link-pill">
+            <span>💎 Sponsor Link 2</span>
+          </a>
+        </div>
       </div>
     </div>
 
+    <!-- Completed & Return to Bot View -->
     <div id="completed-view" class="completed-box">
-      <div style="font-size: 3.5rem; margin-bottom: 12px;">✅</div>
-      <h2 style="font-size: 1.3rem; font-weight: 800; color: #34d399; margin-bottom: 8px;">Ad Completed!</h2>
-      <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.4;">
-        <b>₹5.00</b> was added to your balance.<br/>
+      <div style="font-size: 3.8rem; margin-bottom: 12px; filter: drop-shadow(0 6px 16px rgba(16, 185, 129, 0.4));">✅</div>
+      <h2 style="font-size: 1.4rem; font-weight: 800; color: #34d399; margin-bottom: 8px;">Ad Completed!</h2>
+      <p style="font-size: 0.95rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 6px;">
+        <b>₹5.00</b> was added to your balance.
+      </p>
+      <p style="font-size: 0.8rem; color: #94a3b8;">
         Returning to Telegram bot...
       </p>
       <button class="btn-return" onclick="closeAdWindow()">Return to Bot</button>
@@ -191,25 +371,24 @@
   <script>
     const tg = window.Telegram?.WebApp;
     if (tg) {
-      tg.ready();
-      tg.expand();
+      try {
+        tg.ready();
+        tg.expand();
+      } catch (e) {}
     }
 
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('userId') || tg?.initDataUnsafe?.user?.id || 'demo_user';
     const initData = tg?.initData || '';
 
-    const TOTAL_SECONDS = 20;
-    let remaining = TOTAL_SECONDS;
-    const circleCircumference = 2 * Math.PI * 58; // ~364
-
-    const timerCount = document.getElementById('timer-count');
-    const timerBar = document.getElementById('timer-bar');
-    const statusText = document.getElementById('status-text');
     const playingView = document.getElementById('playing-view');
     const completedView = document.getElementById('completed-view');
+    const statusText = document.getElementById('status-text');
+    const closeClaimBtn = document.getElementById('close-claim-btn');
 
-    // 1. LibTL In-App Interstitial Ad
+    let isCompleted = false;
+
+    // 1. LibTL In-App Interstitial
     if (typeof window.show_12128125 === 'function') {
       try {
         window.show_12128125({
@@ -226,37 +405,46 @@
 
       // 2. LibTL Rewarded Interstitial
       window.show_12128125().then(() => {
-        console.log('LibTL Rewarded Ad completed');
+        console.log('LibTL Rewarded Interstitial finished');
+        handleAdCompletion();
       }).catch(() => {
-        // Fallback: Rewarded Popup format
+        // Fallback to Rewarded Popup
         if (typeof window.show_12128125 === 'function') {
-          window.show_12128125('pop').catch(() => {});
+          window.show_12128125('pop').then(() => {
+            console.log('LibTL Rewarded Popup finished');
+            handleAdCompletion();
+          }).catch(e => {
+            console.warn('LibTL Popup closed or skipped:', e);
+          });
         }
       });
     }
 
-    // Trigger GigaPub official showGiga if available
+    // Trigger GigaPub if available
     if (typeof window.showGiga === 'function') {
-      try { window.showGiga().catch(() => {}); } catch(e) {}
+      try {
+        window.showGiga().then(() => {
+          handleAdCompletion();
+        }).catch(() => {});
+      } catch(e) {}
     }
 
-    const interval = setInterval(async () => {
-      remaining--;
-      if (timerCount) timerCount.textContent = `${remaining}s`;
+    // Called when user clicks "❌ Close Ad & Claim (+₹5.00)" button
+    function onUserClosedAd() {
+      handleAdCompletion();
+    }
 
-      if (timerBar) {
-        const offset = circleCircumference * (1 - remaining / TOTAL_SECONDS);
-        timerBar.style.strokeDashoffset = offset;
+    async function handleAdCompletion() {
+      if (isCompleted) return;
+      isCompleted = true;
+
+      if (closeClaimBtn) {
+        closeClaimBtn.disabled = true;
+        closeClaimBtn.innerHTML = '✨ Claiming ₹5.00...';
       }
-
-      if (remaining <= 0) {
-        clearInterval(interval);
-        await onAdCompleted();
+      if (statusText) {
+        statusText.textContent = '✨ Verifying and crediting reward...';
       }
-    }, 1000);
-
-    async function onAdCompleted() {
-      if (statusText) statusText.textContent = '✨ Claiming reward...';
 
       try {
         const res = await fetch('/api/ads/complete', {
@@ -270,17 +458,19 @@
         const data = await res.json();
         console.log('Ad complete response:', data);
       } catch (err) {
-        console.warn('Could not reach backend to claim ad:', err);
+        console.warn('Could not contact server to credit ad:', err);
       }
 
-      playingView.style.display = 'none';
-      completedView.style.display = 'block';
+      if (playingView) playingView.style.display = 'none';
+      if (completedView) completedView.style.display = 'block';
 
       if (tg?.HapticFeedback) {
-        tg.HapticFeedback.notificationOccurred('success');
+        try {
+          tg.HapticFeedback.notificationOccurred('success');
+        } catch (e) {}
       }
 
-      // Automatically close WebApp window after 600ms so user returns to Telegram chat
+      // Automatically close WebApp after 650ms to return back to Telegram bot
       setTimeout(() => {
         closeAdWindow();
       }, 700);
@@ -290,6 +480,7 @@
       if (tg && typeof tg.close === 'function') {
         tg.close();
       } else {
+        window.close();
         window.history.back();
       }
     }

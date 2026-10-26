@@ -166,10 +166,19 @@ function updateStreakLadder(currentStreak = 0, ladder = []) {
     }
 
     if (day <= currentStreak) {
+      pill.classList.add('completed');
+      pill.classList.remove('current');
       pill.style.background = 'linear-gradient(135deg, #10b981, #059669)';
       pill.style.color = '#ffffff';
       pill.style.borderColor = '#10b981';
+    } else if (day === currentStreak + 1) {
+      pill.classList.remove('completed');
+      pill.classList.add('current');
+      pill.style.background = 'rgba(59, 130, 246, 0.15)';
+      pill.style.color = '#60a5fa';
+      pill.style.borderColor = 'rgba(59, 130, 246, 0.4)';
     } else {
+      pill.classList.remove('completed', 'current');
       pill.style.background = 'rgba(255,255,255,0.04)';
       pill.style.color = 'var(--text-muted)';
       pill.style.borderColor = 'rgba(255,255,255,0.08)';
@@ -464,7 +473,7 @@ async function handleWatchAd() {
       if (window.GigaPub && typeof window.GigaPub.showRewardedAd === 'function') {
         return window.GigaPub.showRewardedAd();
       }
-      return new Promise(resolve => setTimeout(resolve, 20000));
+      return Promise.resolve();
     };
 
     await triggerAd()
@@ -565,14 +574,21 @@ window.completeTaskAction = async function(taskId, targetUrl) {
 function getReferralLinks() {
   const userId = state.user?.id || '';
   const botUser = state.config?.botUsername || 'easyandfastearn_bot';
-  const botLink = `https://t.me/${botUser.replace(/^@/, '')}?start=ref_${userId}`;
-  return { botLink };
+  const botLink = `https://t.me/${botUser.replace(/^@/, '')}?start=${userId}`;
+  const senderBalance = (state.user?.balance || 0).toFixed(2);
+  const shareText = `Maine iss bot se ₹ ${senderBalance} kamaye. Aap bhi try karein.`;
+  const shareTemplate = `${botLink}\n${shareText}`;
+  return { botLink, senderBalance, shareText, shareTemplate };
 }
 
 async function loadReferralData() {
-  const { botLink } = getReferralLinks();
+  const { botLink, senderBalance } = getReferralLinks();
   const linkInput = document.getElementById('ref-link-display');
   if (linkInput) linkInput.value = botLink;
+  const templateLinkEl = document.getElementById('ref-template-link');
+  if (templateLinkEl) templateLinkEl.textContent = botLink;
+  const templateMsgEl = document.getElementById('ref-template-msg');
+  if (templateMsgEl) templateMsgEl.textContent = `Maine iss bot se ₹ ${senderBalance} kamaye. Aap bhi try karein.`;
 
   const res = await apiRequest('/api/referrals/list');
   if (res.success) {
@@ -664,19 +680,16 @@ async function loadReferralData() {
 }
 
 function handleCopyRefLink() {
-  const { botLink } = getReferralLinks();
-  navigator.clipboard.writeText(botLink).then(() => {
-    showToast('📋 Referral link copied!', 'success');
+  const { shareTemplate } = getReferralLinks();
+  navigator.clipboard.writeText(shareTemplate).then(() => {
+    showToast('📋 Invite template copied!', 'success');
     hapticNotification('success');
   });
 }
 
 function handleShareRefLink() {
-  const { botLink } = getReferralLinks();
-  const shareText = encodeURIComponent(
-    `🎁 Join this bot to earn cash by watching ads and inviting friends! Join here: ${botLink}`
-  );
-  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${shareText}`;
+  const { botLink, shareText } = getReferralLinks();
+  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(shareText)}`;
 
   if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
   else window.open(shareUrl, '_blank');

@@ -405,7 +405,7 @@ export function initBot() {
       await handleInviteFriendsAction(ctx);
     });
 
-    // In-Bot Ad Viewing Callback -> Plays 10-second Ad and credits automatically
+    // In-Bot Ad Viewing Callback -> Credit reward on crossing/closing ad
     bot.callbackQuery('bot_watch_ad', async (ctx) => {
       const user = ctx.from;
       const canWatch = db.canWatchAd(user.id);
@@ -413,36 +413,51 @@ export function initBot() {
         return ctx.answerCallbackQuery({ text: canWatch.reason, show_alert: true });
       }
 
-      await ctx.answerCallbackQuery({ text: '🎬 Watching 20s ad...' });
+      await ctx.answerCallbackQuery();
 
       const symbol = db.getSetting('currencySymbol') || '₹';
       const adReward = db.getSetting('adReward') || 5.0;
-      const dailyLimit = parseInt(db.getSetting('dailyAdLimit') || '0', 10);
+      const smartLink = config.adsterraSmartLink || 'https://asiafilm.org/4/61f332a3515c3caef8635a0905b1f8e8';
 
-      const adMsg = await ctx.reply(
-        `🎬 <b>Watching 20-second Ad...</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `⏳ Please wait <b>20 seconds</b> while the advertisement plays.\n` +
-        `Your <b>+${symbol}${adReward.toFixed(2)}</b> reward will be credited automatically.`,
-        { parse_mode: 'HTML' }
+      const keyboard = new InlineKeyboard()
+        .url('🎬 Open Sponsored Ad', smartLink)
+        .row()
+        .text('❌ Close Ad & Claim (+₹5)', 'claim_closed_ad');
+
+      await ctx.reply(
+        `🎬 <b>Watch Ad & Earn</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `1️⃣ Tap <b>"Open Sponsored Ad"</b> below to view the ad.\n` +
+        `2️⃣ When finished, tap <b>"Close Ad & Claim (❌)"</b> to credit your balance!\n\n` +
+        `💰 <b>Reward:</b> <b>+${symbol}${adReward.toFixed(2)}</b>`,
+        { parse_mode: 'HTML', reply_markup: keyboard }
       );
+    });
 
-      // Automatically credit reward after 20 seconds
-      setTimeout(async () => {
-        const result = db.recordDirectAdReward(user.id);
-        if (result.success) {
-          try {
-            await ctx.api.deleteMessage(ctx.chat.id, adMsg.message_id);
-          } catch {}
+    bot.callbackQuery('claim_closed_ad', async (ctx) => {
+      const user = ctx.from;
+      const check = db.canWatchAd(user.id);
+      if (!check.canWatch) {
+        return ctx.answerCallbackQuery({ text: check.reason, show_alert: true });
+      }
 
-          const limitSuffix = dailyLimit > 0 ? `/${dailyLimit}` : '';
-          const completionText =
-            `✅ <b>Ad completed!</b> ${symbol}${result.reward.toFixed(2)} was added to your balance.\n\n` +
-            `💰 <b>Balance:</b> ${result.balance.toFixed(2)}\n` +
-            `📅 <b>Ads watched today:</b> ${result.adsToday}${limitSuffix}`;
+      const result = db.recordDirectAdReward(user.id);
+      if (result.success) {
+        await ctx.answerCallbackQuery({ text: '🎉 Ad completed & reward credited!' });
+        try { await ctx.deleteMessage(); } catch {}
 
-          await ctx.reply(completionText, { parse_mode: 'HTML' });
-        }
-      }, 20000);
+        const symbol = db.getSetting('currencySymbol') || '₹';
+        const dailyLimit = parseInt(db.getSetting('dailyAdLimit') || '0', 10);
+        const limitSuffix = dailyLimit > 0 ? `/${dailyLimit}` : '';
+
+        const completionText =
+          `✅ <b>Ad completed!</b> ${symbol}${result.reward.toFixed(2)} was added to your balance.\n\n` +
+          `💰 <b>Balance:</b> ${result.balance.toFixed(2)}\n` +
+          `📅 <b>Ads watched today:</b> ${result.adsToday}${limitSuffix}`;
+
+        await ctx.reply(completionText, { parse_mode: 'HTML' });
+      } else {
+        await ctx.answerCallbackQuery({ text: result.message || 'Could not claim ad reward.', show_alert: true });
+      }
     });
 
     bot.callbackQuery('claim_daily_bonus', async (ctx) => {
@@ -1360,6 +1375,8 @@ async function handleWatchAdsAction(ctx) {
   } else {
     keyboard.text('🎬 Open Ad', 'bot_watch_ad').row();
   }
+  const adsterraLink = config.adsterraSmartLink || 'https://asiafilm.org/4/61f332a3515c3caef8635a0905b1f8e8';
+  keyboard.url('⚡ High Earning SmartLink', adsterraLink).row();
   keyboard.url('🔥 Sponsor Offer 1', 'https://uplcm.com/4/11717959').row();
   keyboard.url('💎 Sponsor Offer 2', 'https://uplcm.com/4/11717884');
 
@@ -1373,23 +1390,24 @@ async function handleWatchAdsAction(ctx) {
 async function handleInviteFriendsAction(ctx) {
   const user = ctx.from;
   const botUser = bot.botInfo?.username || config.botUsername || 'easyandfastearn_bot';
-  const refLink = `https://t.me/${botUser}?start=ref_${user.id}`;
+  const refLink = `https://t.me/${botUser}?start=${user.id}`;
   const dbUser = db.getUser(user.id) || db.getOrCreateUser(user).user;
   const rank = db.getUserWeeklyRank(user.id);
   const refReward = db.getSetting('referralReward');
   const currency = db.getSetting('currencyName') || 'Points';
   const symbol = db.getSetting('currencySymbol') || '₹';
+  const senderBalance = (dbUser.balance || 0).toFixed(2);
 
   const refEarnings = ((dbUser.referral_count || 0) * refReward).toFixed(2);
 
-  const shareText = encodeURIComponent(
-    `🎁 Join this bot to earn free cash by watching ads and referring friends! Claim your reward now: ${refLink}`
-  );
-  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${shareText}`;
+  const shareText = `Maine iss bot se ₹ ${senderBalance} kamaye. Aap bhi try karein.`;
+  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(shareText)}`;
 
   const variables = {
     first_name: user.first_name,
     referral_link: refLink,
+    sender_balance: senderBalance,
+    balance: senderBalance,
     referral_reward: refReward,
     referrals: dbUser.referral_count || 0,
     referral_earnings: refEarnings,

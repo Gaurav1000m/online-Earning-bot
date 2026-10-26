@@ -60,6 +60,9 @@ export const config = {
     process.env.AD_DIRECT_LINK_2 || 'https://uplcm.com/4/11717884'
   ],
 
+  // Adsterra SmartLink for High Revenue
+  adsterraSmartLink: process.env.ADSTERRA_SMARTLINK || 'https://asiafilm.org/4/61f332a3515c3caef8635a0905b1f8e8',
+
   maintenanceMode: process.env.MAINTENANCE_MODE === 'true'
 };
 

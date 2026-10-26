@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Refer & Earn Mini App | GigaPub Ads</title>
+  <title>Easy & Fast Earn | Telegram Mini App</title>
   
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -14,7 +14,7 @@
   <!-- LibTL Monetag Ads SDK (Zone ID: 12128125) -->
   <script src="//libtl.com/sdk.js" data-zone="12128125" data-sdk="show_12128125"></script>
   
-  <!-- Custom Stylesheet -->
+  <!-- Custom Modern Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -26,7 +26,7 @@
   <canvas id="confetti-canvas"></canvas>
 
   <!-- Dev Demo Mode Banner -->
-  <div id="demo-mode-banner" style="display:none; background:#f59e0b; color:#1e1e1e; font-size:0.75rem; font-weight:700; text-align:center; padding:6px 12px;">
+  <div id="demo-mode-banner" style="display:none; background:#f59e0b; color:#1e1e1e; font-size:0.75rem; font-weight:800; text-align:center; padding:6px 12px; letter-spacing:0.3px;">
     ⚠️ Running in Browser Preview Mode (Mock Telegram User Active)
   </div>
 
@@ -35,44 +35,44 @@
   <!-- ======================================================== -->
   <main id="tab-home" class="tab-pane active">
     <!-- User Profile Header -->
-    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
       <div style="display:flex; align-items:center; gap:12px;">
-        <div style="width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg, #3b82f6, #06b6d4); display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1.2rem; color:white; box-shadow:0 4px 10px rgba(59,130,246,0.3);">
+        <div style="width:46px; height:46px; border-radius:50%; background:linear-gradient(135deg, #3b82f6, #06b6d4); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.25rem; color:white; box-shadow:0 6px 16px rgba(59,130,246,0.4); border:2px solid rgba(255,255,255,0.15);">
           👤
         </div>
         <div>
-          <div class="text-xs text-muted">Welcome back,</div>
-          <div id="user-greeting-name" class="text-base font-bold">User</div>
+          <div class="text-xs text-muted" style="letter-spacing:0.3px;">Welcome back,</div>
+          <div id="user-greeting-name" class="text-base font-bold" style="color:#ffffff;">User</div>
         </div>
       </div>
-      <div style="display:flex; gap:6px; align-items:center;">
-        <button id="admin-quick-btn" class="badge" style="display:none; background:rgba(245,158,11,0.2); color:#fbbf24; border:1px solid rgba(245,158,11,0.3); cursor:pointer;" onclick="location.href='/admin'">
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button id="admin-quick-btn" class="badge" style="display:none; background:rgba(245,158,11,0.2); color:#fbbf24; border:1px solid rgba(245,158,11,0.35); cursor:pointer;" onclick="location.href='/admin'">
           ⚙️ Admin
         </button>
-        <div class="badge badge-approved" style="font-size:0.75rem;">
+        <div class="badge badge-approved">
           ID: <span id="user-profile-id">...</span>
         </div>
       </div>
     </header>
 
-    <!-- Main Balance Card -->
+    <!-- Main Balance Gradient Card -->
     <section class="gradient-card" style="margin-bottom:18px;">
       <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div>
-          <div class="text-xs" style="opacity:0.85; text-transform:uppercase; letter-spacing:0.5px;">Current Available Balance</div>
-          <div class="text-3xl font-black" style="margin:4px 0;">
+          <div class="text-xs" style="opacity:0.85; text-transform:uppercase; letter-spacing:0.6px; font-weight:700;">Available Balance</div>
+          <div class="text-3xl font-black" style="margin:4px 0 2px;">
             <span class="val-currency-symbol">₹</span><span class="user-balance">0.00</span>
           </div>
-          <div class="text-xs" style="opacity:0.9;">
+          <div class="text-xs" style="opacity:0.85;">
             ≈ <span class="user-balance">0.00</span> <span class="val-currency-name">Points</span>
           </div>
         </div>
-        <button class="btn btn-sm" data-switch-tab="wallet" style="background:rgba(255,255,255,0.25); color:white; backdrop-filter:blur(10px); border:none;">
+        <button class="btn btn-sm" data-switch-tab="wallet" style="background:rgba(255,255,255,0.2); color:white; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.25); font-weight:700;">
           💸 Withdraw
         </button>
       </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.2);">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.18);">
         <div>
           <div class="text-xs" style="opacity:0.8;">Total Earned</div>
           <div class="text-sm font-bold"><span class="val-currency-symbol">₹</span><span class="user-total-earned">0.00</span></div>
@@ -84,34 +84,51 @@
       </div>
     </section>
 
+    <!-- High Earning Adsterra SmartLink Sponsor Card -->
+    <section class="adsterra-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <span class="adsterra-badge">⚡ MAXIMUM REVENUE OFFER</span>
+        <span style="font-size:0.75rem; color:#fef08a; font-weight:800;">Adsterra SmartLink</span>
+      </div>
+      <div style="font-size:0.95rem; font-weight:800; color:#ffffff; margin-bottom:4px;">
+        🔥 High-Yield SmartLink Monetization
+      </div>
+      <div class="text-xs text-muted" style="margin-bottom:12px; line-height:1.4;">
+        Direct sponsor link delivering top advertiser offers worldwide.
+      </div>
+      <a href="https://asiafilm.org/4/61f332a3515c3caef8635a0905b1f8e8" target="_blank" rel="noopener noreferrer" class="btn-smartlink">
+        <span>⚡ Visit Adsterra SmartLink</span>
+      </a>
+    </section>
+
     <!-- Quick Action Navigation Grid -->
     <section style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
-      <div class="card" data-switch-tab="earn" style="cursor:pointer; display:flex; align-items:center; gap:12px;">
-        <div style="font-size:1.8rem; background:rgba(59,130,246,0.15); width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+      <div class="card" data-switch-tab="earn" style="cursor:pointer; display:flex; align-items:center; gap:12px; padding:14px;">
+        <div style="font-size:1.8rem; background:rgba(59,130,246,0.15); width:44px; height:44px; border-radius:14px; display:flex; align-items:center; justify-content:center;">
           🎬
         </div>
         <div>
           <div class="text-sm font-bold">Watch Ads</div>
-          <div class="text-xs text-muted">+<span class="val-ad-reward">5.0</span> <span class="val-currency-name">₹</span></div>
+          <div class="text-xs text-muted">+<span class="val-currency-symbol">₹</span><span class="val-ad-reward">5.0</span> instant</div>
         </div>
       </div>
 
-      <div class="card" data-switch-tab="refer" style="cursor:pointer; display:flex; align-items:center; gap:12px;">
-        <div style="font-size:1.8rem; background:rgba(16,185,129,0.15); width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+      <div class="card" data-switch-tab="refer" style="cursor:pointer; display:flex; align-items:center; gap:12px; padding:14px;">
+        <div style="font-size:1.8rem; background:rgba(16,185,129,0.15); width:44px; height:44px; border-radius:14px; display:flex; align-items:center; justify-content:center;">
           👥
         </div>
         <div>
           <div class="text-sm font-bold">Refer & Earn</div>
-          <div class="text-xs text-muted">+<span class="val-referral-reward">20.0</span> <span class="val-currency-name">₹</span></div>
+          <div class="text-xs text-muted">+<span class="val-currency-symbol">₹</span><span class="val-referral-reward">20.0</span> per friend</div>
         </div>
       </div>
     </section>
 
     <!-- Daily Streak Bonus Card -->
     <section class="card" style="margin-bottom:18px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:1.5rem;">🎁</span>
+          <span style="font-size:1.6rem;">🎁</span>
           <div>
             <div class="text-sm font-bold">Daily Streak Bonus</div>
             <div class="text-xs text-muted">Current Streak: <b id="streak-days-count" class="text-primary">1</b> Days</div>
@@ -120,15 +137,15 @@
         <span id="bonus-timer-text" class="text-xs text-muted font-semibold">Ready to Claim</span>
       </div>
 
-      <!-- 7-Day Streak Pills -->
-      <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; margin-bottom:12px; text-align:center;">
-        <div class="streak-pill" data-day="1"><div class="text-xs">D1</div><b style="font-size:0.7rem;">5</b></div>
-        <div class="streak-pill" data-day="2"><div class="text-xs">D2</div><b style="font-size:0.7rem;">10</b></div>
-        <div class="streak-pill" data-day="3"><div class="text-xs">D3</div><b style="font-size:0.7rem;">15</b></div>
-        <div class="streak-pill" data-day="4"><div class="text-xs">D4</div><b style="font-size:0.7rem;">20</b></div>
-        <div class="streak-pill" data-day="5"><div class="text-xs">D5</div><b style="font-size:0.7rem;">25</b></div>
-        <div class="streak-pill" data-day="6"><div class="text-xs">D6</div><b style="font-size:0.7rem;">30</b></div>
-        <div class="streak-pill" data-day="7"><div class="text-xs">D7</div><b style="font-size:0.7rem;">35</b></div>
+      <!-- 7-Day Streak Pills (5, 10, 15, 20, 25, 30, 35) -->
+      <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; margin-bottom:14px; text-align:center;">
+        <div class="streak-pill" data-day="1"><div class="text-xs text-muted">D1</div><b style="font-size:0.75rem;">5</b></div>
+        <div class="streak-pill" data-day="2"><div class="text-xs text-muted">D2</div><b style="font-size:0.75rem;">10</b></div>
+        <div class="streak-pill" data-day="3"><div class="text-xs text-muted">D3</div><b style="font-size:0.75rem;">15</b></div>
+        <div class="streak-pill" data-day="4"><div class="text-xs text-muted">D4</div><b style="font-size:0.75rem;">20</b></div>
+        <div class="streak-pill" data-day="5"><div class="text-xs text-muted">D5</div><b style="font-size:0.75rem;">25</b></div>
+        <div class="streak-pill" data-day="6"><div class="text-xs text-muted">D6</div><b style="font-size:0.75rem;">30</b></div>
+        <div class="streak-pill" data-day="7"><div class="text-xs text-muted">D7</div><b style="font-size:0.75rem;">35</b></div>
       </div>
 
       <button id="claim-bonus-btn" class="btn btn-success">
@@ -140,12 +157,12 @@
     <section class="card" style="margin-bottom:18px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
         <span class="text-xs font-semibold text-muted">Today's Ads Watched</span>
-        <span id="ads-progress-text" class="text-xs font-bold text-primary">0 / 20 Today</span>
+        <span id="ads-progress-text" class="text-xs font-bold text-primary">0 Watched Today</span>
       </div>
       <div class="progress-bar">
         <div id="ads-progress-bar" class="progress-fill" style="width:0%;"></div>
       </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
         <span id="ad-cooldown-text" class="text-xs text-success font-semibold">Ad Available Now</span>
         <button id="watch-ad-btn" class="btn btn-primary btn-sm">
           🎬 Watch Ad
@@ -173,39 +190,56 @@
   <main id="tab-earn" class="tab-pane">
     <header style="margin-bottom:16px;">
       <h1 class="text-xl font-bold">⚡ Earn Rewards</h1>
-      <p class="text-xs text-muted">Watch short ads via GigaPub and complete tasks to earn instant points.</p>
+      <p class="text-xs text-muted">Watch sponsored ads, explore SmartLinks, and complete partner tasks.</p>
     </header>
 
-    <!-- Rewarded Ads Section -->
-    <section class="card" style="margin-bottom:18px; text-align:center; padding:24px 16px;">
+    <!-- Rewarded Ads Section (Close ad to claim!) -->
+    <section class="card" style="margin-bottom:18px; text-align:center; padding:24px 18px;">
       <div style="font-size:3.5rem; margin-bottom:8px;">🎬</div>
       <h2 class="text-lg font-bold">Watch Ads & Earn</h2>
-      <p class="text-xs text-muted" style="margin:6px 0 16px;">
-        Watch a short 20-second video ad to credit ₹5.00 automatically. Unlimited ads daily!
+      <p class="text-xs text-muted" style="margin:6px 0 16px; line-height:1.45;">
+        Watch a short sponsored ad and close it (❌) to automatically credit ₹5.00 to your balance.
       </p>
 
       <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(16,185,129,0.15); color:#34d399; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:700; margin-bottom:16px;">
-        +<span class="val-currency-symbol">₹</span><span class="val-ad-reward">5.0</span> per Ad
+        +<span class="val-currency-symbol">₹</span><span class="val-ad-reward">5.0</span> per Ad Completed
       </div>
 
-      <button id="watch-ad-btn-page" class="btn btn-primary" onclick="handleWatchAd()" style="margin-bottom:16px;">
-        ▶️ Watch Video Ad Now
+      <button id="watch-ad-btn-page" class="btn btn-primary" onclick="handleWatchAd()" style="margin-bottom:14px;">
+        ▶️ Watch Sponsored Ad
       </button>
 
-      <div class="text-xs text-muted" style="margin-bottom:18px;">
-        ⚡ Cooldown: 20s &bull; Guaranteed Server Verification &bull; Unlimited Ads
+      <div class="text-xs text-muted" style="margin-bottom:16px;">
+        ⚡ Instant Verification &bull; Unlimited Daily Ads &bull; Fast Payout
       </div>
 
-      <!-- High Monetization Direct Sponsor Offers -->
-      <div style="padding-top:14px; border-top:1px solid rgba(255,255,255,0.08); text-align:left;">
-        <div style="font-size:0.75rem; font-weight:800; color:#f59e0b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; text-align:center;">
-          🔥 High Earning Direct Sponsor Links
+      <!-- Adsterra High-Yield SmartLink Section -->
+      <div class="adsterra-card" style="margin-bottom:12px; text-align:left;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span class="adsterra-badge">⚡ MAXIMUM REVENUE</span>
+          <span style="font-size:0.75rem; color:#fef08a; font-weight:800;">Adsterra SmartLink</span>
+        </div>
+        <div style="font-size:0.88rem; font-weight:800; color:#ffffff; margin-bottom:4px;">
+          Adsterra Premium SmartLink Direct
+        </div>
+        <div class="text-xs text-muted" style="margin-bottom:10px;">
+          Highest revenue link for top-paying sponsor campaigns.
+        </div>
+        <a href="https://asiafilm.org/4/61f332a3515c3caef8635a0905b1f8e8" target="_blank" rel="noopener noreferrer" class="btn-smartlink">
+          <span>🔥 Open Adsterra SmartLink</span>
+        </a>
+      </div>
+
+      <!-- Additional Sponsor Links -->
+      <div style="padding-top:12px; border-top:1px solid rgba(255,255,255,0.08); text-align:left;">
+        <div style="font-size:0.72rem; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; text-align:center;">
+          Direct Partner Offers
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-          <a href="https://uplcm.com/4/11717959" target="_blank" rel="noopener noreferrer" class="btn" style="background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.35); color:#60a5fa; font-size:0.78rem; font-weight:700; padding:10px 8px; text-decoration:none; text-align:center; border-radius:12px;">
+          <a href="https://uplcm.com/4/11717959" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="text-decoration:none; font-size:0.78rem;">
             🚀 Offer #1
           </a>
-          <a href="https://uplcm.com/4/11717884" target="_blank" rel="noopener noreferrer" class="btn" style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.35); color:#34d399; font-size:0.78rem; font-weight:700; padding:10px 8px; text-decoration:none; text-align:center; border-radius:12px;">
+          <a href="https://uplcm.com/4/11717884" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="text-decoration:none; font-size:0.78rem;">
             💎 Offer #2
           </a>
         </div>
@@ -214,7 +248,7 @@
 
     <!-- Social & Partner Tasks Section -->
     <section class="card">
-      <h3 class="text-sm font-bold" style="margin-bottom:12px;">📋 Available Tasks</h3>
+      <h3 class="text-sm font-bold" style="margin-bottom:12px;">📋 Available Tasks (+₹5.00 each)</h3>
       <div id="tasks-container-list">
         <div class="text-xs text-muted text-center py-4">Loading available tasks...</div>
       </div>
@@ -227,7 +261,7 @@
   <main id="tab-refer" class="tab-pane">
     <header style="margin-bottom:16px;">
       <h1 class="text-xl font-bold">👥 Refer & Earn Club</h1>
-      <p class="text-xs text-muted">Invite friends to earn instant rewards! Top 20 referrers win cash every week.</p>
+      <p class="text-xs text-muted">Invite friends to earn ₹20.00 instantly! Top referrers win cash weekly.</p>
     </header>
 
     <!-- Referral Hero Card with Live Stats Strip -->
@@ -257,7 +291,7 @@
         </div>
         <div class="ref-stat-box">
           <div class="text-xs text-muted font-semibold">Total Earned</div>
-          <div id="ref-stat-earned" class="text-lg font-black text-success" style="margin-top:2px;"><span class="val-currency-symbol">$</span>0.00</div>
+          <div id="ref-stat-earned" class="text-lg font-black text-success" style="margin-top:2px;"><span class="val-currency-symbol">₹</span>0.00</div>
         </div>
         <div class="ref-stat-box">
           <div class="text-xs text-muted font-semibold">Weekly Rank</div>
@@ -280,18 +314,24 @@
       </div>
     </section>
 
-    <!-- Referral Link Box -->
+    <!-- Referral Template Box -->
     <section class="card" style="margin-bottom:16px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <span class="text-xs font-semibold text-muted">Your Unique Referral Link</span>
+        <span class="text-xs font-semibold text-muted">Your Share & Invite Template</span>
         <span class="text-xs text-primary font-bold">1-Click Share</span>
       </div>
 
-      <input id="ref-link-display" type="text" readonly class="input" style="font-size:0.8rem; margin-bottom:12px; background:rgba(0,0,0,0.3);" value="Loading link...">
+      <!-- Live Template Preview Box -->
+      <div style="background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:12px 14px; margin-bottom:12px; font-size:0.85rem; line-height:1.5;">
+        <div id="ref-template-link" style="color:#60a5fa; font-weight:700; word-break:break-all;">Loading link...</div>
+        <div id="ref-template-msg" style="color:#f8fafc; margin-top:4px; font-weight:600;">Maine iss bot se ₹ <span class="user-balance">0.00</span> kamaye. Aap bhi try karein.</div>
+      </div>
+
+      <input id="ref-link-display" type="hidden" value="Loading link...">
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
         <button id="copy-ref-btn" class="btn btn-secondary">
-          📋 Copy Link
+          📋 Copy Invite
         </button>
         <button id="share-ref-btn" class="btn btn-primary">
           📢 Share on Telegram
@@ -361,7 +401,7 @@
   <main id="tab-wallet" class="tab-pane">
     <header style="margin-bottom:16px;">
       <h1 class="text-xl font-bold">💳 Wallet & Payouts</h1>
-      <p class="text-xs text-muted">Manage your payment settings and withdraw your earned funds.</p>
+      <p class="text-xs text-muted">Manage payout settings and submit withdrawal requests.</p>
     </header>
 
     <!-- Balance Summary Card -->
@@ -499,7 +539,7 @@
   </main>
 
   <!-- ======================================================== -->
-  <!-- BOTTOM NAVIGATION BAR -->
+  <!-- FLOATING BOTTOM NAVIGATION BAR -->
   <!-- ======================================================== -->
   <nav class="bottom-nav">
     <div class="nav-item active" data-tab="home">
@@ -509,7 +549,7 @@
 
     <div class="nav-item" data-tab="earn">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <span>Earn Ads</span>
+      <span>Earn</span>
     </div>
 
     <div class="nav-item" data-tab="refer">

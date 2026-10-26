@@ -32,6 +32,7 @@
 
 import db from '../src/db.js';
 import config from '../src/config.js';
+import { renderTaskCard } from '../src/bot.js';
 
 let passedTests = 0;
 let failedTests = 0;
@@ -255,6 +256,18 @@ async function runTestSuite() {
     assert(penUser.verified_channels === false, 'Test 18b: User marked unverified upon channel departure');
     assert(penUser.balance === Math.max(0, balBeforePenalty - 10.0), 'Test 18b: 10 rs penalty deducted from user balance');
     db.updateUser(testUserBId, { verified_channels: true });
+
+    // ----------------------------------------------------
+    // TEST 18c: Task Completed Status Message in Bot Card
+    // ----------------------------------------------------
+    const completedCard = renderTaskCard(testUserAId, 0);
+    assert(completedCard.isDone === true, 'Test 18c: Completed task correctly recognized in task card');
+    assert(completedCard.text.includes('Status: COMPLETED & REWARDED'), 'Test 18c: Task card displays completed status banner');
+    assert(completedCard.text.includes('You have already completed this task and received your reward'), 'Test 18c: Task card displays completed acknowledgement');
+
+    const pendingCard = renderTaskCard(testUserBId, 0);
+    assert(pendingCard.isDone === false, 'Test 18c: Incomplete task correctly recognized as pending');
+    assert(pendingCard.text.includes('after that click Joined ☑️ button'), 'Test 18c: Incomplete task prompts user to join and verify');
 
     // ----------------------------------------------------
     // TEST 19: Withdrawal Lock (Requires 10 Referrals & 30 Ads)

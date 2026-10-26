@@ -522,50 +522,139 @@ async function loadTasks() {
       return;
     }
 
-    container.innerHTML = res.tasks.map(t => `
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-radius:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); margin-bottom:10px;">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:1.6rem;">${t.icon || '🎯'}</span>
-          <div>
-            <div class="text-sm font-bold">${t.title}</div>
-            <div class="text-xs text-muted">+${state.config.currencySymbol}${t.reward} ${state.config.currencyName}</div>
+    const symbol = state.config?.currencySymbol || '₹';
+    const currencyName = state.config?.currencyName || 'INR';
+
+    container.innerHTML = res.tasks.map((t, idx) => {
+      const taskNum = idx + 1;
+      const isCompleted = !!t.is_completed;
+      const rewardFormatted = Number(t.reward).toFixed(2);
+      const desc = t.description || `Join ${t.title} 📢 and earn extra rewards.`;
+
+      if (isCompleted) {
+        return `
+          <div style="padding:14px; border-radius:14px; background:rgba(16, 185, 129, 0.08); border:1px solid rgba(16, 185, 129, 0.28); margin-bottom:12px; transition:all 0.2s ease;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:1.6rem;">${t.icon || '📌'}</span>
+                <div>
+                  <div class="text-sm font-bold" style="color:#ffffff;">Task #${taskNum}: ${t.title}</div>
+                  <div class="text-xs" style="color:#10b981; font-weight:700;">💰 Reward: ${symbol}${rewardFormatted} ${currencyName}</div>
+                </div>
+              </div>
+              <span class="badge badge-approved" style="font-size:0.75rem; padding:4px 10px;">
+                ✅ Completed
+              </span>
+            </div>
+            
+            <div style="background:rgba(16, 185, 129, 0.12); border:1px solid rgba(16, 185, 129, 0.25); border-radius:10px; padding:10px 12px; margin-top:8px; font-size:0.8rem; color:#a7f3d0; line-height:1.45;">
+              <div style="font-weight:700; color:#34d399; margin-bottom:2px;">
+                ✅ Status: COMPLETED & REWARDED (+${symbol}${rewardFormatted})
+              </div>
+              <div>
+                🎉 You have completed this task and the reward has been added to your balance!
+              </div>
+            </div>
+
+            <div style="display:flex; gap:8px; margin-top:10px;">
+              ${t.target_url ? `
+                <button class="btn btn-secondary btn-sm" style="flex:1; font-size:0.78rem; padding:7px 10px; opacity:0.85;" onclick="openTaskUrl('${t.target_url}')">
+                  ${t.task_type === 'channel_join' ? '📢 View Channel' : '🔗 View Link'}
+                </button>
+              ` : ''}
+              <button class="btn btn-sm" disabled style="flex:1; font-size:0.78rem; padding:7px 10px; background:rgba(16, 185, 129, 0.2); color:#34d399; border:1px solid rgba(16, 185, 129, 0.4); cursor:default;">
+                ✅ Rewarded
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div style="padding:14px; border-radius:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); margin-bottom:12px; transition:all 0.2s ease;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:1.6rem;">${t.icon || '📌'}</span>
+              <div>
+                <div class="text-sm font-bold">Task #${taskNum}: ${t.title}</div>
+                <div class="text-xs" style="color:#60a5fa; font-weight:700;">💰 Reward: ${symbol}${rewardFormatted} ${currencyName}</div>
+              </div>
+            </div>
+            <span class="badge badge-pending" style="font-size:0.75rem; padding:4px 10px;">
+              ⏳ Incomplete
+            </span>
+          </div>
+
+          <div class="text-xs text-muted" style="margin-bottom:8px; line-height:1.45;">
+            ${desc}
+            <br>
+            <span style="color:#cbd5e1;">After that click <b>Joined ☑️</b> button to verify and continue.</span>
+          </div>
+
+          <div style="background:rgba(245, 158, 11, 0.08); border:1px solid rgba(245, 158, 11, 0.2); border-radius:8px; padding:6px 10px; margin-bottom:10px; font-size:0.72rem; color:#fde68a; line-height:1.35;">
+            ⚠️ <b>Important:</b> Task will be checked and reviewed by our team carefully. Only real and verified completions will be rewarded.
+          </div>
+
+          <div style="display:flex; gap:8px;">
+            ${t.target_url ? `
+              <button class="btn btn-secondary btn-sm" style="flex:1; font-size:0.8rem; padding:8px 10px;" onclick="openTaskUrl('${t.target_url}')">
+                ${t.task_type === 'channel_join' ? '📌 Join Channel' : '🚀 Open Task'}
+              </button>
+            ` : ''}
+            <button class="btn btn-primary btn-sm" id="btn-task-${t.id}" style="flex:1; font-size:0.8rem; padding:8px 10px; background:linear-gradient(135deg, #10b981, #059669);" onclick="completeTaskAction('${t.id}')">
+              Joined ☑️
+            </button>
           </div>
         </div>
-        <div>
-          ${t.is_completed ? `
-            <span class="badge badge-approved">Completed</span>
-          ` : `
-            <button class="btn btn-primary btn-sm" onclick="completeTaskAction('${t.id}', '${t.target_url || ''}')">
-              Complete
-            </button>
-          `}
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 }
 
-window.completeTaskAction = async function(taskId, targetUrl) {
-  if (targetUrl) {
-    if (tg?.openTelegramLink && targetUrl.includes('t.me')) tg.openTelegramLink(targetUrl);
-    else window.open(targetUrl, '_blank');
+window.openTaskUrl = function(targetUrl) {
+  if (!targetUrl) return;
+  if (tg?.openTelegramLink && (targetUrl.includes('t.me') || targetUrl.startsWith('https://t.me/'))) {
+    tg.openTelegramLink(targetUrl);
+  } else {
+    window.open(targetUrl, '_blank');
+  }
+};
+
+window.completeTaskAction = async function(taskId) {
+  const btn = document.getElementById(`btn-task-${taskId}`);
+  const originalText = btn ? btn.innerHTML : 'Joined ☑️';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Verifying...';
   }
 
   showToast('Verifying task completion...', 'info');
 
-  setTimeout(async () => {
+  try {
     const res = await apiRequest('/api/tasks/complete', 'POST', { taskId });
     if (res.success) {
       state.user.balance = res.balance;
       updateUserUI();
-      showToast(`🎉 Task completed! +${state.config.currencySymbol}${res.reward}`, 'success');
+      const symbol = state.config?.currencySymbol || '₹';
+      showToast(`🎉 Task completed! +${symbol}${Number(res.reward).toFixed(2)} credited`, 'success');
       hapticNotification('success');
       spawnConfetti();
-      loadTasks();
+      await loadTasks();
     } else {
-      showToast(res.message || 'Task could not be verified.', 'warning');
+      showToast(res.message || 'Task could not be verified. Please join first!', 'warning');
+      hapticNotification('warning');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
     }
-  }, 1200);
+  } catch (err) {
+    showToast('Failed to verify task. Please try again.', 'error');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
 };
 
 // 4. Referral System

@@ -565,7 +565,18 @@ export function initBot() {
     });
 
     // Task already completed notification
-    bot.callbackQuery(/^(?:task_already_done_|task_already_done:)/, async (ctx) => {
+    bot.callbackQuery(/^(?:task_already_done_|task_already_done:)(.+)$/, async (ctx) => {
+      const taskId = ctx.match[1];
+      const task = db.getTasks().find(t => t.id === taskId);
+      const symbol = db.getSetting('currencySymbol') || '₹';
+      const rewardTxt = task ? ` (+${symbol}${task.reward.toFixed(2)})` : '';
+      await ctx.answerCallbackQuery({
+        text: `✅ You have already completed this task and received your reward${rewardTxt}!`,
+        show_alert: true
+      });
+    });
+
+    bot.callbackQuery(/^(?:task_already_done_|task_already_done:)$/, async (ctx) => {
       await ctx.answerCallbackQuery({ text: '✅ You have already completed this task!', show_alert: true });
     });
 
@@ -595,7 +606,11 @@ export function initBot() {
       // Check if already completed
       const existing = (db.data.task_completions || []).find(c => String(c.user_id) === String(user.id) && c.task_id === taskId);
       if (existing) {
-        await ctx.answerCallbackQuery({ text: '✅ You have already completed this task!', show_alert: true });
+        const symbol = db.getSetting('currencySymbol') || '₹';
+        await ctx.answerCallbackQuery({
+          text: `✅ You have already completed this task and received +${symbol}${task.reward.toFixed(2)}!`,
+          show_alert: true
+        });
         return;
       }
 
@@ -641,11 +656,26 @@ export function initBot() {
       const res = db.completeTask(user.id, task.id);
       if (res.success) {
         const symbol = db.getSetting('currencySymbol') || '₹';
-        await ctx.answerCallbackQuery({ text: `✅ Task completed! +${symbol}${res.reward}` });
+        await ctx.answerCallbackQuery({ text: `✅ Task completed! +${symbol}${res.reward.toFixed(2)}` });
 
+        // Update the current task card to show completed state
+        try {
+          const updatedCard = renderTaskCard(user.id, taskIndex);
+          if (updatedCard && updatedCard.task) {
+            await ctx.editMessageText(updatedCard.text, {
+              parse_mode: 'HTML',
+              reply_markup: updatedCard.reply_markup,
+              disable_web_page_preview: true
+            });
+          }
+        } catch {}
+
+        const activeTasks = db.getTasks().filter(t => t.is_active);
         const taskKeyboard = new InlineKeyboard()
-          .text('💰 My Balance', 'menu_balance')
-          .text('📋 Next Task', `task_nav_${taskIndex + 1}`);
+          .text('💰 My Balance', 'menu_balance');
+        if (taskIndex + 1 < activeTasks.length) {
+          taskKeyboard.text('📋 Next Task', `task_nav_${taskIndex + 1}`);
+        }
 
         await ctx.reply(
           `🎉 <b>Task Completed: ${res.taskTitle}</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
@@ -653,18 +683,6 @@ export function initBot() {
           `💳 New Balance: <b>${symbol}${res.balance.toFixed(2)}</b>`,
           { parse_mode: 'HTML', reply_markup: taskKeyboard }
         );
-
-        // Advance to next task if possible
-        try {
-          const nextCard = renderTaskCard(user.id, taskIndex + 1);
-          if (nextCard && nextCard.task) {
-            await ctx.editMessageText(nextCard.text, {
-              parse_mode: 'HTML',
-              reply_markup: nextCard.reply_markup,
-              disable_web_page_preview: true
-            });
-          }
-        } catch {}
       } else {
         await ctx.answerCallbackQuery({ text: res.message, show_alert: true });
       }
@@ -1548,14 +1566,26 @@ export function renderTaskCard(userId, taskIndex = 0) {
 
   const desc = task.description || `Join ${task.title} 📢 and earn extra rewards,`;
 
-  const text =
-    `📋 <b>Task #${taskNum}</b>\n\n` +
-    `📌 <b>${task.title}</b>\n\n` +
-    `💰 <b>Reward:</b> ${symbol}${task.reward.toFixed(2)}\n\n` +
-    `${desc}\n` +
-    `after that click Joined ☑️ button to verify and continue.\n\n` +
-    `⚠️ <b>Important:</b> Task will be checked and reviewed by our team carefully. Only real and verified completions will be rewarded.\n\n` +
-    `📊 <b>Progress:</b> ${completedCount}/${totalTasks} tasks`;
+  let text;
+  if (isDone) {
+    text =
+      `📋 <b>Task #${taskNum}</b>\n\n` +
+      `📌 <b>${task.title}</b>\n\n` +
+      `💰 <b>Reward:</b> ${symbol}${task.reward.toFixed(2)}\n\n` +
+      `✅ <b>Status: COMPLETED & REWARDED (+${symbol}${task.reward.toFixed(2)})</b>\n\n` +
+      `🎉 You have already completed this task and received your reward!\n\n` +
+      `⚠️ <b>Important:</b> Keep subscribed to all joined channels. If you leave, penalties may be applied.\n\n` +
+      `📊 <b>Progress:</b> ${completedCount}/${totalTasks} tasks`;
+  } else {
+    text =
+      `📋 <b>Task #${taskNum}</b>\n\n` +
+      `📌 <b>${task.title}</b>\n\n` +
+      `💰 <b>Reward:</b> ${symbol}${task.reward.toFixed(2)}\n\n` +
+      `${desc}\n` +
+      `after that click Joined ☑️ button to verify and continue.\n\n` +
+      `⚠️ <b>Important:</b> Task will be checked and reviewed by our team carefully. Only real and verified completions will be rewarded.\n\n` +
+      `📊 <b>Progress:</b> ${completedCount}/${totalTasks} tasks`;
+  }
 
   const keyboard = new InlineKeyboard();
 
@@ -1582,7 +1612,7 @@ export function renderTaskCard(userId, taskIndex = 0) {
   }
 
   // Note: Open Mini App button removed as requested
-  return { text, reply_markup: keyboard, task, validIndex, completedCount, totalTasks };
+  return { text, reply_markup: keyboard, task, validIndex, completedCount, totalTasks, isDone };
 }
 
 /**

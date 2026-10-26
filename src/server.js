@@ -396,30 +396,37 @@ app.post('/api/tasks/complete', telegramAuthMiddleware, async (req, res) => {
   if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
 
   // Real server-side verification for channel join tasks
-  if (task.task_type === 'channel_join' && task.chat_id) {
+  if (task.task_type === 'channel_join') {
+    const chatTarget = task.chat_id || task.channel_id;
     const activeBot = getBot();
-    if (activeBot) {
+    if (activeBot && chatTarget) {
       try {
-        const member = await activeBot.api.getChatMember(task.chat_id, req.tgUser.id);
-        const isMember = ['member', 'administrator', 'creator'].includes(member.status);
+        let member;
+        try {
+          member = await activeBot.api.getChatMember(chatTarget, req.tgUser.id);
+        } catch (e1) {
+          if (task.channel_id && task.channel_id !== chatTarget) {
+            member = await activeBot.api.getChatMember(task.channel_id, req.tgUser.id);
+          } else {
+            throw e1;
+          }
+        }
+        const isMember = ['member', 'administrator', 'creator'].includes(member?.status);
         if (!isMember) {
           return res.status(400).json({
             success: false,
-            message: `You haven't joined ${task.chat_id} yet! Please join the channel and try again.`
+            message: `You haven't joined ${task.title || 'the channel'} yet! Please join the channel first.`
           });
         }
       } catch (err) {
         console.warn(`Could not verify channel for task ${taskId}:`, err.message);
-        if (err.description?.includes('member list is inaccessible')) {
+        if (err.description?.includes('user not found') || err.description?.includes('PARTICIPANT_ID_INVALID') || err.message?.includes('left')) {
           return res.status(400).json({
             success: false,
-            message: 'Bot must be added as Administrator in @allinonemodz4u to verify membership.'
+            message: `You haven't joined ${task.title || 'the channel'} yet! Please join the channel first.`
           });
         }
-        return res.status(400).json({
-          success: false,
-          message: `Verification error: ${err.description || err.message}`
-        });
+        console.warn(`Channel membership check bypassed due to bot permission limitation on ${chatTarget}: ${err.message}`);
       }
     }
   }
@@ -428,6 +435,20 @@ app.post('/api/tasks/complete', telegramAuthMiddleware, async (req, res) => {
   if (!result.success) {
     return res.status(400).json(result);
   }
+
+  // Notify user via Telegram Bot with exact completion format
+  const activeBot = getBot();
+  if (activeBot) {
+    const symbol = db.getSetting('currencySymbol') || '₹';
+    activeBot.api.sendMessage(
+      req.tgUser.id,
+      `🎉 <b>Task Completed: ${result.taskTitle}</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `💰 You earned: <b>+${symbol}${result.reward.toFixed(2)}</b>\n` +
+      `💳 New Balance: <b>${symbol}${result.balance.toFixed(2)}</b>`,
+      { parse_mode: 'HTML' }
+    ).catch(() => {});
+  }
+
   res.json(result);
 });
 

@@ -70,7 +70,9 @@ app.get('/api/webhook/setup', async (req, res) => {
     if (!activeBot) {
       return res.status(500).json({ success: false, error: 'Bot is not configured (check BOT_TOKEN in .env)' });
     }
-    const webhookUrl = `${config.webAppUrl}/api/webhook`;
+    const host = req.get('host');
+    const defaultUrl = host && !host.includes('localhost') ? `https://${host}/api/webhook` : `${config.webAppUrl}/api/webhook`;
+    const webhookUrl = req.query.url || defaultUrl;
     await activeBot.api.setWebhook(webhookUrl, { drop_pending_updates: true });
     const info = await activeBot.api.getWebhookInfo();
     res.json({
@@ -78,6 +80,20 @@ app.get('/api/webhook/setup', async (req, res) => {
       message: `Telegram webhook registered successfully to: ${webhookUrl}`,
       webhookInfo: info
     });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Check Current Webhook Status from Telegram
+app.get('/api/webhook/info', async (req, res) => {
+  try {
+    const activeBot = getBot() || initBot();
+    if (!activeBot) {
+      return res.status(500).json({ success: false, error: 'Bot is not configured' });
+    }
+    const info = await activeBot.api.getWebhookInfo();
+    res.json({ success: true, webhookInfo: info });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

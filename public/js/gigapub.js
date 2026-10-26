@@ -14,6 +14,13 @@ class GigaPubManager {
    * Uses primary and fallback CDN rotation as recommended by GigaPub
    */
   async init(projectId) {
+    if (typeof window.showGiga === 'function') {
+      this.isLoaded = true;
+      this.projectId = projectId || '8830';
+      console.log('✅ GigaPub official SDK detected and active!');
+      return;
+    }
+
     if (!projectId || projectId === 'YOUR_GIGAPUB_PROJECT_ID') {
       console.warn('GigaPub: Using simulated ad mode (placeholder project ID detected).');
       this.isLoaded = true;

@@ -10,16 +10,16 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 export const config = {
   // Bot & Server
-  botToken: process.env.BOT_TOKEN || '',
+  botToken: process.env.BOT_TOKEN || '7651918317:AAH1zEwWXZQxJFrkJ9rZ3Q86fubk8ODMmnw',
   adminId: String(process.env.ADMIN_ID || '6656939308').trim(),
   adminSecret: process.env.ADMIN_SECRET || 'admin123456',
   port: parseInt(process.env.PORT || '3000', 10),
-  webAppUrl: (process.env.WEBAPP_URL || 'http://localhost:3000').replace(/\/+$/, ''),
-  botUsername: (process.env.BOT_USERNAME || '').replace(/^@/, '').trim(),
+  webAppUrl: (process.env.WEBAPP_URL || 'https://onlineearning-inky.vercel.app').replace(/\/+$/, ''),
+  botUsername: (process.env.BOT_USERNAME || 'easyandfastearn_bot').replace(/^@/, '').trim(),
   supportUsername: (process.env.SUPPORT_USERNAME || 'gaurav_tnwr00').replace(/^@/, '').trim(),
 
   // GigaPub Ads
-  gigaPubProjectId: process.env.GIGAPUB_PROJECT_ID || 'YOUR_GIGAPUB_PROJECT_ID',
+  gigaPubProjectId: process.env.GIGAPUB_PROJECT_ID || '8830',
   gigaPubApiKey: process.env.GIGAPUB_API_KEY || '',
   gigaPubAppId: process.env.GIGAPUB_APP_ID || '',
 

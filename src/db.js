@@ -579,8 +579,8 @@ class Database {
   }
 
   setWallet(userId, { method = 'upi', details }) {
-    const user = this.getUser(userId);
-    if (!user) return null;
+    let user = this.getUser(userId);
+    if (!user) user = this.getOrCreateUser({ id: userId, first_name: 'Telegram User' }).user;
 
     if (method === 'upi') {
       user.wallet_upi = String(details).trim();
@@ -975,8 +975,8 @@ class Database {
 
   completeTask(userId, taskId) {
     const id = String(userId);
-    const user = this.getUser(id);
-    if (!user) return { success: false, message: 'User not found' };
+    let user = this.getUser(id);
+    if (!user) user = this.getOrCreateUser({ id, first_name: 'Telegram User' }).user;
     if (user.is_banned) return { success: false, message: 'Account is suspended' };
 
     const task = this.data.tasks.find(t => t.id === taskId);
@@ -1092,8 +1092,8 @@ class Database {
 
   claimDailyBonus(userId) {
     const id = String(userId);
-    const user = this.getUser(id);
-    if (!user) return { success: false, message: 'User not found' };
+    let user = this.getUser(id);
+    if (!user) user = this.getOrCreateUser({ id, first_name: 'Telegram User' }).user;
     if (user.is_banned) return { success: false, message: 'Account is banned' };
 
     const check = this.canClaimDailyBonus(id);
@@ -1149,8 +1149,8 @@ class Database {
   // =======================================================
 
   canWatchAd(userId) {
-    const user = this.getUser(userId);
-    if (!user) return { canWatch: false, reason: 'User not found' };
+    let user = this.getUser(userId);
+    if (!user) user = this.getOrCreateUser({ id: userId, first_name: 'Telegram User' }).user;
     if (user.is_banned) return { canWatch: false, reason: 'Account suspended' };
 
     const today = this.getTodayString();
@@ -1215,8 +1215,8 @@ class Database {
 
   verifyAndClaimAd(userId, sessionId, token) {
     const id = String(userId);
-    const user = this.getUser(id);
-    if (!user) return { success: false, message: 'User not found' };
+    let user = this.getUser(id);
+    if (!user) user = this.getOrCreateUser({ id, first_name: 'Telegram User' }).user;
 
     const session = this.data.ad_sessions[sessionId];
     if (!session || session.user_id !== id) {
@@ -1286,8 +1286,8 @@ class Database {
 
   recordDirectAdReward(userId) {
     const id = String(userId);
-    const user = this.getUser(id);
-    if (!user) return { success: false, message: 'User not found' };
+    let user = this.getUser(id);
+    if (!user) user = this.getOrCreateUser({ id, first_name: 'Telegram User' }).user;
 
     const check = this.canWatchAd(id);
     if (!check.canWatch) {
@@ -1337,20 +1337,8 @@ class Database {
 
   getWithdrawalEligibility(userId) {
     const id = String(userId);
-    const user = this.getUser(id);
-    if (!user) {
-      return {
-        eligible: false,
-        reason: 'User not found',
-        requiredReferrals: 10,
-        requiredAds: 30,
-        currentReferrals: 0,
-        currentAds: 0,
-        remainingReferrals: 10,
-        remainingAds: 30,
-        balance: 0
-      };
-    }
+    let user = this.getUser(id);
+    if (!user) user = this.getOrCreateUser({ id, first_name: 'Telegram User' }).user;
 
     const REQUIRED_REFERRALS = 10;
     const REQUIRED_ADS = 30;
@@ -1376,8 +1364,8 @@ class Database {
 
   createWithdrawal(userId, { method = 'upi', amount, details, bypassRules = false }) {
     const id = String(userId);
-    const user = this.getUser(id);
-    if (!user) return { success: false, message: 'User not found' };
+    let user = this.getUser(id);
+    if (!user) user = this.getOrCreateUser({ id, first_name: 'Telegram User' }).user;
     if (user.is_banned) return { success: false, message: 'Your account is banned' };
 
     const eligibility = this.getWithdrawalEligibility(id);

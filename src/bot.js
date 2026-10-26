@@ -407,7 +407,7 @@ export function initBot() {
 
       const symbol = db.getSetting('currencySymbol') || '₹';
       const adReward = db.getSetting('adReward') || 5.0;
-      const smartLink = config.adsterraSmartLink || 'https://asiafilm.org/4/61f332a3515c3caef8635a0905b1f8e8';
+      const smartLink = config.adsterraSmartLink || 'https://arwf.org/4/ef8f2a6df3e5243a89a484add434af25';
 
       const keyboard = new InlineKeyboard()
         .url('🎬 Open Sponsored Ad', smartLink)
@@ -1422,7 +1422,7 @@ async function handleWatchAdsAction(ctx) {
   } else {
     keyboard.text('🎬 Open Ad', 'bot_watch_ad').row();
   }
-  const adsterraLink = config.adsterraSmartLink || 'https://asiafilm.org/4/61f332a3515c3caef8635a0905b1f8e8';
+  const adsterraLink = config.adsterraSmartLink || 'https://arwf.org/4/ef8f2a6df3e5243a89a484add434af25';
   keyboard.url('⚡ High Earning SmartLink', adsterraLink).row();
   keyboard.url('🔥 Sponsor Offer 1', 'https://uplcm.com/4/11717959').row();
   keyboard.url('💎 Sponsor Offer 2', 'https://uplcm.com/4/11717884');

@@ -61,7 +61,7 @@ export const config = {
   ],
 
   // Adsterra SmartLink for High Revenue
-  adsterraSmartLink: process.env.ADSTERRA_SMARTLINK || 'https://asiafilm.org/4/61f332a3515c3caef8635a0905b1f8e8',
+  adsterraSmartLink: process.env.ADSTERRA_SMARTLINK || 'https://arwf.org/4/ef8f2a6df3e5243a89a484add434af25',
 
   maintenanceMode: process.env.MAINTENANCE_MODE === 'true'
 };

@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import config from '../config.js';
+import db from '../db.js';
 
 /**
  * Validates Telegram WebApp initData string using Bot Token
@@ -137,5 +138,11 @@ export function telegramAuthMiddleware(req, res, next) {
 
   req.tgUser = result.user;
   req.isDevMode = result.isDevMode;
+
+  // Auto-register user in DB so "User not found" never occurs across any mini app endpoint
+  if (req.tgUser && req.tgUser.id) {
+    db.getOrCreateUser(req.tgUser);
+  }
+
   next();
 }

@@ -290,6 +290,11 @@ app.post('/api/ads/complete', async (req, res) => {
     return res.status(400).json({ success: false, message: 'Missing user identification' });
   }
 
+  // Ensure user exists before crediting reward
+  if (!db.getUser(userId)) {
+    db.getOrCreateUser({ id: userId, first_name: 'Telegram User' });
+  }
+
   const result = db.recordDirectAdReward(userId);
   if (!result.success) {
     return res.status(400).json(result);
@@ -315,6 +320,10 @@ app.post('/api/wallet/update', telegramAuthMiddleware, (req, res) => {
   const { method, details } = req.body;
   if (!details) {
     return res.status(400).json({ success: false, message: 'Please provide valid payment details.' });
+  }
+
+  if (!db.getUser(req.tgUser.id)) {
+    db.getOrCreateUser(req.tgUser);
   }
 
   const updated = db.setWallet(req.tgUser.id, { method: method || 'upi', details });

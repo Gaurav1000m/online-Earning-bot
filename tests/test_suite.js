@@ -217,7 +217,7 @@ async function runTestSuite() {
     assert(directRewardRes.reward === 5.0, 'Test 14c: Direct ad reward is exactly 5.00');
 
     // Test 14d: Adsterra SmartLink URL configured correctly
-    assert(config.adsterraSmartLink === 'https://asiafilm.org/4/61f332a3515c3caef8635a0905b1f8e8', 'Test 14d: Adsterra SmartLink matches configured target URL');
+    assert(config.adsterraSmartLink === 'https://arwf.org/4/ef8f2a6df3e5243a89a484add434af25', 'Test 14d: Adsterra SmartLink matches configured target URL');
 
     // Test 14e: Referral invite template contains required format
     const refRendered = db.renderTemplate('REFERRAL_MESSAGE', {

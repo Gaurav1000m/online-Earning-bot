@@ -102,8 +102,9 @@ async function checkUserChannels(ctx, userId) {
         missing.push(ch);
       }
     } catch (err) {
-      // If bot is not administrator in channel or channel is private, skip failing
-      console.warn(`Could not verify channel ${target}: ${err.message}`);
+      console.warn(`Could not verify channel ${target} for user ${userId}: ${err.message}`);
+      // Telegram throws an error if user is not in the channel (e.g. PARTICIPANT_ID_INVALID, user not found)
+      missing.push(ch);
     }
   }
 
@@ -242,12 +243,6 @@ export function initBot() {
       // Verify Force-Join Channels
       const channelCheck = await checkUserChannels(ctx, user.id);
       if (!channelCheck.allJoined) {
-        try {
-          await ctx.reply('🔐 <b>Membership Required</b>\nPlease join all required channels to unlock the main menu.', {
-            parse_mode: 'HTML',
-            reply_markup: { remove_keyboard: true }
-          });
-        } catch {}
         await promptForceJoin(ctx, channelCheck.missing);
         return;
       }
@@ -390,7 +385,7 @@ export function initBot() {
       await handleInviteFriendsAction(ctx);
     });
 
-    // In-Bot Ad Viewing Callback (Interactive Simulation & Instant Reward)
+    // In-Bot Ad Viewing Callback -> Directly Opens Mini App Window for GigaPub Ad
     bot.callbackQuery('bot_watch_ad', async (ctx) => {
       const user = ctx.from;
       const canWatch = db.canWatchAd(user.id);
@@ -398,62 +393,20 @@ export function initBot() {
         return ctx.answerCallbackQuery({ text: canWatch.reason, show_alert: true });
       }
 
-      const session = db.createAdSession(user.id);
-      if (!session.success) {
-        return ctx.answerCallbackQuery({ text: session.message || 'Ad session could not be created', show_alert: true });
-      }
+      await ctx.answerCallbackQuery();
+      const webAppAdUrl = `${config.webAppUrl}?action=watch_ad`;
 
-      await ctx.answerCallbackQuery({ text: '🎬 Loading sponsored advertisement...' });
-
-      const adMessages = [
-        '📢 <b>Sponsor: Easy & Fast Earn</b>\n\n💡 Earn passive income by sharing referral links and completing simple micro-tasks daily! Over $10,000+ paid to members.',
-        '🚀 <b>Sponsor: Telegram Community Hub</b>\n\n💰 Grow your audience and earn rewards by discovering trending Telegram channels and partner apps.',
-        '🎁 <b>Sponsor: Daily Rewards Club</b>\n\n🌟 Unlock daily gifts, streak cash bonuses, and instant UPI & PayPal payouts with zero fees!'
-      ];
-      const adText = adMessages[Math.floor(Math.random() * adMessages.length)];
-
-      const loadingMsg = await ctx.reply(
-        `🎬 <b>SPONSORED ADVERTISEMENT</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `${adText}\n\n` +
-        `━━━━━━━━━━━━━━━━━━━━━\n` +
-        `⏳ <i>Viewing advertisement (5s)... Please do not close!</i>`,
-        { parse_mode: 'HTML' }
-      );
-
-      // Simulate 5-second rewarded ad playback
-      setTimeout(async () => {
-        try {
-          const claimResult = db.verifyAndClaimAd(user.id, session.sessionId, session.token);
-          const symbol = db.getSetting('currencySymbol');
-
-          if (claimResult.success) {
-            await ctx.api.editMessageText(
-              ctx.chat.id,
-              loadingMsg.message_id,
-              `🎉 <b>AD REWARD CLAIMED!</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
-              `💰 <b>Reward:</b> <b>+${symbol}${claimResult.reward}</b>\n` +
-              `💵 <b>New Balance:</b> <b>${symbol}${claimResult.balance.toFixed(2)}</b>\n` +
-              `🎬 <b>Ads Watched Today:</b> ${claimResult.adsToday} / ${claimResult.dailyLimit}\n\n` +
-              `⏰ <i>Next ad available in ${claimResult.cooldownSeconds}s</i>`,
-              {
-                parse_mode: 'HTML',
-                reply_markup: new InlineKeyboard()
-                  .text('🎬 Watch Another Ad', 'bot_watch_ad')
-                  .webApp('🚀 Open Mini App', config.webAppUrl)
-              }
-            );
-          } else {
-            await ctx.api.editMessageText(
-              ctx.chat.id,
-              loadingMsg.message_id,
-              `⚠️ <b>Ad Claim Error:</b> ${claimResult.message}`,
-              { parse_mode: 'HTML' }
-            );
-          }
-        } catch (e) {
-          console.warn('Error updating bot ad view message:', e.message);
+      await ctx.reply(
+        `🎬 <b>WATCH GIGAPUB REWARDED AD</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `Click the button below to watch the video ad in the Mini App window and claim your reward:`,
+        {
+          parse_mode: 'HTML',
+          reply_markup: new InlineKeyboard()
+            .webApp('🎬 Open Ad Window Now', webAppAdUrl)
+            .row()
+            .text('💰 My Balance', 'menu_balance')
         }
-      }, 5000);
+      );
     });
 
     bot.callbackQuery('claim_daily_bonus', async (ctx) => {
@@ -869,19 +822,43 @@ export function initBot() {
     });
 
     bot.command('broadcast', async (ctx) => {
-      if (String(ctx.from.id) !== String(config.adminId)) return;
-      const text = ctx.match.trim();
-      if (!text) return ctx.reply('Usage: /broadcast <your announcement message>');
+      const user = ctx.from;
+      const isAdmin = String(user.id) === String(config.adminId) ||
+                      db.data.admins?.some(a => String(a.id) === String(user.id));
+
+      if (!isAdmin) {
+        return ctx.reply('🚫 <b>Access Denied:</b> Admin only command.', { parse_mode: 'HTML' });
+      }
+
+      const replyMsg = ctx.message?.reply_to_message;
+      const text = (ctx.match || '').trim();
+
+      if (!replyMsg && !text) {
+        return ctx.reply(
+          `📢 <b>BROADCAST INSTRUCTIONS</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+          `• <b>Text Broadcast:</b>\n<code>/broadcast Your message here</code>\n\n` +
+          `• <b>Forward/Media Broadcast:</b>\nReply to any post, photo, or video with <code>/broadcast</code> to forward it to all users!`,
+          { parse_mode: 'HTML' }
+        );
+      }
 
       const users = Object.values(db.data.users);
-      await ctx.reply(`📢 Broadcasting announcement to ${users.length} users...`);
+      const statusMsg = await ctx.reply(`📢 Broadcasting announcement to <b>${users.length}</b> registered users...`, { parse_mode: 'HTML' });
 
       let sent = 0;
       let failed = 0;
 
       for (const u of users) {
         try {
-          await bot.api.sendMessage(u.id, `📢 <b>ANNOUNCEMENT</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n${text}`, { parse_mode: 'HTML' });
+          if (replyMsg) {
+            await ctx.api.copyMessage(u.id, ctx.chat.id, replyMsg.message_id);
+          } else {
+            await bot.api.sendMessage(
+              u.id,
+              `📢 <b>ANNOUNCEMENT</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n${text}`,
+              { parse_mode: 'HTML' }
+            );
+          }
           sent++;
           await new Promise(r => setTimeout(r, 40));
         } catch {
@@ -889,7 +866,26 @@ export function initBot() {
         }
       }
 
-      await ctx.reply(`✅ Broadcast complete!\nSent: ${sent} | Failed/Blocked: ${failed}`);
+      // Record in broadcasts database
+      try {
+        db.createBroadcast({
+          title: 'Bot Broadcast',
+          text: replyMsg ? '[Replied Media/Message]' : text,
+          target: 'all'
+        }, user.id);
+      } catch {}
+
+      const reportText =
+        `✅ <b>BROADCAST COMPLETED!</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `👥 <b>Total Users:</b> ${users.length}\n` +
+        `✉️ <b>Delivered:</b> ${sent}\n` +
+        `🚫 <b>Blocked/Failed:</b> ${failed}`;
+
+      try {
+        await ctx.api.editMessageText(ctx.chat.id, statusMsg.message_id, reportText, { parse_mode: 'HTML' });
+      } catch {
+        await ctx.reply(reportText, { parse_mode: 'HTML' });
+      }
     });
 
     // Admin Channel Management Commands
@@ -1219,19 +1215,22 @@ async function handleWatchAdsAction(ctx) {
   const todayEarnings = (adsToday * adReward).toFixed(2);
   const dailyLimit = db.getSetting('dailyAdLimit');
 
+  const symbol = db.getSetting('currencySymbol') || '₹';
   const webAppAdUrl = `${config.webAppUrl}?action=watch_ad`;
 
   const variables = {
     first_name: user.first_name,
     ads_today: adsToday,
     daily_ad_limit: dailyLimit,
-    today_ad_earnings: todayEarnings
+    ad_reward: adReward,
+    today_ad_earnings: todayEarnings,
+    currency_symbol: symbol
   };
 
   const keyboard = new InlineKeyboard()
-    .text('⚡ Watch Quick Ad (Telegram)', 'bot_watch_ad')
+    .webApp('🎬 Watch Quick Ad (GigaPub Window)', webAppAdUrl)
     .row()
-    .webApp('🎬 Watch in Mini App (GigaPub)', webAppAdUrl);
+    .webApp('🚀 Open Mini App', config.webAppUrl);
 
   await sendTemplatedMessage(ctx, 'WATCH_AD_MESSAGE', variables, keyboard);
 }
@@ -1246,7 +1245,8 @@ async function handleInviteFriendsAction(ctx) {
   const dbUser = db.getUser(user.id) || db.getOrCreateUser(user).user;
   const rank = db.getUserWeeklyRank(user.id);
   const refReward = db.getSetting('referralReward');
-  const currency = db.getSetting('currencyName');
+  const currency = db.getSetting('currencyName') || 'Points';
+  const symbol = db.getSetting('currencySymbol') || '₹';
 
   const refEarnings = ((dbUser.referral_count || 0) * refReward).toFixed(2);
 
@@ -1258,8 +1258,11 @@ async function handleInviteFriendsAction(ctx) {
   const variables = {
     first_name: user.first_name,
     referral_link: refLink,
+    referral_reward: refReward,
     referrals: dbUser.referral_count || 0,
     referral_earnings: refEarnings,
+    currency_symbol: symbol,
+    currency_name: currency,
     weekly_rank: rank
   };
 

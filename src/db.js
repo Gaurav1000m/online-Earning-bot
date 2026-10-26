@@ -59,7 +59,7 @@ export const DEFAULT_TEMPLATES = {
     inline_buttons: []
   },
   REFERRAL_MESSAGE: {
-    text: `👥 <b>INVITE & EARN</b>\n━━━━━━━━━━━━━━━━━━\n\n💰 <b>Earn {{currency_symbol}}{{referral_reward}}</b> for every valid referral!\n\n🔗 <b>YOUR REFERRAL LINK:</b>\n<code>{{referral_link}}</code>\n\n━━━━━━━━━━━━━━━━━━\n📊 <b>YOUR STATS</b>\n👥 Total Referrals: <b>{{referrals}}</b>\n💰 Referral Earnings: <b>{{currency_symbol}}{{referral_earnings}}</b>\n🏆 Weekly Rank: <b>#{{weekly_rank}}</b>\n\n━━━━━━━━━━━━━━━━━━\n🎁 <b>WEEKLY REFERRAL PRIZES</b>\n🥇 1st: {{currency_symbol}}10\n🥈 2nd: {{currency_symbol}}10\n🥉 3rd: {{currency_symbol}}10\n4️⃣–🔟: {{currency_symbol}}5\n🔟–2️⃣0️⃣: {{currency_symbol}}3\n\nShare your link and earn more! 🚀`,
+    text: `👥 <b>INVITE & EARN</b>\n━━━━━━━━━━━━━━━━━━\n\n💰 <b>Earn {{currency_symbol}}{{referral_reward}}</b> for every valid referral!\n\n🔗 <b>YOUR REFERRAL LINK:</b>\n<code>{{referral_link}}</code>\n\n━━━━━━━━━━━━━━━━━━\n📊 <b>YOUR STATS</b>\n👥 Total Referrals: <b>{{referrals}}</b>\n💰 Referral Earnings: <b>{{currency_symbol}}{{referral_earnings}}</b>\n🏆 Weekly Rank: <b>#{{weekly_rank}}</b>\n\n━━━━━━━━━━━━━━━━━━\n🎁 <b>WEEKLY LEADERBOARD PRIZES</b>\n🥇 1st Place: <b>{{currency_symbol}}50</b>\n🥈 2nd Place: <b>{{currency_symbol}}30</b>\n🥉 3rd Place: <b>{{currency_symbol}}20</b>\n4️⃣–🔟 4th–10th: <b>{{currency_symbol}}10 each</b>\n🔟–2️⃣0️⃣ 11th–20th: <b>{{currency_symbol}}5 each</b>\n\nShare your link and start climbing the leaderboard! 🚀`,
     media_type: 'none',
     media_url: '',
     inline_buttons: []
@@ -184,11 +184,11 @@ const DEFAULT_STATE = {
   weekly_leaderboards: {
     current_week_start: new Date().toISOString(),
     prizes: [
-      { rank: 1, prize: 10 },
-      { rank: 2, prize: 10 },
-      { rank: 3, prize: 10 },
-      { ranks: '4-10', prize: 5 },
-      { ranks: '11-20', prize: 3 }
+      { rank: 1, prize: 50 },
+      { rank: 2, prize: 30 },
+      { rank: 3, prize: 20 },
+      { ranks: '4-10', prize: 10 },
+      { ranks: '11-20', prize: 5 }
     ],
     history: []
   },

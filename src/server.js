@@ -315,6 +315,7 @@ app.get('/api/referrals/list', telegramAuthMiddleware, (req, res) => {
     success: true,
     referrals,
     leaderboard,
+    prizes: db.data.weekly_leaderboards?.prizes || [],
     weeklyRank: rank,
     referralReward: db.getSetting('referralReward'),
     currencyName: db.getSetting('currencyName'),

@@ -53,10 +53,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   startTimers();
 
-  // Handle URL deep links from Telegram Bot buttons
+  // Handle URL deep links from Telegram Bot buttons (query, hash, or tg start_param)
   const urlParams = new URLSearchParams(window.location.search);
-  const actionParam = urlParams.get('action');
-  const tabParam = urlParams.get('tab');
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const tgStart = tg?.initDataUnsafe?.start_param || '';
+
+  const actionParam = urlParams.get('action') || hashParams.get('action') || (tgStart === 'watch_ad' ? 'watch_ad' : '');
+  const tabParam = urlParams.get('tab') || hashParams.get('tab') || (['earn', 'refer', 'wallet'].includes(tgStart) ? tgStart : '');
 
   if (tabParam) {
     switchTab(tabParam);
@@ -66,7 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     switchTab('earn');
     setTimeout(() => {
       handleWatchAd();
-    }, 600);
+    }, 700);
   }
 });
 
@@ -572,9 +575,9 @@ async function loadReferralData() {
         leadEl.innerHTML = res.leaderboard.map((item, idx) => {
           let rankClass = '';
           let rankBadge = `#${idx + 1}`;
-          if (idx === 0) { rankClass = 'top-1'; rankBadge = '🥇 1st ($10)'; }
-          else if (idx === 1) { rankClass = 'top-2'; rankBadge = '🥈 2nd ($10)'; }
-          else if (idx === 2) { rankClass = 'top-3'; rankBadge = '🥉 3rd ($10)'; }
+          if (idx === 0) { rankClass = 'top-1'; rankBadge = `🥇 1st (${symbol}50)`; }
+          else if (idx === 1) { rankClass = 'top-2'; rankBadge = `🥈 2nd (${symbol}30)`; }
+          else if (idx === 2) { rankClass = 'top-3'; rankBadge = `🥉 3rd (${symbol}20)`; }
 
           return `
             <div class="leaderboard-item ${rankClass}">

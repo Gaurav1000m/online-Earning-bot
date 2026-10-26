@@ -26,7 +26,7 @@ if (process.env.VERCEL && !fs.existsSync(DB_PATH)) {
 
 export const DEFAULT_TEMPLATES = {
   START_MESSAGE: {
-    text: `👋 <b>Welcome, {{first_name}}!</b>\n\n🌟 Welcome to the <b>Refer & Earn Bot</b>.\n\n💡 <b>How to Earn:</b>\n• 👥 <b>Refer Friends:</b> Earn <b>{{currency_symbol}}{{referral_reward}}</b> per valid invite\n• 🎬 <b>Watch Ads:</b> Earn <b>{{currency_symbol}}{{ad_reward}}</b> per ad\n• 🎁 <b>Daily Bonus:</b> Streak rewards up to <b>{{currency_symbol}}0.50</b>\n• 📋 <b>Tasks:</b> High-reward social tasks\n• 💸 <b>Instant Withdrawal:</b> Fast payouts to UPI, PayPal & Bank\n\n👇 <i>Choose an option from the menu below to start earning!</i>`,
+    text: `👋 <b>Welcome, {{first_name}}!</b>\n\n🌟 Welcome to the <b>Refer & Earn Bot</b>.\n\n💡 <b>How to Earn:</b>\n• 👥 <b>Refer Friends:</b> Earn <b>{{currency_symbol}}{{referral_reward}}</b> per valid invite\n• 🎬 <b>Watch Ads:</b> Earn <b>{{currency_symbol}}{{ad_reward}}</b> per ad\n• 🎁 <b>Daily Bonus:</b> Streak rewards up to <b>{{currency_symbol}}35</b>\n• 📋 <b>Tasks:</b> High-reward social tasks\n• 💸 <b>Instant Withdrawal:</b> Fast payouts to UPI, PayPal & Bank\n\n👇 <i>Choose an option from the menu below to start earning!</i>`,
     media_type: 'none',
     media_url: '',
     inline_buttons: [
@@ -65,7 +65,7 @@ export const DEFAULT_TEMPLATES = {
     inline_buttons: []
   },
   WATCH_AD_MESSAGE: {
-    text: `🎬 <b>Watch Ads & Earn</b>\n\nWatch a short 10-second ad and earn {{currency_symbol}}{{ad_reward}} for each completed ad. You can watch {{daily_ad_limit_text}} per day.\n\n📊 <b>Total ads watched:</b> {{total_ads_watched}}\n👀 <b>Ads watched today:</b> {{ads_today_display}}\n\nTap below to open the ad👇`,
+    text: `🎬 <b>Watch Ads & Earn</b>\n\nWatch a short 20-second ad and earn {{currency_symbol}}{{ad_reward}} for each completed ad. You can watch {{daily_ad_limit_text}} per day.\n\n📊 <b>Total ads watched:</b> {{total_ads_watched}}\n👀 <b>Ads watched today:</b> {{ads_today_display}}\n\nTap below to open the ad👇`,
     media_type: 'none',
     media_url: '',
     inline_buttons: []
@@ -160,8 +160,8 @@ const DEFAULT_STATE = {
     {
       id: 'task_join_allinonemodz',
       title: 'Join Telegram Channel',
-      description: 'Join Telegram Channel 📢 and earn 0.5$ extra rewards,',
-      reward: 0.50,
+      description: 'Join Telegram Channel 📢 and earn ₹5.00 extra rewards,',
+      reward: 5.00,
       task_type: 'channel_join',
       target_url: 'https://t.me/allinonemodz4u',
       chat_id: '@allinonemodz4u',
@@ -173,8 +173,8 @@ const DEFAULT_STATE = {
     {
       id: 'task_join_channel_2',
       title: 'Join Partner Channel',
-      description: 'Join Telegram Channel 📢 and earn 0.5$ extra rewards,',
-      reward: 0.50,
+      description: 'Join Telegram Channel 📢 and earn ₹5.00 extra rewards,',
+      reward: 5.00,
       task_type: 'channel_join',
       target_url: 'https://t.me/studywithgaurav0',
       chat_id: '@studywithgaurav0',
@@ -188,7 +188,7 @@ const DEFAULT_STATE = {
   ad_sessions: {},
   ad_logs: [],
   bonuses: {
-    daily_ladder: [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.50],
+    daily_ladder: [5, 10, 15, 20, 25, 30, 35],
     welcome_bonus: 0.00,
     streak_bonus: 0.00
   },
@@ -290,11 +290,14 @@ class Database {
         if (!state.message_templates.FORCE_JOIN_MESSAGE || state.message_templates.FORCE_JOIN_MESSAGE.text.includes('JOIN REQUIRED CHANNELS')) {
           state.message_templates.FORCE_JOIN_MESSAGE = DEFAULT_TEMPLATES.FORCE_JOIN_MESSAGE;
         }
-        if (!state.message_templates.WATCH_AD_MESSAGE || state.message_templates.WATCH_AD_MESSAGE.text.includes('today_ad_earnings') || state.message_templates.WATCH_AD_MESSAGE.text.includes('up to {{daily_ad_limit}} ads')) {
+        if (!state.message_templates.WATCH_AD_MESSAGE || !state.message_templates.WATCH_AD_MESSAGE.text.includes('20-second')) {
           state.message_templates.WATCH_AD_MESSAGE = DEFAULT_TEMPLATES.WATCH_AD_MESSAGE;
         }
         if (!state.message_templates.AD_SUCCESS_MESSAGE || state.message_templates.AD_SUCCESS_MESSAGE.text.includes('🎉 You earned') || state.message_templates.AD_SUCCESS_MESSAGE.text.includes('{{ads_today}}/{{daily_ad_limit}}')) {
           state.message_templates.AD_SUCCESS_MESSAGE = DEFAULT_TEMPLATES.AD_SUCCESS_MESSAGE;
+        }
+        if (!state.message_templates.START_MESSAGE || state.message_templates.START_MESSAGE.text.includes('0.50')) {
+          state.message_templates.START_MESSAGE = DEFAULT_TEMPLATES.START_MESSAGE;
         }
         if (!state.message_templates.TASK_MESSAGE || state.message_templates.TASK_MESSAGE.text.includes('Select a task below')) {
           state.message_templates.TASK_MESSAGE = DEFAULT_TEMPLATES.TASK_MESSAGE;
@@ -305,6 +308,20 @@ class Database {
           state.settings.btn_bonus = '🎁 Bonus';
         }
 
+        // Apply updated daily bonus streak ladder [5, 10, 15, 20, 25, 30, 35]
+        if (!state.bonuses) state.bonuses = {};
+        state.bonuses.daily_ladder = [5, 10, 15, 20, 25, 30, 35];
+
+        // Ensure tasks reward is updated to ₹5.00 per task
+        if (Array.isArray(state.tasks)) {
+          state.tasks.forEach(t => {
+            if (t.reward < 5.0) t.reward = 5.0;
+            if (t.description && t.description.includes('0.5$')) {
+              t.description = t.description.replace('0.5$', '₹5.00');
+            }
+          });
+        }
+
         // Apply environment economy settings
         state.settings.referralReward = config.referralReward;
         state.settings.adReward = config.adReward;
@@ -312,6 +329,7 @@ class Database {
         state.settings.dailyAdLimit = config.dailyAdLimit;
         state.settings.currencySymbol = config.currencySymbol;
         state.settings.currencyName = config.currencyName;
+        state.settings.adCooldownSeconds = config.adCooldownSeconds;
 
         return state;
       }
@@ -1002,6 +1020,49 @@ class Database {
     };
   }
 
+  revokeTaskCompletion(userId, taskId) {
+    const id = String(userId);
+    const initialLen = (this.data.task_completions || []).length;
+    this.data.task_completions = (this.data.task_completions || []).filter(
+      c => !(c.user_id === id && c.task_id === taskId)
+    );
+    if (this.data.task_completions.length !== initialLen) {
+      const user = this.getUser(id);
+      if (user && user.tasks_completed > 0) {
+        user.tasks_completed = Math.max(0, user.tasks_completed - 1);
+      }
+      this.save();
+      return true;
+    }
+    return false;
+  }
+
+  penalizeLeftChannel(userId, channelIdentifier, penaltyAmount = 10.0) {
+    const id = String(userId);
+    const user = this.getUser(id);
+    if (!user) return null;
+
+    const penalty = parseFloat(penaltyAmount) || 10.0;
+    const refEventId = `PENALTY-LEFT-${id}-${Date.now()}`;
+
+    // Deduct penalty
+    this.recordTransaction({
+      userId: id,
+      amount: -penalty,
+      type: 'CHANNEL_LEFT_PENALTY',
+      referenceId: refEventId,
+      description: `Penalty for leaving required channel (${channelIdentifier})`
+    });
+
+    // Mark channels as unverified
+    user.verified_channels = false;
+    user.referral_status = 'pending_verification';
+
+    this.save();
+    this.logAudit('SYSTEM', 'CHANNEL_LEFT_PENALTY', id, { channel: channelIdentifier, penalty, balanceAfter: user.balance });
+    return user;
+  }
+
   // =======================================================
   // 8. DAILY BONUS SYSTEM (Rule 15 & 16)
   // =======================================================
@@ -1043,7 +1104,7 @@ class Database {
       };
     }
 
-    const ladder = this.data.bonuses.daily_ladder || [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.50];
+    const ladder = this.data.bonuses?.daily_ladder || [5, 10, 15, 20, 25, 30, 35];
     const now = Date.now();
     const lastClaim = user.last_daily_bonus || 0;
     const hoursSinceLast = (now - lastClaim) / (1000 * 60 * 60);

@@ -144,15 +144,15 @@
   <div class="ad-card">
     <div id="playing-view">
       <div class="ad-badge">🎬 SPONSORED AD</div>
-      <h1 class="ad-title">Watch Short 10s Ad</h1>
-      <p class="ad-desc">Watch this 10-second advertisement to automatically credit your reward.</p>
+      <h1 class="ad-title">Watch Short 20s Ad</h1>
+      <p class="ad-desc">Watch this 20-second advertisement to automatically credit your reward.</p>
 
       <div class="timer-circle-box">
         <svg class="timer-circle-svg" viewBox="0 0 130 130">
           <circle class="timer-circle-bg" cx="65" cy="65" r="58"></circle>
           <circle id="timer-bar" class="timer-circle-progress" cx="65" cy="65" r="58"></circle>
         </svg>
-        <div id="timer-count" class="timer-text">10s</div>
+        <div id="timer-count" class="timer-text">20s</div>
       </div>
 
       <div class="reward-pill">
@@ -160,7 +160,7 @@
       </div>
 
       <div id="status-text" class="status-text">
-        ⏳ Playing ad... Please wait 10 seconds.
+        ⏳ Playing ad... Please wait 20 seconds.
       </div>
 
       <!-- Direct Links for High Monetization Revenue -->
@@ -199,7 +199,7 @@
     const userId = urlParams.get('userId') || tg?.initDataUnsafe?.user?.id || 'demo_user';
     const initData = tg?.initData || '';
 
-    const TOTAL_SECONDS = 10;
+    const TOTAL_SECONDS = 20;
     let remaining = TOTAL_SECONDS;
     const circleCircumference = 2 * Math.PI * 58; // ~364
 

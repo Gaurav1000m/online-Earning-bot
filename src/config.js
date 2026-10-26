@@ -49,7 +49,7 @@ export const config = {
   minWithdrawal: parseFloat(process.env.MIN_WITHDRAWAL || '500.0'),
   maxWithdrawal: parseFloat(process.env.MAX_WITHDRAWAL || '10000.0'),
 
-  adCooldownSeconds: parseInt(process.env.AD_COOLDOWN_SECONDS || '10', 10),
+  adCooldownSeconds: parseInt(process.env.AD_COOLDOWN_SECONDS || '20', 10),
   dailyAdLimit: parseInt(process.env.DAILY_AD_LIMIT || '0', 10),
   maxDailyAdEarnings: parseFloat(process.env.MAX_DAILY_AD_EARNINGS || '25.0'),
 

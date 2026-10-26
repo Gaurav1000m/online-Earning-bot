@@ -156,8 +156,15 @@ function updateStreakLadder(currentStreak = 0, ladder = []) {
   const countEl = document.getElementById('streak-days-count');
   if (countEl) countEl.textContent = currentStreak;
 
+  const effectiveLadder = (ladder && ladder.length > 0) ? ladder : (state.bonusLadder || [5, 10, 15, 20, 25, 30, 35]);
+
   document.querySelectorAll('.streak-pill').forEach(pill => {
     const day = parseInt(pill.getAttribute('data-day'), 10);
+    const amtEl = pill.querySelector('b');
+    if (amtEl && effectiveLadder[day - 1] !== undefined) {
+      amtEl.textContent = effectiveLadder[day - 1];
+    }
+
     if (day <= currentStreak) {
       pill.style.background = 'linear-gradient(135deg, #10b981, #059669)';
       pill.style.color = '#ffffff';
@@ -457,7 +464,7 @@ async function handleWatchAd() {
       if (window.GigaPub && typeof window.GigaPub.showRewardedAd === 'function') {
         return window.GigaPub.showRewardedAd();
       }
-      return new Promise(resolve => setTimeout(resolve, 10000));
+      return new Promise(resolve => setTimeout(resolve, 20000));
     };
 
     await triggerAd()

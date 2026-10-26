@@ -204,7 +204,7 @@ async function runTestSuite() {
     const bonusRes = db.claimDailyBonus(testUserBId);
     assert(bonusRes.success === true, 'Test 15: Daily bonus claimed successfully');
     assert(bonusRes.streak === 1, 'Test 15: Streak day starts at 1');
-    assert(bonusRes.amount > 0, 'Test 15: Non-zero bonus amount credited');
+    assert(bonusRes.amount === 5, 'Test 15: Day 1 streak bonus is exactly 5');
 
     // ----------------------------------------------------
     // TEST 16: Duplicate Bonus Claim Rejection
@@ -220,12 +220,22 @@ async function runTestSuite() {
     const targetTask = tasks[0];
     const taskCompleteRes = db.completeTask(testUserAId, targetTask.id);
     assert(taskCompleteRes.success === true, 'Test 17: Task completed and reward credited to wallet');
+    assert(taskCompleteRes.reward === 5.0, 'Test 17: Task reward is exactly 5.0');
 
     // ----------------------------------------------------
     // TEST 18: Duplicate Task Completion Rejection
     // ----------------------------------------------------
     const dupTaskRes = db.completeTask(testUserAId, targetTask.id);
     assert(dupTaskRes.success === false, 'Test 18: Duplicate task completion prevented by idempotency');
+
+    // ----------------------------------------------------
+    // TEST 18b: Channel Departure Penalty (10 rs deduction & unverified status)
+    // ----------------------------------------------------
+    const balBeforePenalty = db.getUser(testUserBId).balance;
+    const penUser = db.penalizeLeftChannel(testUserBId, '@allinonemodz4u', 10.0);
+    assert(penUser.verified_channels === false, 'Test 18b: User marked unverified upon channel departure');
+    assert(penUser.balance === Math.max(0, balBeforePenalty - 10.0), 'Test 18b: 10 rs penalty deducted from user balance');
+    db.updateUser(testUserBId, { verified_channels: true });
 
     // ----------------------------------------------------
     // TEST 19: Withdrawal Lock (Requires 10 Referrals & 30 Ads)

@@ -89,6 +89,8 @@ async function checkUserChannels(ctx, userId) {
   const enabledChannels = db.getEnabledChannels();
   if (enabledChannels.length === 0) return { allJoined: true, missing: [] };
 
+  const dbUser = db.getUser(userId);
+  const wasVerified = Boolean(dbUser && dbUser.verified_channels);
   const missing = [];
 
   for (const ch of enabledChannels) {
@@ -108,16 +110,34 @@ async function checkUserChannels(ctx, userId) {
     }
   }
 
+  // If user was previously verified but has now left one or more channels -> Apply ₹10 penalty
+  if (wasVerified && missing.length > 0) {
+    const chName = missing[0].name || missing[0].username || 'Official Channel';
+    const PENALTY_AMOUNT = 10.0;
+    const penalizedUser = db.penalizeLeftChannel(userId, chName, PENALTY_AMOUNT);
+    const symbol = db.getSetting('currencySymbol') || '₹';
+
+    await ctx.reply(
+      `⚠️ <b>Channel Membership Lost!</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `You left our official channel: <b>${chName}</b>.\n\n` +
+      `🚨 <b>Penalty Applied:</b> <b>-${symbol}${PENALTY_AMOUNT.toFixed(2)}</b> has been deducted from your balance!\n` +
+      `💰 Current Balance: <b>${symbol}${penalizedUser ? penalizedUser.balance.toFixed(2) : '0.00'}</b>\n\n` +
+      `🔒 <i>Your account access is restricted. Rejoin all required channels below to regain access.</i>`,
+      { parse_mode: 'HTML' }
+    ).catch(() => {});
+  }
+
   return { allJoined: missing.length === 0, missing };
 }
 
 /**
  * Shows force join message with individual channel buttons and Verify button
  */
-async function promptForceJoin(ctx, missingChannels) {
+async function promptForceJoin(ctx, missingChannels = null) {
+  const channels = (missingChannels && missingChannels.length > 0) ? missingChannels : db.getEnabledChannels();
   const keyboard = new InlineKeyboard();
 
-  missingChannels.forEach(ch => {
+  channels.forEach(ch => {
     const url = ch.invite_url || (ch.username ? `https://t.me/${ch.username.replace(/^@/, '')}` : '#');
     const label = ch.button_label || `📢 Join ${ch.name}`;
     keyboard.url(label, url).row();
@@ -393,20 +413,20 @@ export function initBot() {
         return ctx.answerCallbackQuery({ text: canWatch.reason, show_alert: true });
       }
 
-      await ctx.answerCallbackQuery({ text: '🎬 Watching 10s ad...' });
+      await ctx.answerCallbackQuery({ text: '🎬 Watching 20s ad...' });
 
       const symbol = db.getSetting('currencySymbol') || '₹';
       const adReward = db.getSetting('adReward') || 5.0;
       const dailyLimit = parseInt(db.getSetting('dailyAdLimit') || '0', 10);
 
       const adMsg = await ctx.reply(
-        `🎬 <b>Watching 10-second Ad...</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `⏳ Please wait <b>10 seconds</b> while the advertisement plays.\n` +
+        `🎬 <b>Watching 20-second Ad...</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `⏳ Please wait <b>20 seconds</b> while the advertisement plays.\n` +
         `Your <b>+${symbol}${adReward.toFixed(2)}</b> reward will be credited automatically.`,
         { parse_mode: 'HTML' }
       );
 
-      // Automatically credit reward after 10 seconds
+      // Automatically credit reward after 20 seconds
       setTimeout(async () => {
         const result = db.recordDirectAdReward(user.id);
         if (result.success) {
@@ -422,7 +442,7 @@ export function initBot() {
 
           await ctx.reply(completionText, { parse_mode: 'HTML' });
         }
-      }, 10000);
+      }, 20000);
     });
 
     bot.callbackQuery('claim_daily_bonus', async (ctx) => {
@@ -591,6 +611,41 @@ export function initBot() {
         } catch {}
       } else {
         await ctx.answerCallbackQuery({ text: res.message, show_alert: true });
+      }
+    });
+
+    // Real-Time Channel Departure Listener (detects when user leaves an official channel)
+    bot.on('chat_member', async (ctx) => {
+      const update = ctx.chatMember;
+      if (!update) return;
+
+      const oldStatus = update.old_chat_member?.status;
+      const newStatus = update.new_chat_member?.status;
+      const targetUser = update.new_chat_member?.user;
+      if (!targetUser) return;
+
+      if (['member', 'administrator', 'creator'].includes(oldStatus) && ['left', 'kicked'].includes(newStatus)) {
+        const dbUser = db.getUser(targetUser.id);
+        if (dbUser && dbUser.verified_channels) {
+          const channelTitle = ctx.chat?.title || ctx.chat?.username || 'Official Channel';
+          const PENALTY_AMOUNT = 10.0;
+          const penalizedUser = db.penalizeLeftChannel(targetUser.id, channelTitle, PENALTY_AMOUNT);
+          const symbol = db.getSetting('currencySymbol') || '₹';
+
+          try {
+            await ctx.api.sendMessage(
+              targetUser.id,
+              `⚠️ <b>Channel Membership Lost!</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+              `You left our channel: <b>${channelTitle}</b>.\n\n` +
+              `🚨 <b>Penalty Applied:</b> <b>-${symbol}${PENALTY_AMOUNT.toFixed(2)}</b> has been deducted from your balance!\n` +
+              `💰 Current Balance: <b>${symbol}${penalizedUser ? penalizedUser.balance.toFixed(2) : '0.00'}</b>\n\n` +
+              `🔒 <i>Your account access is restricted. Please rejoin our channel and verify to unlock features.</i>`,
+              { parse_mode: 'HTML' }
+            );
+          } catch (err) {
+            console.warn(`Could not send penalty message to user ${targetUser.id}:`, err.message);
+          }
+        }
       }
     });
 
@@ -1357,10 +1412,10 @@ async function handleInviteFriendsAction(ctx) {
 async function handleBonusAction(ctx) {
   const user = ctx.from;
   const dbUser = db.getUser(user.id) || db.getOrCreateUser(user).user;
-  const symbol = db.getSetting('currencySymbol') || '$';
+  const symbol = db.getSetting('currencySymbol') || '₹';
   const currency = db.getSetting('currencyName') || 'Points';
   const check = db.canClaimDailyBonus(user.id);
-  const ladder = db.data.bonuses?.daily_ladder || [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.50];
+  const ladder = db.data.bonuses?.daily_ladder || [5, 10, 15, 20, 25, 30, 35];
 
   const streak = dbUser.daily_streak || 0;
   const nextStreak = check.canClaim ? ((streak % 7) + 1) : (streak || 1);
@@ -1387,13 +1442,13 @@ async function handleBonusAction(ctx) {
     `🔥 <b>Current Streak:</b> Day ${streak} / 7\n` +
     `💰 <b>Next Reward:</b> <b>+${symbol}${nextAmount} ${currency}</b>\n\n` +
     `<b>📅 7-Day Streak Ladder:</b>\n` +
-    `• Day 1: ${symbol}0.05 ${streak >= 1 ? '✅' : ''}\n` +
-    `• Day 2: ${symbol}0.10 ${streak >= 2 ? '✅' : ''}\n` +
-    `• Day 3: ${symbol}0.15 ${streak >= 3 ? '✅' : ''}\n` +
-    `• Day 4: ${symbol}0.20 ${streak >= 4 ? '✅' : ''}\n` +
-    `• Day 5: ${symbol}0.25 ${streak >= 5 ? '✅' : ''}\n` +
-    `• Day 6: ${symbol}0.30 ${streak >= 6 ? '✅' : ''}\n` +
-    `• Day 7: ${symbol}0.50 🌟 ${streak >= 7 ? '✅' : ''}\n\n` +
+    `• Day 1: ${symbol}5 ${streak >= 1 ? '✅' : ''}\n` +
+    `• Day 2: ${symbol}10 ${streak >= 2 ? '✅' : ''}\n` +
+    `• Day 3: ${symbol}15 ${streak >= 3 ? '✅' : ''}\n` +
+    `• Day 4: ${symbol}20 ${streak >= 4 ? '✅' : ''}\n` +
+    `• Day 5: ${symbol}25 ${streak >= 5 ? '✅' : ''}\n` +
+    `• Day 6: ${symbol}30 ${streak >= 6 ? '✅' : ''}\n` +
+    `• Day 7: ${symbol}35 🌟 ${streak >= 7 ? '✅' : ''}\n\n` +
     `━━━━━━━━━━━━━━━━━━━━━\n` +
     `${statusText}`;
 
@@ -1477,6 +1532,41 @@ export function renderTaskCard(userId, taskIndex = 0) {
  */
 async function handleTasksAction(ctx) {
   const user = ctx.from;
+
+  // 1. Check force-join channels
+  const channelCheck = await checkUserChannels(ctx, user.id);
+  if (!channelCheck.allJoined) {
+    await promptForceJoin(ctx, channelCheck.missing);
+    return;
+  }
+
+  // 2. Check if user completed any channel_join tasks that they have now left
+  const userTasks = db.getUserTasks(user.id);
+  const completedChannelTasks = userTasks.filter(t => t.task_type === 'channel_join' && t.chat_id && t.is_completed);
+
+  for (const ct of completedChannelTasks) {
+    try {
+      const member = await ctx.api.getChatMember(ct.chat_id, user.id);
+      const isMember = ['member', 'administrator', 'creator'].includes(member.status);
+      if (!isMember) {
+        // User left task channel -> Apply ₹10 penalty and revoke task completion
+        const PENALTY_AMOUNT = 10.0;
+        const penalizedUser = db.penalizeLeftChannel(user.id, ct.chat_id, PENALTY_AMOUNT);
+        db.revokeTaskCompletion(user.id, ct.id);
+        const symbol = db.getSetting('currencySymbol') || '₹';
+
+        await ctx.reply(
+          `⚠️ <b>Channel Membership Lost!</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+          `You left the task channel: <b>${ct.title}</b> (${ct.chat_id}).\n\n` +
+          `🚨 <b>Penalty Applied:</b> <b>-${symbol}${PENALTY_AMOUNT.toFixed(2)}</b> was deducted from your balance!\n` +
+          `💰 Current Balance: <b>${symbol}${penalizedUser ? penalizedUser.balance.toFixed(2) : '0.00'}</b>\n\n` +
+          `🔒 <i>Please rejoin the channel and tap Joined ☑️ to continue earning.</i>`,
+          { parse_mode: 'HTML' }
+        ).catch(() => {});
+      }
+    } catch (e) {}
+  }
+
   const activeTasks = db.getTasks().filter(t => t.is_active);
 
   if (activeTasks.length === 0) {
@@ -1484,9 +1574,9 @@ async function handleTasksAction(ctx) {
     return;
   }
 
-  const userTasks = db.getUserTasks(user.id);
+  const refreshedUserTasks = db.getUserTasks(user.id);
   // Default to first uncompleted task if available
-  let firstUnfinished = activeTasks.findIndex(t => !userTasks.find(ut => ut.id === t.id && ut.is_completed));
+  let firstUnfinished = activeTasks.findIndex(t => !refreshedUserTasks.find(ut => ut.id === t.id && ut.is_completed));
   if (firstUnfinished === -1) firstUnfinished = 0;
 
   const card = renderTaskCard(user.id, firstUnfinished);

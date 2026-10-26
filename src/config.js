@@ -33,9 +33,9 @@ export const config = {
   gigaPubApiKey: process.env.GIGAPUB_API_KEY || '',
   gigaPubAppId: process.env.GIGAPUB_APP_ID || '',
 
-  // Channel Verification (legacy fallback)
-  channelUsername: (process.env.CHANNEL_USERNAME || '').trim(),
-  channelUrl: (process.env.CHANNEL_URL || '').trim(),
+  // Channel Verification (Default: https://t.me/allinonemodz4u)
+  channelUsername: (process.env.CHANNEL_USERNAME || '@allinonemodz4u').trim(),
+  channelUrl: (process.env.CHANNEL_URL || 'https://t.me/allinonemodz4u').trim(),
 
   // Economy & Rewards
   currencyName: process.env.CURRENCY_NAME || 'Points',

@@ -342,7 +342,7 @@ export function initBot() {
     // =======================================================
 
     // My Balance Handler
-    bot.hears(/My Balance/i, async (ctx) => {
+    bot.hears(/Balance/i, async (ctx) => {
       await handleBalanceAction(ctx);
     });
 
@@ -357,12 +357,12 @@ export function initBot() {
     });
 
     // Invite Friends Handler
-    bot.hears(/Invite Friends/i, async (ctx) => {
+    bot.hears(/Invite/i, async (ctx) => {
       await handleInviteFriendsAction(ctx);
     });
 
-    // Bonus System Handler
-    bot.hears(/Bonus System/i, async (ctx) => {
+    // Bonus Handler (matches "🎁 Bonus", "Bonus", "Bonus System")
+    bot.hears(/Bonus/i, async (ctx) => {
       await handleBonusAction(ctx);
     });
 
@@ -374,6 +374,11 @@ export function initBot() {
     // =======================================================
     // 4. Inline Callback Queries for Sub-features
     // =======================================================
+
+    bot.callbackQuery('menu_balance', async (ctx) => {
+      await ctx.answerCallbackQuery();
+      await handleBalanceAction(ctx);
+    });
 
     bot.callbackQuery('menu_withdraw', async (ctx) => {
       await ctx.answerCallbackQuery();
@@ -459,13 +464,17 @@ export function initBot() {
 
       if (result.success) {
         await ctx.answerCallbackQuery({ text: `🎉 Claimed +${symbol}${result.amount}!` });
+        const bonusKeyboard = new InlineKeyboard()
+          .text('💰 My Balance', 'menu_balance')
+          .webApp('🚀 Open Mini App', config.webAppUrl);
+
         await ctx.reply(
           `🎉 <b>DAILY BONUS CLAIMED!</b>\n━━━━━━━━━━━━━━━━━━━━━\n` +
           `🔥 <b>Streak:</b> Day ${result.streak} / 7\n` +
           `💰 <b>Reward:</b> <b>+${symbol}${result.amount} ${currency}</b>\n` +
-          `💳 <b>New Balance:</b> <b>${symbol}${result.balance} ${currency}</b>\n\n` +
+          `💳 <b>New Balance:</b> <b>${symbol}${result.balance.toFixed(2)} ${currency}</b>\n\n` +
           `⏰ <i>Come back tomorrow to continue your streak!</i>`,
-          { parse_mode: 'HTML' }
+          { parse_mode: 'HTML', reply_markup: bonusKeyboard }
         );
       } else {
         await ctx.answerCallbackQuery({ text: result.message, show_alert: true });
@@ -542,13 +551,25 @@ export function initBot() {
           const isMember = ['member', 'administrator', 'creator'].includes(member.status);
           if (!isMember) {
             await ctx.answerCallbackQuery({
-              text: '❌ You have not joined the channel yet! Please join first.',
+              text: `❌ You have not joined ${task.chat_id} yet! Please join the channel first.`,
               show_alert: true
             });
             return;
           }
         } catch (err) {
           console.warn(`Could not verify channel for task ${taskId}:`, err.message);
+          if (err.description?.includes('member list is inaccessible')) {
+            await ctx.answerCallbackQuery({
+              text: '⚠️ Bot must be added as Administrator in @allinonemodz4u to verify membership. Please add @easyandfastearn_bot as Admin.',
+              show_alert: true
+            });
+            return;
+          }
+          await ctx.answerCallbackQuery({
+            text: `❌ Verification error: ${err.description || err.message}`,
+            show_alert: true
+          });
+          return;
         }
       }
 
@@ -556,11 +577,15 @@ export function initBot() {
       if (res.success) {
         const symbol = db.getSetting('currencySymbol');
         await ctx.answerCallbackQuery({ text: `✅ Task completed! +${symbol}${res.reward}` });
+        const taskKeyboard = new InlineKeyboard()
+          .text('💰 My Balance', 'menu_balance')
+          .webApp('🚀 Open Mini App', config.webAppUrl);
+
         await ctx.reply(
-          `🎉 <b>Task Completed: ${res.taskTitle}</b>\n\n` +
+          `🎉 <b>Task Completed: ${res.taskTitle}</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
           `💰 You earned: <b>+${symbol}${res.reward}</b>\n` +
-          `💳 New Balance: <b>${symbol}${res.balance}</b>`,
-          { parse_mode: 'HTML' }
+          `💳 New Balance: <b>${symbol}${res.balance.toFixed(2)}</b>`,
+          { parse_mode: 'HTML', reply_markup: taskKeyboard }
         );
       } else {
         await ctx.answerCallbackQuery({ text: res.message, show_alert: true });
@@ -1073,6 +1098,9 @@ async function showWelcomeAndMainMenu(ctx, user) {
   const botUser = bot.botInfo?.username || config.botUsername || 'easyandfastearn_bot';
   const refLink = `https://t.me/${botUser}?start=ref_${user.id}`;
   const rank = db.getUserWeeklyRank(user.id);
+  const symbol = db.getSetting('currencySymbol') || '$';
+  const refReward = db.getSetting('referralReward');
+  const adReward = db.getSetting('adReward');
 
   const variables = {
     first_name: user.first_name,
@@ -1081,45 +1109,51 @@ async function showWelcomeAndMainMenu(ctx, user) {
     balance: user.balance.toFixed(2),
     referrals: user.referral_count || 0,
     referral_link: refLink,
+    referral_reward: refReward,
+    ad_reward: adReward,
+    currency_symbol: symbol,
     weekly_rank: rank
   };
 
-  // First send welcome text with reply keyboard attached
-  await ctx.reply(
-    `👋 <b>Welcome, ${user.first_name}!</b>\n\n` +
-    `Use the menu below to check your balance, watch ads, invite friends, and request instant withdrawals.`,
-    {
-      parse_mode: 'HTML',
-      reply_markup: buildMainMenuKeyboard()
-    }
-  );
+  const rendered = db.renderTemplate('START_MESSAGE', variables);
 
-  // Then send templated start card
-  await sendTemplatedMessage(ctx, 'START_MESSAGE', variables);
+  // Send single welcome card with the 2-column Reply Keyboard attached
+  await ctx.reply(rendered.text, {
+    parse_mode: 'HTML',
+    reply_markup: buildMainMenuKeyboard()
+  });
 }
 
 /**
- * Handle My Balance Action
+ * Handle My Balance Action (Master Prompt Section 6)
  */
 async function handleBalanceAction(ctx) {
   const user = ctx.from;
   const dbUser = db.getUser(user.id) || db.getOrCreateUser(user).user;
   const rank = db.getUserWeeklyRank(user.id);
+  const symbol = db.getSetting('currencySymbol') || '$';
+  const currency = db.getSetting('currencyName') || 'Points';
 
   const variables = {
     first_name: user.first_name,
     username: user.username || user.first_name,
     user_id: user.id,
+    currency_symbol: symbol,
+    currency_name: currency,
     balance: dbUser.balance.toFixed(2),
     referrals: dbUser.referral_count || 0,
     ads_watched: dbUser.ads_watched || 0,
+    bonuses_claimed: dbUser.bonuses_claimed || 0,
     bonuses_earned: ((dbUser.bonuses_claimed || 0) * db.getSetting('dailyBonus')).toFixed(2),
+    rank: rank,
     weekly_rank: rank
   };
 
   const keyboard = new InlineKeyboard()
     .text('💸 Withdraw', 'menu_withdraw')
-    .text('👥 Invite Friends', 'menu_refer');
+    .text('👥 Invite Friends', 'menu_refer')
+    .row()
+    .webApp('🚀 Open Mini App', config.webAppUrl);
 
   await sendTemplatedMessage(ctx, 'BALANCE_MESSAGE', variables, keyboard);
 }
@@ -1238,21 +1272,55 @@ async function handleInviteFriendsAction(ctx) {
 }
 
 /**
- * Handle Bonus Action
+ * Handle Bonus Action (Master Prompt Section 8)
  */
 async function handleBonusAction(ctx) {
   const user = ctx.from;
   const dbUser = db.getUser(user.id) || db.getOrCreateUser(user).user;
+  const symbol = db.getSetting('currencySymbol') || '$';
+  const currency = db.getSetting('currencyName') || 'Points';
+  const check = db.canClaimDailyBonus(user.id);
+  const ladder = db.data.bonuses?.daily_ladder || [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.50];
 
-  const variables = {
-    first_name: user.first_name,
-    daily_streak: dbUser.daily_streak || 0
-  };
+  const streak = dbUser.daily_streak || 0;
+  const nextStreak = check.canClaim ? ((streak % 7) + 1) : (streak || 1);
+  const nextAmount = ladder[nextStreak - 1] || ladder[0];
 
-  const keyboard = new InlineKeyboard()
-    .text('🎁 CLAIM DAILY BONUS', 'claim_daily_bonus');
+  let statusText = '';
+  const keyboard = new InlineKeyboard();
 
-  await sendTemplatedMessage(ctx, 'BONUS_MESSAGE', variables, keyboard);
+  if (check.canClaim) {
+    statusText = `🎉 <b>Status:</b> Ready to claim Day ${nextStreak} bonus!\n\n👇 <i>Tap below to claim your cash reward:</i>`;
+    keyboard.text('🎁 CLAIM DAILY BONUS', 'claim_daily_bonus').row();
+  } else {
+    const hours = Math.floor(check.waitMinutes / 60);
+    const mins = check.waitMinutes % 60;
+    statusText = `⏰ <b>Status:</b> Already claimed today's bonus!\n⏳ <i>Next reward available in: <b>${hours}h ${mins}m</b></i>`;
+    keyboard.text('💰 My Balance', 'menu_balance').row();
+  }
+
+  keyboard.webApp('🚀 Open Mini App', config.webAppUrl);
+
+  const bonusCard =
+    `🎁 <b>DAILY BONUS REWARDS</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `Claim your free cash bonus every 24 hours to build your streak!\n\n` +
+    `🔥 <b>Current Streak:</b> Day ${streak} / 7\n` +
+    `💰 <b>Next Reward:</b> <b>+${symbol}${nextAmount} ${currency}</b>\n\n` +
+    `<b>📅 7-Day Streak Ladder:</b>\n` +
+    `• Day 1: ${symbol}0.05 ${streak >= 1 ? '✅' : ''}\n` +
+    `• Day 2: ${symbol}0.10 ${streak >= 2 ? '✅' : ''}\n` +
+    `• Day 3: ${symbol}0.15 ${streak >= 3 ? '✅' : ''}\n` +
+    `• Day 4: ${symbol}0.20 ${streak >= 4 ? '✅' : ''}\n` +
+    `• Day 5: ${symbol}0.25 ${streak >= 5 ? '✅' : ''}\n` +
+    `• Day 6: ${symbol}0.30 ${streak >= 6 ? '✅' : ''}\n` +
+    `• Day 7: ${symbol}0.50 🌟 ${streak >= 7 ? '✅' : ''}\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `${statusText}`;
+
+  await ctx.reply(bonusCard, {
+    parse_mode: 'HTML',
+    reply_markup: keyboard
+  });
 }
 
 /**

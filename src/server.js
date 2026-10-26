@@ -328,10 +328,42 @@ app.get('/api/tasks/list', telegramAuthMiddleware, (req, res) => {
   res.json({ success: true, tasks });
 });
 
-// User Complete Task
-app.post('/api/tasks/complete', telegramAuthMiddleware, (req, res) => {
+// User Complete Task (With Real Server-Side Verification)
+app.post('/api/tasks/complete', telegramAuthMiddleware, async (req, res) => {
   const { taskId } = req.body;
   if (!taskId) return res.status(400).json({ success: false, message: 'Missing taskId' });
+
+  const task = db.getTasks().find(t => t.id === taskId);
+  if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
+
+  // Real server-side verification for channel join tasks
+  if (task.task_type === 'channel_join' && task.chat_id) {
+    const activeBot = getBot();
+    if (activeBot) {
+      try {
+        const member = await activeBot.api.getChatMember(task.chat_id, req.tgUser.id);
+        const isMember = ['member', 'administrator', 'creator'].includes(member.status);
+        if (!isMember) {
+          return res.status(400).json({
+            success: false,
+            message: `You haven't joined ${task.chat_id} yet! Please join the channel and try again.`
+          });
+        }
+      } catch (err) {
+        console.warn(`Could not verify channel for task ${taskId}:`, err.message);
+        if (err.description?.includes('member list is inaccessible')) {
+          return res.status(400).json({
+            success: false,
+            message: 'Bot must be added as Administrator in @allinonemodz4u to verify membership.'
+          });
+        }
+        return res.status(400).json({
+          success: false,
+          message: `Verification error: ${err.description || err.message}`
+        });
+      }
+    }
+  }
 
   const result = db.completeTask(req.tgUser.id, taskId);
   if (!result.success) {

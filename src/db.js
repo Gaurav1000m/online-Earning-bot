@@ -146,39 +146,26 @@ const DEFAULT_STATE = {
   withdrawals: [],
   channels: [
     {
-      id: 'chan_default',
-      name: 'Official Channel',
-      username: config.channelUsername || '@studywithgaurav0',
-      channel_id: '',
-      invite_url: config.channelUrl || 'https://t.me/studywithgaurav0',
-      button_label: '📢 Join Official Channel',
-      is_enabled: Boolean(config.channelUsername),
+      id: 'chan_allinonemodz',
+      name: 'All in One Modz',
+      username: '@allinonemodz4u',
+      channel_id: '-1004390905200',
+      invite_url: 'https://t.me/allinonemodz4u',
+      button_label: '📢 Join All in One Modz',
+      is_enabled: true,
       order: 1
     }
   ],
   tasks: [
     {
-      id: 'task_channel_1',
-      title: 'Join Official Channel',
-      description: 'Join our Telegram updates channel',
-      reward: 0.10,
+      id: 'task_join_allinonemodz',
+      title: 'Join All in One Modz',
+      description: 'Join our official Telegram channel @allinonemodz4u to earn rewards',
+      reward: 0.50,
       task_type: 'channel_join',
-      target_url: config.channelUrl || 'https://t.me/studywithgaurav0',
-      chat_id: config.channelUsername || '@studywithgaurav0',
+      target_url: 'https://t.me/allinonemodz4u',
+      chat_id: '@allinonemodz4u',
       icon: '📢',
-      is_active: true,
-      max_completions: 100000,
-      completions_count: 0
-    },
-    {
-      id: 'task_video_1',
-      title: 'Watch How to Earn Guide',
-      description: 'Watch short video tutorial to earn points',
-      reward: 0.20,
-      task_type: 'url_visit',
-      target_url: 'https://youtube.com',
-      chat_id: '',
-      icon: '📺',
       is_active: true,
       max_completions: 100000,
       completions_count: 0

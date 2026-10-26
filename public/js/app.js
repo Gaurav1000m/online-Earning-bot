@@ -392,14 +392,21 @@ async function handleClaimBonus() {
   btn.innerHTML = '🎁 Claim Daily Bonus';
 }
 
-// 2. Watch Rewarded Ad with Anti-Fraud Session Verification
+// 2. Watch Rewarded Ad with GigaPub Integration (window.showGiga)
 async function handleWatchAd() {
-  const btn = document.getElementById('watch-ad-btn');
-  if (!btn || btn.disabled) return;
+  const btns = [
+    document.getElementById('watch-ad-btn'),
+    document.getElementById('watch-ad-btn-page')
+  ].filter(Boolean);
+
+  const isAnyDisabled = btns.some(b => b.disabled);
+  if (isAnyDisabled) return;
 
   hapticFeedback('medium');
-  btn.disabled = true;
-  btn.innerHTML = '⏳ Loading Ad...';
+  btns.forEach(b => {
+    b.disabled = true;
+    b.innerHTML = '⏳ Loading Ad...';
+  });
 
   try {
     // 1. Request ad session from server
@@ -407,36 +414,54 @@ async function handleWatchAd() {
     if (!sessionRes.success) {
       showToast(sessionRes.message || 'Ad unavailable right now.', 'warning');
       if (sessionRes.remainingSeconds) state.adCooldownRemaining = sessionRes.remainingSeconds;
-      btn.innerHTML = '🎬 Watch Ad';
+      btns.forEach(b => {
+        b.disabled = false;
+        b.innerHTML = '🎬 Watch Ad';
+      });
       return;
     }
 
-    // 2. Display official GigaPub ad
-    await window.GigaPub.showRewardedAd();
+    // 2. Call GigaPub ads SDK using official window.showGiga() pattern
+    const triggerAd = () => {
+      if (typeof window.showGiga === 'function') {
+        return window.showGiga();
+      }
+      return window.GigaPub.showRewardedAd();
+    };
 
-    // 3. Confirm completion with server using session token
-    btn.innerHTML = '✨ Verifying Reward...';
-    const claimRes = await apiRequest('/api/ads/claim', 'POST', {
-      sessionId: sessionRes.sessionId,
-      token: sessionRes.token
-    });
+    await triggerAd()
+      .then(async () => {
+        // Reward logic here
+        btns.forEach(b => b.innerHTML = '✨ Verifying Reward...');
+        const claimRes = await apiRequest('/api/ads/claim', 'POST', {
+          sessionId: sessionRes.sessionId,
+          token: sessionRes.token
+        });
 
-    if (claimRes.success) {
-      state.user.balance = claimRes.balance;
-      state.user.adsToday = claimRes.adsToday;
-      state.adCooldownRemaining = claimRes.cooldownSeconds || 30;
-      updateUserUI();
-      showToast(`🎬 Ad Watched! +${state.config.currencySymbol}${claimRes.reward}`, 'success');
-      hapticNotification('success');
-      spawnConfetti();
-    } else {
-      showToast(claimRes.message || 'Verification failed.', 'error');
-      hapticNotification('error');
-    }
+        if (claimRes.success) {
+          state.user.balance = claimRes.balance;
+          state.user.adsToday = claimRes.adsToday;
+          state.adCooldownRemaining = claimRes.cooldownSeconds || 30;
+          updateUserUI();
+          showToast(`🎬 Ad Watched! +${state.config.currencySymbol}${claimRes.reward}`, 'success');
+          hapticNotification('success');
+          spawnConfetti();
+        } else {
+          showToast(claimRes.message || 'Verification failed.', 'error');
+          hapticNotification('error');
+        }
+      })
+      .catch((e) => {
+        // Handle errors here
+        console.warn('GigaPub Ad playback error:', e);
+        showToast(e?.message || 'Ad playback cancelled or closed.', 'warning');
+      });
   } catch (err) {
-    showToast(err.message || 'Ad playback cancelled.', 'warning');
+    showToast(err.message || 'Ad playback error.', 'warning');
   } finally {
-    btn.innerHTML = '🎬 Watch Ad';
+    btns.forEach(b => {
+      b.innerHTML = '🎬 Watch Ad';
+    });
   }
 }
 
@@ -501,8 +526,8 @@ window.completeTaskAction = async function(taskId, targetUrl) {
 // 4. Referral System
 function getReferralLinks() {
   const userId = state.user?.id || '';
-  const botUser = window.Telegram?.WebApp?.initDataUnsafe?.user?.username || 'YourBot';
-  const botLink = `https://t.me/${botUser}?start=ref_${userId}`;
+  const botUser = state.config?.botUsername || 'easyandfastearn_bot';
+  const botLink = `https://t.me/${botUser.replace(/^@/, '')}?start=ref_${userId}`;
   return { botLink };
 }
 
@@ -513,40 +538,86 @@ async function loadReferralData() {
 
   const res = await apiRequest('/api/referrals/list');
   if (res.success) {
+    // Update live stats strip
+    const refCount = res.referrals?.length || state.user?.referralCount || 0;
+    const refReward = res.referralReward || 1.0;
+    const refEarned = (refCount * refReward).toFixed(2);
+    const symbol = res.currencySymbol || state.config?.currencySymbol || '$';
+
+    const countEl = document.getElementById('ref-stat-count');
+    const earnedEl = document.getElementById('ref-stat-earned');
+    const rankEl = document.getElementById('ref-stat-rank');
+
+    if (countEl) countEl.textContent = refCount;
+    if (earnedEl) earnedEl.textContent = `${symbol}${refEarned}`;
+    if (rankEl) rankEl.textContent = `#${res.weeklyRank || 1}`;
+
+    // Update Withdrawal Milestone Bar (10 Referrals Required)
+    const milestoneText = document.getElementById('ref-milestone-text');
+    const milestoneBar = document.getElementById('ref-milestone-bar');
+    if (milestoneText) {
+      milestoneText.textContent = `${Math.min(10, refCount)} / 10 Referrals`;
+    }
+    if (milestoneBar) {
+      const pct = Math.min(100, Math.round((refCount / 10) * 100));
+      milestoneBar.style.width = `${pct}%`;
+    }
+
     // Leaderboard
     const leadEl = document.getElementById('leaderboard-list');
     if (leadEl) {
-      leadEl.innerHTML = res.leaderboard.map((item, idx) => {
-        let rankBadge = `#${idx + 1}`;
-        if (idx === 0) rankBadge = '🥇 1st ($10)';
-        else if (idx === 1) rankBadge = '🥈 2nd ($10)';
-        else if (idx === 2) rankBadge = '🥉 3rd ($10)';
+      if (!res.leaderboard || res.leaderboard.length === 0) {
+        leadEl.innerHTML = `<div class="text-xs text-muted text-center py-4">No referrers yet this week. Be the first to invite friends!</div>`;
+      } else {
+        leadEl.innerHTML = res.leaderboard.map((item, idx) => {
+          let rankClass = '';
+          let rankBadge = `#${idx + 1}`;
+          if (idx === 0) { rankClass = 'top-1'; rankBadge = '🥇 1st ($10)'; }
+          else if (idx === 1) { rankClass = 'top-2'; rankBadge = '🥈 2nd ($10)'; }
+          else if (idx === 2) { rankClass = 'top-3'; rankBadge = '🥉 3rd ($10)'; }
 
-        return `
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
-            <div>
-              <div class="text-sm font-semibold">${item.name}</div>
-              <div class="text-xs text-muted">${rankBadge}</div>
+          return `
+            <div class="leaderboard-item ${rankClass}">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; font-size:0.9rem; font-weight:bold;">
+                  ${idx === 0 ? '👑' : (idx < 3 ? '⭐' : (idx + 1))}
+                </div>
+                <div>
+                  <div class="text-sm font-semibold">${item.name}</div>
+                  <div class="text-xs text-muted">${rankBadge}</div>
+                </div>
+              </div>
+              <div class="text-sm font-bold text-white">${item.weekly_referrals || item.referral_count} invites</div>
             </div>
-            <div class="text-sm font-bold">${item.weekly_referrals || item.referral_count} invites</div>
-          </div>
-        `;
-      }).join('');
+          `;
+        }).join('');
+      }
     }
 
-    // My Referrals
+    // My Referrals List
     const listEl = document.getElementById('my-referrals-list');
     if (listEl) {
-      if (res.referrals.length === 0) {
-        listEl.innerHTML = `<div class="text-xs text-muted text-center py-4">No referrals yet. Share your link above to begin earning!</div>`;
+      if (!res.referrals || res.referrals.length === 0) {
+        listEl.innerHTML = `
+          <div style="text-align:center; padding:16px 8px;">
+            <div style="font-size:2rem; margin-bottom:6px;">👥</div>
+            <div class="text-sm font-semibold">No referrals yet</div>
+            <div class="text-xs text-muted" style="margin-top:2px;">Share your link above to start earning +${symbol}${refReward} per friend!</div>
+          </div>
+        `;
       } else {
         listEl.innerHTML = res.referrals.map(r => `
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
-            <div>
-              <div class="text-sm font-semibold">${r.name}</div>
-              <div class="text-xs text-muted">${r.username || 'ID: ' + r.id}</div>
+          <div class="leaderboard-item">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="width:32px; height:32px; border-radius:50%; background:rgba(59,130,246,0.15); color:#60a5fa; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:0.9rem;">
+                👤
+              </div>
+              <div>
+                <div class="text-sm font-semibold">${r.name}</div>
+                <div class="text-xs text-muted">${r.username || 'ID: ' + r.id} &bull; ${new Date(r.created_at).toLocaleDateString()}</div>
+              </div>
             </div>
-            <div class="badge badge-approved">+${res.referralReward} ${res.currencyName}</div>
+            <div class="badge badge-approved">+${symbol}${refReward}</div>
           </div>
         `).join('');
       }

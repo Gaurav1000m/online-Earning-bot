@@ -90,15 +90,9 @@ class GigaPubManager {
    * @returns {Promise<boolean>} Resolves true when ad watched to completion
    */
   async showRewardedAd() {
-    // 1. If GigaPub official window.showGiga function exists
+    // 1. If GigaPub official window.showGiga function exists, call it directly
     if (typeof window.showGiga === 'function') {
-      try {
-        await window.showGiga();
-        return true;
-      } catch (err) {
-        console.warn('GigaPub SDK error or no ad inventory, falling back to interactive ad:', err);
-        return await this.showSimulatedAd();
-      }
+      return window.showGiga();
     }
 
     // 2. Interactive simulator modal for development / fallback environments

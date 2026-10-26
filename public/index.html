@@ -208,41 +208,118 @@
   <!-- ======================================================== -->
   <main id="tab-refer" class="tab-pane">
     <header style="margin-bottom:16px;">
-      <h1 class="text-xl font-bold">👥 Refer & Earn</h1>
-      <p class="text-xs text-muted">Invite your friends and earn instant rewards on every joining!</p>
+      <h1 class="text-xl font-bold">👥 Refer & Earn Club</h1>
+      <p class="text-xs text-muted">Invite friends to earn instant rewards! Top 20 referrers win cash every week.</p>
     </header>
 
-    <!-- Referral Link Box -->
-    <section class="card" style="margin-bottom:18px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <span class="text-xs font-semibold text-muted">Your Unique Invite Link</span>
-        <span class="badge badge-approved">+<span class="val-referral-reward">1.0</span> <span class="val-currency-name">Points</span> / Refer</span>
+    <!-- Referral Hero Card with Live Stats Strip -->
+    <section class="ref-hero-card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <span class="badge" style="background:rgba(52,211,153,0.2); color:#34d399; border:1px solid rgba(52,211,153,0.3); font-weight:800; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.5px;">
+            💎 Instant Reward
+          </span>
+          <div class="text-2xl font-black" style="margin:8px 0 2px; color:white;">
+            +<span class="val-currency-symbol">$</span><span class="val-referral-reward">1.0</span> <span style="font-size:0.9rem; font-weight:600; opacity:0.85;">per Referral</span>
+          </div>
+          <div class="text-xs" style="color:rgba(255,255,255,0.75);">
+            Credited instantly once friend verifies channel join
+          </div>
+        </div>
+        <div style="font-size:2.8rem; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.3));">
+          🎁
+        </div>
       </div>
 
-      <input id="ref-link-display" type="text" readonly class="input" style="font-size:0.8rem; margin-bottom:12px;" value="Loading link...">
+      <!-- Live Referral Stats Strip -->
+      <div class="ref-stats-strip">
+        <div class="ref-stat-box">
+          <div class="text-xs text-muted font-semibold">Total Invited</div>
+          <div id="ref-stat-count" class="text-lg font-black text-white" style="margin-top:2px;">0</div>
+        </div>
+        <div class="ref-stat-box">
+          <div class="text-xs text-muted font-semibold">Total Earned</div>
+          <div id="ref-stat-earned" class="text-lg font-black text-success" style="margin-top:2px;"><span class="val-currency-symbol">$</span>0.00</div>
+        </div>
+        <div class="ref-stat-box">
+          <div class="text-xs text-muted font-semibold">Weekly Rank</div>
+          <div id="ref-stat-rank" class="text-lg font-black text-primary" style="margin-top:2px;">#--</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Withdrawal Unlock Milestone Bar (10 Referrals Required) -->
+    <section class="card" style="margin-bottom:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span class="text-xs font-bold" style="letter-spacing:0.3px;">🎯 Withdrawal Milestone</span>
+        <span id="ref-milestone-text" class="text-xs font-bold text-warning">0 / 10 Referrals</span>
+      </div>
+      <div class="progress-bar" style="height:10px; border-radius:5px; margin-bottom:8px;">
+        <div id="ref-milestone-bar" class="progress-fill" style="width:0%; background:linear-gradient(90deg, #3b82f6, #10b981);"></div>
+      </div>
+      <div class="text-xs text-muted">
+        ⚡ Complete <b>10 referrals & 30 ads</b> to unlock unlimited instant payouts!
+      </div>
+    </section>
+
+    <!-- Referral Link Box -->
+    <section class="card" style="margin-bottom:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span class="text-xs font-semibold text-muted">Your Unique Referral Link</span>
+        <span class="text-xs text-primary font-bold">1-Click Share</span>
+      </div>
+
+      <input id="ref-link-display" type="text" readonly class="input" style="font-size:0.8rem; margin-bottom:12px; background:rgba(0,0,0,0.3);" value="Loading link...">
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
         <button id="copy-ref-btn" class="btn btn-secondary">
           📋 Copy Link
         </button>
         <button id="share-ref-btn" class="btn btn-primary">
-          📢 Share on TG
+          📢 Share on Telegram
         </button>
       </div>
     </section>
 
-    <!-- Weekly Leaderboard Announcement Box -->
-    <section class="card" style="margin-bottom:18px; background:linear-gradient(135deg, rgba(168,85,247,0.15), rgba(59,130,246,0.15)); border-color:rgba(168,85,247,0.3);">
-      <div style="font-size:0.85rem; font-weight:800; color:#c084fc; margin-bottom:6px;">🎁 WEEKLY LEADERBOARD PRIZES</div>
-      <div style="font-size:0.78rem; color:var(--text-main); line-height:1.5;">
-        🥇 1st — <b>$10</b> &bull; 🥈 2nd — <b>$10</b> &bull; 🥉 3rd — <b>$10</b><br/>
-        4️⃣ 4th–10th — <b>$5</b> &bull; 🔟 11th–20th — <b>$3</b>
+    <!-- Weekly Leaderboard Prize Pool Banner -->
+    <section class="card" style="margin-bottom:16px; background:linear-gradient(135deg, rgba(88,28,135,0.2), rgba(30,58,138,0.25)); border-color:rgba(168,85,247,0.35);">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-size:0.85rem; font-weight:800; color:#c084fc; letter-spacing:0.5px;">
+          🏆 WEEKLY CASH PRIZE POOL ($38+)
+        </div>
+        <span class="badge" style="background:rgba(168,85,247,0.2); color:#e9d5ff; font-size:0.7rem;">Every Sunday</span>
+      </div>
+
+      <div class="ref-prize-grid">
+        <div class="ref-prize-item">
+          <div style="font-size:1.1rem;">🥇</div>
+          <div class="text-xs font-bold text-white">1st Place</div>
+          <div class="text-xs font-black text-warning">$10.00</div>
+        </div>
+        <div class="ref-prize-item">
+          <div style="font-size:1.1rem;">🥈</div>
+          <div class="text-xs font-bold text-white">2nd Place</div>
+          <div class="text-xs font-black text-warning">$10.00</div>
+        </div>
+        <div class="ref-prize-item">
+          <div style="font-size:1.1rem;">🥉</div>
+          <div class="text-xs font-bold text-white">3rd Place</div>
+          <div class="text-xs font-black text-warning">$10.00</div>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-around; margin-top:8px; font-size:0.75rem; color:var(--text-muted);">
+        <span>4th–10th: <b>$5.00 each</b></span>
+        <span>&bull;</span>
+        <span>11th–20th: <b>$3.00 each</b></span>
       </div>
     </section>
 
-    <!-- Leaderboard -->
-    <section class="card" style="margin-bottom:18px;">
-      <h3 class="text-sm font-bold" style="margin-bottom:8px;">🔥 Weekly Top Referrers</h3>
+    <!-- Weekly Leaderboard -->
+    <section class="card" style="margin-bottom:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 class="text-sm font-bold">🔥 Top Weekly Referrers</h3>
+        <span class="text-xs text-muted">Auto-updates</span>
+      </div>
       <div id="leaderboard-list">
         <div class="text-xs text-muted text-center py-4">Loading top referrers...</div>
       </div>
@@ -250,7 +327,10 @@
 
     <!-- My Invited Friends List -->
     <section class="card">
-      <h3 class="text-sm font-bold" style="margin-bottom:8px;">👥 My Invited Friends</h3>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 class="text-sm font-bold">👥 My Invited Friends</h3>
+        <span class="text-xs text-muted">Verified referrals</span>
+      </div>
       <div id="my-referrals-list">
         <div class="text-xs text-muted text-center py-4">Loading your referrals...</div>
       </div>

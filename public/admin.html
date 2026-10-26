@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Admin Dashboard — Refer & Earn Bot</title>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Admin Stylesheet -->
+  <link rel="stylesheet" href="css/admin.css">
+  <!-- Chart.js for rich responsive charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Login Modal (If not authenticated) -->
+  <div id="login-modal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+      <div style="font-size: 2.5rem; margin-bottom: 8px;">🔐</div>
+      <h2 style="margin-bottom: 8px; font-weight: 800;">Admin Authentication</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">
+        Please enter the admin password or secret key to access the control panel.
+      </p>
+      <div class="form-group">
+        <input id="login-password" type="password" class="input" placeholder="Admin Secret / Password">
+      </div>
+      <button class="btn btn-primary" onclick="handleAdminLogin()" style="width: 100%;">
+        Authenticate & Enter
+      </button>
+    </div>
+  </div>
+
+  <!-- Sidebar Navigation -->
+  <aside id="sidebar" class="admin-sidebar">
+    <div class="sidebar-header">
+      <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #06b6d4); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem;">
+        ⚡
+      </div>
+      <div>
+        <div class="sidebar-brand">BOT ADMIN</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted);">Control & Economy</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-link active" data-section="dashboard">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span>Dashboard</span>
+      </div>
+
+      <div class="nav-link" data-section="users">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        <span>User Management</span>
+      </div>
+
+      <div class="nav-link" data-section="withdrawals">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        <span>Withdrawals</span>
+      </div>
+
+      <div class="nav-link" data-section="referrals">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+        <span>Referrals & Leaderboard</span>
+      </div>
+
+      <div class="nav-link" data-section="gigapub">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+        <span>GigaPub Ads</span>
+      </div>
+
+      <div class="nav-link" data-section="channels">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+        <span>Force Join Channels</span>
+      </div>
+
+      <div class="nav-link" data-section="tasks">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        <span>Tasks System</span>
+      </div>
+
+      <div class="nav-link" data-section="templates">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+        <span>Bot Messages & Media</span>
+      </div>
+
+      <div class="nav-link" data-section="broadcast">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"/></svg>
+        <span>Broadcast Studio</span>
+      </div>
+
+      <div class="nav-link" data-section="settings">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/></svg>
+        <span>Bot Settings</span>
+      </div>
+
+      <div class="nav-link" data-section="audit">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>Audit Logs</span>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main Content Wrapper -->
+  <main class="admin-main">
+    <!-- Topbar -->
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button id="hamburger-btn" class="hamburger-btn">☰</button>
+        <div>
+          <h1 id="page-title" style="font-size: 1.4rem; font-weight: 800;">Dashboard Overview</h1>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">Real-time metrics, economy & automated systems</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <span id="maintenance-badge" class="badge" style="display: none; background: rgba(239,68,68,0.2); color: #f87171;">
+          🚧 Maintenance Mode ON
+        </span>
+        <button class="btn btn-secondary btn-sm" onclick="location.href='/'">
+          📱 Open Mini App
+        </button>
+      </div>
+    </header>
+
+    <!-- SECTION 1: DASHBOARD -->
+    <section id="sec-dashboard" class="admin-section">
+      <!-- Quick Action Buttons (Rule 46) -->
+      <div class="card" style="margin-bottom: 20px; padding: 16px 20px;">
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">⚡ Quick Actions</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <button class="btn btn-secondary btn-sm" onclick="openBalanceModalQuick('add')">➕ Add Balance</button>
+          <button class="btn btn-secondary btn-sm" onclick="openBalanceModalQuick('cut')">➖ Deduct Balance</button>
+          <button class="btn btn-secondary btn-sm" onclick="switchSection('broadcast')">📢 Broadcast</button>
+          <button class="btn btn-secondary btn-sm" onclick="switchSection('users')">👥 Users</button>
+          <button class="btn btn-secondary btn-sm" onclick="switchSection('withdrawals')">💸 Withdrawals</button>
+          <button class="btn btn-secondary btn-sm" onclick="switchSection('gigapub')">🎬 Ads</button>
+          <button class="btn btn-secondary btn-sm" onclick="switchSection('settings')">🎁 Bonuses</button>
+          <button class="btn btn-secondary btn-sm" onclick="switchSection('tasks')">📋 Tasks</button>
+          <button class="btn btn-secondary btn-sm" onclick="switchSection('channels')">🔐 Channels</button>
+          <button class="btn btn-secondary btn-sm" onclick="switchSection('settings')">⚙️ Settings</button>
+        </div>
+      </div>
+
+      <!-- Advanced Analytics Cards (Rule 49) -->
+      <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 20px;">
+        <div class="stat-card" style="padding: 14px;">
+          <div class="label">DAU (24h)</div>
+          <div id="ana-dau" class="value text-primary" style="font-size: 1.4rem;">0</div>
+          <div class="sub">Active today</div>
+        </div>
+        <div class="stat-card" style="padding: 14px;">
+          <div class="label">WAU (7d)</div>
+          <div id="ana-wau" class="value" style="font-size: 1.4rem; color: #a855f7;">0</div>
+          <div class="sub">Weekly active</div>
+        </div>
+        <div class="stat-card" style="padding: 14px;">
+          <div class="label">MAU (30d)</div>
+          <div id="ana-mau" class="value text-info" style="font-size: 1.4rem;">0</div>
+          <div class="sub">Monthly active</div>
+        </div>
+        <div class="stat-card" style="padding: 14px;">
+          <div class="label">Retention</div>
+          <div id="ana-retention" class="value text-success" style="font-size: 1.4rem;">0%</div>
+          <div class="sub">7-day cohort</div>
+        </div>
+        <div class="stat-card" style="padding: 14px;">
+          <div class="label">Ref. Conversion</div>
+          <div id="ana-conversion" class="value text-warning" style="font-size: 1.4rem;">0%</div>
+          <div class="sub">Verified referrals</div>
+        </div>
+        <div class="stat-card" style="padding: 14px;">
+          <div class="label">Ad Completion</div>
+          <div id="ana-ad-completion" class="value text-success" style="font-size: 1.4rem;">0%</div>
+          <div class="sub">Session success</div>
+        </div>
+      </div>
+
+      <!-- Stat Cards Grid -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="label">Total Users</div>
+          <div id="stat-total-users" class="value text-primary">0</div>
+          <div class="sub"><span id="stat-new-today">0</span> joined today</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Active Users</div>
+          <div id="stat-active-users" class="value text-success">0</div>
+          <div class="sub">Non-banned accounts</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Total Referrals</div>
+          <div id="stat-total-referrals" class="value" style="color: #a855f7;">0</div>
+          <div class="sub">Deep-link tracked invites</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Ads Watched (GigaPub)</div>
+          <div id="stat-total-ads" class="value text-info">0</div>
+          <div class="sub">Completed rewarded sessions</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Total User Balance</div>
+          <div id="stat-total-balance" class="value text-warning">0</div>
+          <div class="sub">Current liability in wallet</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Total Paid Out</div>
+          <div id="stat-total-paid" class="value text-success">0</div>
+          <div class="sub">Completed withdrawals</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Pending Withdrawals</div>
+          <div id="stat-pending-withdrawals" class="value" style="color: #f43f5e;">0</div>
+          <div class="sub">Awaiting review</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Task Completions</div>
+          <div id="stat-tasks-completed" class="value">0</div>
+          <div class="sub">Completed social tasks</div>
+        </div>
+      </div>
+
+      <!-- Interactive Charts -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 28px;">
+        <div class="card" style="margin-bottom: 0;">
+          <h3 class="card-title">📈 User Growth & Referrals (Last 7 Days)</h3>
+          <div style="height: 250px;">
+            <canvas id="chart-growth"></canvas>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom: 0;">
+          <h3 class="card-title">🎬 Ad Impressions & Payouts (Last 7 Days)</h3>
+          <div style="height: 250px;">
+            <canvas id="chart-activity"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Withdrawals Quick Table -->
+      <div class="card">
+        <div class="card-title">
+          <span>⏳ Immediate Action: Pending Withdrawals</span>
+          <button class="btn btn-secondary btn-sm" onclick="switchSection('withdrawals')">View All</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Destination</th>
+                <th>Time</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="quick-pending-tbody">
+              <tr><td colspan="7" style="text-align:center; padding:24px; color:var(--text-muted);">No pending withdrawals 🎉</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: USER MANAGEMENT -->
+    <section id="sec-users" class="admin-section" style="display: none;">
+      <div class="card">
+        <div class="card-title" style="flex-wrap: wrap; gap: 12px;">
+          <span>👥 User Directory & Filtering (Rule 47)</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+            <input id="user-search-input" type="text" class="input" style="width: 220px;" placeholder="Search ID, name, ref code...">
+            <select id="user-filter-select" class="input" style="width: 160px;" onchange="handleUserFilterChange()">
+              <option value="all">All Users</option>
+              <option value="active">Active Only</option>
+              <option value="banned">Banned</option>
+              <option value="inactive">Inactive (&gt;7d)</option>
+              <option value="has_balance">Has Balance (&gt;0)</option>
+              <option value="has_referrals">Has Referrals (&gt;0)</option>
+              <option value="watched_ads">Watched Ads</option>
+              <option value="made_withdrawal">Made Withdrawal</option>
+            </select>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn btn-secondary btn-sm" onclick="downloadExport('users')">📥 Users CSV</button>
+              <button class="btn btn-secondary btn-sm" onclick="downloadExport('transactions')">📥 Ledger CSV</button>
+              <button class="btn btn-secondary btn-sm" onclick="downloadExport('withdrawals')">📥 Payouts CSV</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Telegram ID</th>
+                <th>Name / Username</th>
+                <th>Balance</th>
+                <th>Referrals</th>
+                <th>Ads Watched</th>
+                <th>Joined</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-tbody">
+              <tr><td colspan="8" style="text-align:center; padding:24px;">Loading users...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+          <span id="user-page-info" style="font-size: 0.82rem; color: var(--text-muted);">Page 1</span>
+          <div style="display: flex; gap: 8px;">
+            <button id="user-prev-page" class="btn btn-secondary btn-sm" onclick="changeUserPage(-1)">Previous</button>
+            <button id="user-next-page" class="btn btn-secondary btn-sm" onclick="changeUserPage(1)">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: WITHDRAWAL MANAGEMENT -->
+    <section id="sec-withdrawals" class="admin-section" style="display: none;">
+      <div class="card">
+        <div class="card-title">
+          <span>💸 Withdrawal Management</span>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary btn-sm wd-filter-btn active" data-status="pending">Pending</button>
+            <button class="btn btn-secondary btn-sm wd-filter-btn" data-status="approved">Approved</button>
+            <button class="btn btn-secondary btn-sm wd-filter-btn" data-status="paid">Paid</button>
+            <button class="btn btn-secondary btn-sm wd-filter-btn" data-status="rejected">Rejected</button>
+            <button class="btn btn-secondary btn-sm wd-filter-btn" data-status="all">All</button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Request ID</th>
+                <th>User</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Payment Address</th>
+                <th>Requested At</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="withdrawals-table-tbody">
+              <tr><td colspan="8" style="text-align:center; padding:24px;">Loading withdrawals...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: REFERRAL MANAGEMENT & LEADERBOARD -->
+    <section id="sec-referrals" class="admin-section" style="display: none;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+        <div class="card">
+          <h3 class="card-title">🏆 Weekly Leaderboard Settings & Payout</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+            Weekly referral leaderboard distributes cash rewards to the top referrers automatically or on-demand.
+          </p>
+          <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 12px; margin-bottom: 16px; font-size: 0.85rem;">
+            🥇 1st Place: <b>$10</b> &bull; 🥈 2nd: <b>$10</b> &bull; 🥉 3rd: <b>$10</b><br/>
+            4️⃣ 4th–10th: <b>$5</b> &bull; 🔟 11th–20th: <b>$3</b>
+          </div>
+          <button class="btn btn-success" onclick="distributeWeeklyRewards()">
+            🎁 Trigger Weekly Leaderboard Payout Now
+          </button>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">🛡️ Suspicious Referral Activity</h3>
+          <div id="suspicious-referrals-list" style="max-height: 220px; overflow-y: auto;">
+            <div style="color: var(--text-muted); font-size: 0.85rem;">Scanning for suspicious multi-accounts...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">🔥 Top Referrers This Week</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>User</th>
+                <th>This Week's Invites</th>
+                <th>All-Time Invites</th>
+                <th>Current Balance</th>
+              </tr>
+            </thead>
+            <tbody id="weekly-leaderboard-tbody">
+              <tr><td colspan="5" style="text-align:center; padding:20px;">Loading leaderboard...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: GIGAPUB ADS MANAGEMENT -->
+    <section id="sec-gigapub" class="admin-section" style="display: none;">
+      <div class="card" style="max-width: 680px;">
+        <h3 class="card-title">🎬 GigaPub Integration Settings</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+          Configure official GigaPub rewarded video advertising parameters and verify connectivity.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">GigaPub Integration Status</label>
+          <select id="gp-enabled" class="input">
+            <option value="true">Active (ON)</option>
+            <option value="false">Disabled (OFF)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">GigaPub Project ID</label>
+          <input id="gp-project-id" type="text" class="input" placeholder="e.g. 12345 or your-project-id">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Reward per Completed Ad</label>
+            <input id="gp-ad-reward" type="number" step="0.05" class="input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Daily Ad Limit per User</label>
+            <input id="gp-daily-limit" type="number" class="input">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Ad Cooldown (Seconds)</label>
+            <input id="gp-cooldown" type="number" class="input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max Daily Ad Earnings</label>
+            <input id="gp-max-daily-earnings" type="number" step="0.1" class="input">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 12px;">
+          <button class="btn btn-primary" onclick="saveGigaPubSettings()">
+            💾 Save Settings
+          </button>
+          <button class="btn btn-secondary" onclick="testGigaPubIntegration()">
+            🧪 Test Integration
+          </button>
+        </div>
+
+        <div id="gp-test-status" style="margin-top: 14px; font-size: 0.85rem;"></div>
+      </div>
+    </section>
+
+    <!-- SECTION 6: FORCE JOIN CHANNELS -->
+    <section id="sec-channels" class="admin-section" style="display: none;">
+      <div class="card">
+        <div class="card-title">
+          <span>🔐 Required Force-Join Channels</span>
+          <button class="btn btn-primary btn-sm" onclick="openChannelModal()">➕ Add Channel</button>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+          Users must join all enabled channels before accessing the bot features and receiving rewards.
+        </p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Channel Name</th>
+                <th>Username / ID</th>
+                <th>Invite URL</th>
+                <th>Button Label</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="channels-table-tbody">
+              <tr><td colspan="6" style="text-align:center; padding:20px;">No force-join channels configured</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 7: TASKS SYSTEM -->
+    <section id="sec-tasks" class="admin-section" style="display: none;">
+      <div class="card">
+        <div class="card-title">
+          <span>📋 Social & Earning Tasks</span>
+          <button class="btn btn-primary btn-sm" onclick="openTaskModal()">➕ Add New Task</button>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Icon</th>
+                <th>Task Title</th>
+                <th>Type</th>
+                <th>Reward</th>
+                <th>Completions</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tasks-table-tbody">
+              <tr><td colspan="7" style="text-align:center; padding:20px;">Loading tasks...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 8: MESSAGE TEMPLATES & MEDIA BUILDER -->
+    <section id="sec-templates" class="admin-section" style="display: none;">
+      <div class="card">
+        <h3 class="card-title">✉️ Message & Template Builder</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+          Customize bot text, attach photos/videos, and configure inline buttons without editing source code.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Select Template to Edit</label>
+          <select id="tpl-selector" class="input" onchange="loadSelectedTemplate()">
+            <option value="START_MESSAGE">START_MESSAGE (/start Welcome Card)</option>
+            <option value="FORCE_JOIN_MESSAGE">FORCE_JOIN_MESSAGE (Channel Access Required)</option>
+            <option value="VERIFICATION_SUCCESS">VERIFICATION_SUCCESS (Channel Joined Success)</option>
+            <option value="BALANCE_MESSAGE">BALANCE_MESSAGE (Wallet / Balance Card)</option>
+            <option value="REFERRAL_MESSAGE">REFERRAL_MESSAGE (Invite Friends Screen)</option>
+            <option value="WATCH_AD_MESSAGE">WATCH_AD_MESSAGE (Watch Ads Card)</option>
+            <option value="AD_SUCCESS_MESSAGE">AD_SUCCESS_MESSAGE (Ad Completed Notification)</option>
+            <option value="WITHDRAW_MESSAGE">WITHDRAW_MESSAGE (Withdraw Screen)</option>
+            <option value="WITHDRAW_SUCCESS">WITHDRAW_SUCCESS (Request Placed Notification)</option>
+            <option value="WITHDRAW_REJECTED">WITHDRAW_REJECTED (Withdrawal Rejection Notice)</option>
+            <option value="BONUS_MESSAGE">BONUS_MESSAGE (Bonus Center)</option>
+            <option value="TASK_MESSAGE">TASK_MESSAGE (Available Tasks)</option>
+            <option value="LEADERBOARD_MESSAGE">LEADERBOARD_MESSAGE (Weekly Rankings)</option>
+            <option value="ERROR_MESSAGE">ERROR_MESSAGE (General Error)</option>
+            <option value="MAINTENANCE_MESSAGE">MAINTENANCE_MESSAGE (Under Maintenance)</option>
+          </select>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; margin-bottom: 16px;">
+          <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">Available Variable Placeholders (Click to Copy):</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.75rem;">
+            <code style="background: rgba(59,130,246,0.15); color:#60a5fa; padding:2px 8px; border-radius:6px; cursor:pointer;" onclick="copyPlaceholder('{{first_name}}')">{{first_name}}</code>
+            <code style="background: rgba(59,130,246,0.15); color:#60a5fa; padding:2px 8px; border-radius:6px; cursor:pointer;" onclick="copyPlaceholder('{{username}}')">{{username}}</code>
+            <code style="background: rgba(59,130,246,0.15); color:#60a5fa; padding:2px 8px; border-radius:6px; cursor:pointer;" onclick="copyPlaceholder('{{user_id}}')">{{user_id}}</code>
+            <code style="background: rgba(59,130,246,0.15); color:#60a5fa; padding:2px 8px; border-radius:6px; cursor:pointer;" onclick="copyPlaceholder('{{balance}}')">{{balance}}</code>
+            <code style="background: rgba(59,130,246,0.15); color:#60a5fa; padding:2px 8px; border-radius:6px; cursor:pointer;" onclick="copyPlaceholder('{{referrals}}')">{{referrals}}</code>
+            <code style="background: rgba(59,130,246,0.15); color:#60a5fa; padding:2px 8px; border-radius:6px; cursor:pointer;" onclick="copyPlaceholder('{{referral_link}}')">{{referral_link}}</code>
+            <code style="background: rgba(59,130,246,0.15); color:#60a5fa; padding:2px 8px; border-radius:6px; cursor:pointer;" onclick="copyPlaceholder('{{ad_reward}}')">{{ad_reward}}</code>
+            <code style="background: rgba(59,130,246,0.15); color:#60a5fa; padding:2px 8px; border-radius:6px; cursor:pointer;" onclick="copyPlaceholder('{{ads_today}}')">{{ads_today}}</code>
+            <code style="background: rgba(59,130,246,0.15); color:#60a5fa; padding:2px 8px; border-radius:6px; cursor:pointer;" onclick="copyPlaceholder('{{weekly_rank}}')">{{weekly_rank}}</code>
+            <code style="background: rgba(59,130,246,0.15); color:#60a5fa; padding:2px 8px; border-radius:6px; cursor:pointer;" onclick="copyPlaceholder('{{minimum_withdrawal}}')">{{minimum_withdrawal}}</code>
+            <code style="background: rgba(59,130,246,0.15); color:#60a5fa; padding:2px 8px; border-radius:6px; cursor:pointer;" onclick="copyPlaceholder('{{currency_symbol}}')">{{currency_symbol}}</code>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Message Text (HTML Formatted)</label>
+          <textarea id="tpl-text" rows="7" class="input" style="font-family: monospace;"></textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 16px;">
+          <div class="form-group">
+            <label class="form-label">Media Attachment</label>
+            <select id="tpl-media-type" class="input">
+              <option value="none">Text Only (No Media)</option>
+              <option value="photo">Photo / Image</option>
+              <option value="video">Video</option>
+              <option value="animation">Animation / GIF</option>
+              <option value="document">Document / PDF</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Media URL or Telegram file_id</label>
+            <input id="tpl-media-url" type="text" class="input" placeholder="https://example.com/banner.jpg or file_id">
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="saveCurrentTemplate()">
+          💾 Save Message Template
+        </button>
+      </div>
+    </section>
+
+    <!-- SECTION 9: BROADCAST STUDIO -->
+    <section id="sec-broadcast" class="admin-section" style="display: none;">
+      <div class="card" style="max-width: 680px;">
+        <h3 class="card-title">📢 Broadcast Studio</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+          Send queued background announcements to targeted audiences respecting Telegram rate limits.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Announcement Title</label>
+          <input id="bc-title" type="text" class="input" placeholder="e.g. SPECIAL WEEKEND BONUS">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Target Audience</label>
+          <select id="bc-target" class="input">
+            <option value="all">All Users</option>
+            <option value="active">Active Non-Banned Users</option>
+            <option value="with_balance">Users With Wallet Balance > 0</option>
+            <option value="watched_ads">Users Who Watched Ads</option>
+            <option value="referrals">Referrers With 1+ Invites</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Message Content (HTML Formatted)</label>
+          <textarea id="bc-text" rows="5" class="input" placeholder="Write your broadcast announcement..."></textarea>
+        </div>
+
+        <button class="btn btn-primary" onclick="sendBroadcast()">
+          🚀 Launch Broadcast
+        </button>
+
+        <div id="bc-progress-box" style="display: none; margin-top: 20px; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 16px;">
+          <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Broadcast Progress:</div>
+          <div id="bc-progress-text" style="font-size: 0.8rem; color: var(--text-muted);">Queued...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 10: BOT SETTINGS -->
+    <section id="sec-settings" class="admin-section" style="display: none;">
+      <div class="card" style="max-width: 680px;">
+        <h3 class="card-title">⚙️ Global Bot & Economy Settings</h3>
+
+        <div class="form-group">
+          <label class="form-label">Maintenance Mode</label>
+          <select id="set-maintenance" class="input">
+            <option value="false">Disabled (Bot Active for all)</option>
+            <option value="true">Enabled (Block regular users)</option>
+          </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Currency Symbol</label>
+            <input id="set-currency-symbol" type="text" class="input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Currency Name</label>
+            <input id="set-currency-name" type="text" class="input">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Referral Reward</label>
+            <input id="set-referral-reward" type="number" step="0.1" class="input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Daily Login Bonus</label>
+            <input id="set-daily-bonus" type="number" step="0.05" class="input">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Minimum Withdrawal</label>
+            <input id="set-min-withdrawal" type="number" class="input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Maximum Withdrawal</label>
+            <input id="set-max-withdrawal" type="number" class="input">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Support Telegram Username (without @)</label>
+          <input id="set-support-user" type="text" class="input">
+        </div>
+
+        <h4 style="font-size: 0.95rem; margin: 18px 0 10px; font-weight: 700;">Main Menu Button Customization</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+          <input id="btn-label-bal" type="text" class="input" placeholder="💰 My Balance">
+          <input id="btn-label-wd" type="text" class="input" placeholder="💸 Withdraw">
+          <input id="btn-label-ads" type="text" class="input" placeholder="🎬 Watch Ads">
+          <input id="btn-label-ref" type="text" class="input" placeholder="👥 Invite Friends">
+          <input id="btn-label-bon" type="text" class="input" placeholder="🎁 Bonus System">
+          <input id="btn-label-tsk" type="text" class="input" placeholder="📋 Tasks">
+        </div>
+
+        <button class="btn btn-primary" onclick="saveGlobalSettings()">
+          💾 Save All Settings
+        </button>
+      </div>
+    </section>
+
+    <!-- SECTION 11: AUDIT LOGS -->
+    <section id="sec-audit" class="admin-section" style="display: none;">
+      <div class="card">
+        <h3 class="card-title">📜 System Audit & Security Trail</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Admin</th>
+                <th>Action</th>
+                <th>Target ID</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="audit-table-tbody">
+              <tr><td colspan="5" style="text-align:center; padding:20px;">Loading audit logs...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- User Profile Modal with Transaction Ledger -->
+  <div id="user-profile-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+        <div>
+          <h2 id="modal-user-name" style="font-weight: 800; font-size: 1.25rem;">User Profile</h2>
+          <div id="modal-user-id" style="font-size: 0.8rem; color: var(--text-muted);">ID: ...</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('user-profile-modal')">✕</button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px;">
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Current Balance</div>
+          <div id="modal-user-balance" style="font-size: 1.4rem; font-weight: 800; color: #34d399;">$0.00</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px;">
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Total Referrals</div>
+          <div id="modal-user-referrals" style="font-size: 1.4rem; font-weight: 800; color: #60a5fa;">0</div>
+        </div>
+      </div>
+
+      <!-- Quick Balance Adjustment -->
+      <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 14px; margin-bottom: 20px;">
+        <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 10px;">💰 Adjust Balance</div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 10px;">
+          <input id="modal-adj-amount" type="number" step="0.1" class="input" placeholder="Amount">
+          <select id="modal-adj-action" class="input">
+            <option value="add">Credit (+)</option>
+            <option value="cut">Debit (-)</option>
+          </select>
+        </div>
+        <input id="modal-adj-reason" type="text" class="input" placeholder="Reason / Note (creates immutable ledger entry)" style="margin-bottom: 10px;">
+        <button class="btn btn-secondary btn-sm" onclick="submitBalanceAdjustment()">Apply Balance Adjustment</button>
+      </div>
+
+      <!-- User Ledger History -->
+      <h4 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 10px;">📜 Transaction Ledger History</h4>
+      <div id="modal-user-txns" style="max-height: 200px; overflow-y: auto; font-size: 0.8rem; border: 1px solid var(--border-color); border-radius: 10px; padding: 10px;">
+        Loading ledger...
+      </div>
+    </div>
+  </div>
+
+  <!-- Channel Builder Modal -->
+  <div id="channel-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 id="channel-modal-title" style="font-weight: 800;">Add Force-Join Channel</h3>
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('channel-modal')">✕</button>
+      </div>
+      <input id="chan-edit-id" type="hidden">
+      <div class="form-group">
+        <label class="form-label">Channel Name</label>
+        <input id="chan-name" type="text" class="input" placeholder="e.g. Official Announcements">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Channel Username (with @) or ID</label>
+        <input id="chan-username" type="text" class="input" placeholder="e.g. @YourChannel">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Invite URL</label>
+        <input id="chan-url" type="text" class="input" placeholder="https://t.me/YourChannel">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Button Label in Verification Prompt</label>
+        <input id="chan-btn-label" type="text" class="input" placeholder="📢 Join Channel">
+      </div>
+      <button class="btn btn-primary" onclick="submitChannelSave()">
+        Save Channel
+      </button>
+    </div>
+  </div>
+
+  <!-- Task Builder Modal -->
+  <div id="task-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 id="task-modal-title" style="font-weight: 800;">Create Social Task</h3>
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('task-modal')">✕</button>
+      </div>
+      <input id="task-edit-id" type="hidden">
+      <div class="form-group">
+        <label class="form-label">Task Title</label>
+        <input id="task-title" type="text" class="input" placeholder="e.g. Follow us on Twitter">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <input id="task-desc" type="text" class="input" placeholder="Short instructions for user">
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">Reward Amount</label>
+          <input id="task-reward" type="number" step="0.05" class="input" value="0.10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Task Type</label>
+          <select id="task-type" class="input">
+            <option value="url_visit">URL / Link Visit</option>
+            <option value="channel_join">Telegram Channel Join</option>
+            <option value="video_watch">Video Watch</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Target Link URL</label>
+        <input id="task-url" type="text" class="input" placeholder="https://...">
+      </div>
+      <button class="btn btn-primary" onclick="submitTaskSave()">
+        Save Task
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="admin-toast" style="position: fixed; bottom: 24px; right: 24px; z-index: 99999; display: none; background: #1e293b; color: white; padding: 12px 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-weight: 600; font-size: 0.9rem;"></div>
+
+  <!-- Scripts -->
+  <script src="js/admin.js"></script>
+</body>
+</html>

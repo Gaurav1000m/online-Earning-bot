@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment Secrets
+.env
+.env.local
+.env.*.local
+
+# Vercel artifacts
+.vercel/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local runtime data
+data/*.json
+data/*.tmp.*
+data/*.sqlite*

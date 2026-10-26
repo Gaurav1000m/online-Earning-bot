@@ -1,0 +1,20 @@
+{
+  "name": "telegram-mini-app-refer-earn",
+  "version": "1.0.0",
+  "description": "Telegram Mini App for Refer & Earn and Viewing Ads with GigaPub",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node tests/test_suite.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "grammy": "^1.35.0"
+  },
+  "author": "",
+  "license": "MIT"
+}

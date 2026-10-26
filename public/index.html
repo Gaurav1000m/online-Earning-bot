@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Refer & Earn Mini App | GigaPub Ads</title>
+  
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Confetti Celebration Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Dev Demo Mode Banner -->
+  <div id="demo-mode-banner" style="display:none; background:#f59e0b; color:#1e1e1e; font-size:0.75rem; font-weight:700; text-align:center; padding:6px 12px;">
+    ⚠️ Running in Browser Preview Mode (Mock Telegram User Active)
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- TAB 1: HOME -->
+  <!-- ======================================================== -->
+  <main id="tab-home" class="tab-pane active">
+    <!-- User Profile Header -->
+    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg, #3b82f6, #06b6d4); display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1.2rem; color:white; box-shadow:0 4px 10px rgba(59,130,246,0.3);">
+          👤
+        </div>
+        <div>
+          <div class="text-xs text-muted">Welcome back,</div>
+          <div id="user-greeting-name" class="text-base font-bold">User</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <button id="admin-quick-btn" class="badge" style="display:none; background:rgba(245,158,11,0.2); color:#fbbf24; border:1px solid rgba(245,158,11,0.3); cursor:pointer;" onclick="location.href='/admin'">
+          ⚙️ Admin
+        </button>
+        <div class="badge badge-approved" style="font-size:0.75rem;">
+          ID: <span id="user-profile-id">...</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Balance Card -->
+    <section class="gradient-card" style="margin-bottom:18px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <div class="text-xs" style="opacity:0.85; text-transform:uppercase; letter-spacing:0.5px;">Current Available Balance</div>
+          <div class="text-3xl font-black" style="margin:4px 0;">
+            <span class="val-currency-symbol">₹</span><span class="user-balance">0.00</span>
+          </div>
+          <div class="text-xs" style="opacity:0.9;">
+            ≈ <span class="user-balance">0.00</span> <span class="val-currency-name">Points</span>
+          </div>
+        </div>
+        <button class="btn btn-sm" data-switch-tab="wallet" style="background:rgba(255,255,255,0.25); color:white; backdrop-filter:blur(10px); border:none;">
+          💸 Withdraw
+        </button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.2);">
+        <div>
+          <div class="text-xs" style="opacity:0.8;">Total Earned</div>
+          <div class="text-sm font-bold"><span class="val-currency-symbol">₹</span><span class="user-total-earned">0.00</span></div>
+        </div>
+        <div>
+          <div class="text-xs" style="opacity:0.8;">Total Withdrawn</div>
+          <div class="text-sm font-bold"><span class="val-currency-symbol">₹</span><span class="user-total-withdrawn">0.00</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Action Navigation Grid -->
+    <section style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
+      <div class="card" data-switch-tab="earn" style="cursor:pointer; display:flex; align-items:center; gap:12px;">
+        <div style="font-size:1.8rem; background:rgba(59,130,246,0.15); width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+          🎬
+        </div>
+        <div>
+          <div class="text-sm font-bold">Watch Ads</div>
+          <div class="text-xs text-muted">+<span class="val-ad-reward">0.2</span> <span class="val-currency-name">Points</span></div>
+        </div>
+      </div>
+
+      <div class="card" data-switch-tab="refer" style="cursor:pointer; display:flex; align-items:center; gap:12px;">
+        <div style="font-size:1.8rem; background:rgba(16,185,129,0.15); width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+          👥
+        </div>
+        <div>
+          <div class="text-sm font-bold">Refer & Earn</div>
+          <div class="text-xs text-muted">+<span class="val-referral-reward">1.0</span> <span class="val-currency-name">Points</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Daily Streak Bonus Card -->
+    <section class="card" style="margin-bottom:18px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.5rem;">🎁</span>
+          <div>
+            <div class="text-sm font-bold">Daily Streak Bonus</div>
+            <div class="text-xs text-muted">Current Streak: <b id="streak-days-count" class="text-primary">1</b> Days</div>
+          </div>
+        </div>
+        <span id="bonus-timer-text" class="text-xs text-muted font-semibold">Ready to Claim</span>
+      </div>
+
+      <!-- 7-Day Streak Pills -->
+      <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; margin-bottom:12px; text-align:center;">
+        <div class="streak-pill" data-day="1"><div class="text-xs">D1</div><b style="font-size:0.7rem;">0.05</b></div>
+        <div class="streak-pill" data-day="2"><div class="text-xs">D2</div><b style="font-size:0.7rem;">0.10</b></div>
+        <div class="streak-pill" data-day="3"><div class="text-xs">D3</div><b style="font-size:0.7rem;">0.15</b></div>
+        <div class="streak-pill" data-day="4"><div class="text-xs">D4</div><b style="font-size:0.7rem;">0.20</b></div>
+        <div class="streak-pill" data-day="5"><div class="text-xs">D5</div><b style="font-size:0.7rem;">0.25</b></div>
+        <div class="streak-pill" data-day="6"><div class="text-xs">D6</div><b style="font-size:0.7rem;">0.30</b></div>
+        <div class="streak-pill" data-day="7"><div class="text-xs">D7</div><b style="font-size:0.7rem;">0.50</b></div>
+      </div>
+
+      <button id="claim-bonus-btn" class="btn btn-success">
+        🎁 Claim Daily Bonus
+      </button>
+    </section>
+
+    <!-- Daily Ads Progress Card -->
+    <section class="card" style="margin-bottom:18px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span class="text-xs font-semibold text-muted">Today's Ads Watched</span>
+        <span id="ads-progress-text" class="text-xs font-bold text-primary">0 / 20 Today</span>
+      </div>
+      <div class="progress-bar">
+        <div id="ads-progress-bar" class="progress-fill" style="width:0%;"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+        <span id="ad-cooldown-text" class="text-xs text-success font-semibold">Ad Available Now</span>
+        <button id="watch-ad-btn" class="btn btn-primary btn-sm">
+          🎬 Watch Ad
+        </button>
+      </div>
+    </section>
+
+    <!-- Optional Force Channel Join Card -->
+    <section id="channel-join-card" class="card" style="display:none; border-color:rgba(59,130,246,0.3); background:rgba(30,58,138,0.15);">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div class="text-sm font-bold">📢 Official Updates Channel</div>
+          <div class="text-xs text-muted">Join for payment proofs & bonuses</div>
+        </div>
+        <a id="channel-link-btn" href="#" target="_blank" class="btn btn-primary btn-sm" style="text-decoration:none;">
+          Join
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- TAB 2: EARN (ADS & TASKS) -->
+  <!-- ======================================================== -->
+  <main id="tab-earn" class="tab-pane">
+    <header style="margin-bottom:16px;">
+      <h1 class="text-xl font-bold">⚡ Earn Rewards</h1>
+      <p class="text-xs text-muted">Watch short ads via GigaPub and complete tasks to earn instant points.</p>
+    </header>
+
+    <!-- GigaPub Rewarded Ads Section -->
+    <section class="card" style="margin-bottom:18px; text-align:center; padding:24px 16px;">
+      <div style="font-size:3.5rem; margin-bottom:8px;">🎬</div>
+      <h2 class="text-lg font-bold">GigaPub Rewarded Ads</h2>
+      <p class="text-xs text-muted" style="margin:6px 0 16px;">
+        Watch a short video ad to credit your account immediately.
+      </p>
+
+      <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(16,185,129,0.15); color:#34d399; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:700; margin-bottom:16px;">
+        +<span class="val-ad-reward">0.2</span> <span class="val-currency-name">Points</span> (<span class="val-currency-symbol">₹</span><span class="val-ad-reward">0.2</span>) per Ad
+      </div>
+
+      <button id="watch-ad-btn-page" class="btn btn-primary" onclick="handleWatchAd()" style="margin-bottom:12px;">
+        ▶️ Watch Video Ad Now
+      </button>
+
+      <div class="text-xs text-muted">
+        ⚡ Cooldown: 30s &bull; Guaranteed Server Verification
+      </div>
+    </section>
+
+    <!-- Social & Partner Tasks Section -->
+    <section class="card">
+      <h3 class="text-sm font-bold" style="margin-bottom:12px;">📋 Available Tasks</h3>
+      <div id="tasks-container-list">
+        <div class="text-xs text-muted text-center py-4">Loading available tasks...</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- TAB 3: REFER & EARN -->
+  <!-- ======================================================== -->
+  <main id="tab-refer" class="tab-pane">
+    <header style="margin-bottom:16px;">
+      <h1 class="text-xl font-bold">👥 Refer & Earn</h1>
+      <p class="text-xs text-muted">Invite your friends and earn instant rewards on every joining!</p>
+    </header>
+
+    <!-- Referral Link Box -->
+    <section class="card" style="margin-bottom:18px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span class="text-xs font-semibold text-muted">Your Unique Invite Link</span>
+        <span class="badge badge-approved">+<span class="val-referral-reward">1.0</span> <span class="val-currency-name">Points</span> / Refer</span>
+      </div>
+
+      <input id="ref-link-display" type="text" readonly class="input" style="font-size:0.8rem; margin-bottom:12px;" value="Loading link...">
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <button id="copy-ref-btn" class="btn btn-secondary">
+          📋 Copy Link
+        </button>
+        <button id="share-ref-btn" class="btn btn-primary">
+          📢 Share on TG
+        </button>
+      </div>
+    </section>
+
+    <!-- Weekly Leaderboard Announcement Box -->
+    <section class="card" style="margin-bottom:18px; background:linear-gradient(135deg, rgba(168,85,247,0.15), rgba(59,130,246,0.15)); border-color:rgba(168,85,247,0.3);">
+      <div style="font-size:0.85rem; font-weight:800; color:#c084fc; margin-bottom:6px;">🎁 WEEKLY LEADERBOARD PRIZES</div>
+      <div style="font-size:0.78rem; color:var(--text-main); line-height:1.5;">
+        🥇 1st — <b>$10</b> &bull; 🥈 2nd — <b>$10</b> &bull; 🥉 3rd — <b>$10</b><br/>
+        4️⃣ 4th–10th — <b>$5</b> &bull; 🔟 11th–20th — <b>$3</b>
+      </div>
+    </section>
+
+    <!-- Leaderboard -->
+    <section class="card" style="margin-bottom:18px;">
+      <h3 class="text-sm font-bold" style="margin-bottom:8px;">🔥 Weekly Top Referrers</h3>
+      <div id="leaderboard-list">
+        <div class="text-xs text-muted text-center py-4">Loading top referrers...</div>
+      </div>
+    </section>
+
+    <!-- My Invited Friends List -->
+    <section class="card">
+      <h3 class="text-sm font-bold" style="margin-bottom:8px;">👥 My Invited Friends</h3>
+      <div id="my-referrals-list">
+        <div class="text-xs text-muted text-center py-4">Loading your referrals...</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- TAB 4: WALLET & WITHDRAW -->
+  <!-- ======================================================== -->
+  <main id="tab-wallet" class="tab-pane">
+    <header style="margin-bottom:16px;">
+      <h1 class="text-xl font-bold">💳 Wallet & Payouts</h1>
+      <p class="text-xs text-muted">Manage your payment settings and withdraw your earned funds.</p>
+    </header>
+
+    <!-- Balance Summary Card -->
+    <section class="card" style="margin-bottom:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div class="text-xs text-muted">Available Balance</div>
+          <div class="text-2xl font-black" style="margin-top:2px;">
+            <span class="val-currency-symbol">₹</span><span class="user-balance">0.00</span>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div class="text-xs text-muted">Total Paid Out</div>
+          <div class="text-sm font-bold text-success"><span class="val-currency-symbol">₹</span><span class="user-total-withdrawn">0.00</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Payout Method Selector -->
+    <section class="card" style="margin-bottom:16px;">
+      <label class="text-xs text-muted" style="display:block; margin-bottom:8px;">Choose Withdrawal Method</label>
+      <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-bottom:12px;">
+        <button class="btn btn-secondary btn-sm wd-tab-btn active" data-method="upi">🇮🇳 UPI</button>
+        <button class="btn btn-secondary btn-sm wd-tab-btn" data-method="paypal">💳 PayPal</button>
+        <button class="btn btn-secondary btn-sm wd-tab-btn" data-method="bank">🏦 Bank</button>
+      </div>
+
+      <div id="wd-method-fields">
+        <!-- UPI input -->
+        <div id="field-upi" class="method-field-group">
+          <label class="text-xs text-muted" style="display:block; margin-bottom:4px;">UPI ID</label>
+          <input id="input-upi-id" type="text" class="input" placeholder="e.g. user@oksbi or mobile@paytm">
+        </div>
+        <!-- PayPal input -->
+        <div id="field-paypal" class="method-field-group" style="display:none;">
+          <label class="text-xs text-muted" style="display:block; margin-bottom:4px;">PayPal Email</label>
+          <input id="input-paypal-email" type="email" class="input" placeholder="your@email.com">
+        </div>
+        <!-- Bank inputs -->
+        <div id="field-bank" class="method-field-group" style="display:none;">
+          <input id="input-bank-name" type="text" class="input" placeholder="Bank Name" style="margin-bottom:6px;">
+          <input id="input-bank-acc" type="text" class="input" placeholder="Account Number" style="margin-bottom:6px;">
+          <input id="input-bank-ifsc" type="text" class="input" placeholder="IFSC Code">
+        </div>
+      </div>
+    </section>
+
+    <!-- Withdrawal Request Form -->
+    <section class="card" style="margin-bottom:18px;">
+      <h3 class="text-sm font-bold" style="margin-bottom:8px;">💸 Withdraw Funds</h3>
+
+      <div style="margin-bottom:12px;">
+        <label class="text-xs text-muted" style="display:block; margin-bottom:4px;">Withdrawal Amount</label>
+        <input id="withdraw-amount-input" type="number" class="input" placeholder="e.g. 10">
+      </div>
+
+      <!-- Quick Amount Buttons -->
+      <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; margin-bottom:14px;">
+        <button class="btn btn-secondary btn-sm quick-amt-btn" data-amt="5">5</button>
+        <button class="btn btn-secondary btn-sm quick-amt-btn" data-amt="10">10</button>
+        <button class="btn btn-secondary btn-sm quick-amt-btn" data-amt="25">25</button>
+        <button class="btn btn-secondary btn-sm quick-amt-btn" data-amt="50">50</button>
+        <button class="btn btn-secondary btn-sm quick-amt-btn" data-amt="all">MAX</button>
+      </div>
+
+      <div class="text-xs text-muted" style="margin-bottom:14px;">
+        ⚠️ Min Withdrawal: <b><span class="val-currency-symbol">₹</span><span class="val-min-withdrawal">10</span></b> &bull; Payout Time: <b>1-12 Hours</b>
+      </div>
+
+      <button id="submit-withdraw-btn" class="btn btn-primary">
+        Submit Withdrawal Request
+      </button>
+    </section>
+
+    <!-- Withdrawal History -->
+    <section class="card">
+      <h3 class="text-sm font-bold" style="margin-bottom:10px;">📜 Withdrawal History</h3>
+      <div id="withdrawal-history-list">
+        <div class="text-xs text-muted text-center py-4">Loading withdrawal history...</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- BOTTOM NAVIGATION BAR -->
+  <!-- ======================================================== -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" data-tab="home">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      <span>Home</span>
+    </div>
+
+    <div class="nav-item" data-tab="earn">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>Earn Ads</span>
+    </div>
+
+    <div class="nav-item" data-tab="refer">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      <span>Refer</span>
+    </div>
+
+    <div class="nav-item" data-tab="wallet">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+      <span>Wallet</span>
+    </div>
+  </nav>
+
+  <!-- Application Scripts -->
+  <script src="js/gigapub.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

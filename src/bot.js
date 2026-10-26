@@ -261,6 +261,14 @@ export function initBot() {
         return;
       }
 
+      // If user joined via referral link, qualify reward and notify sender immediately!
+      if (isNew && dbUser.referred_by) {
+        const qualResult = db.qualifyReferral(user.id);
+        if (qualResult.rewarded && qualResult.referrerId) {
+          await notifyReferralJoined(qualResult.referrerId, user, qualResult);
+        }
+      }
+
       // Verify Force-Join Channels
       const channelCheck = await checkUserChannels(ctx, user.id);
       if (!channelCheck.allJoined) {
@@ -268,20 +276,10 @@ export function initBot() {
         return;
       }
 
-      // If user joined directly with 0 force-join channels required, check referral qualification
+      // If user wasn't rewarded yet (fallback), qualify and notify sender
       const qualResult = db.qualifyReferral(user.id);
       if (qualResult.rewarded && qualResult.referrerId) {
-        const symbol = db.getSetting('currencySymbol');
-        try {
-          await bot.api.sendMessage(
-            qualResult.referrerId,
-            `🎉 <b>NEW REFERRAL!</b>\n━━━━━━━━━━━━━━━━━━━━━\n` +
-            `👤 <a href="tg://user?id=${user.id}">${user.first_name}</a> joined using your referral link!\n` +
-            `💰 <b>You earned: +${symbol}${qualResult.reward}</b>\n` +
-            `💵 <b>New Balance:</b> ${symbol}${qualResult.newBalance}`,
-            { parse_mode: 'HTML' }
-          );
-        } catch (e) {}
+        await notifyReferralJoined(qualResult.referrerId, user, qualResult);
       }
 
       // Show Welcome / Start message with 2-Column Reply Keyboard!
@@ -312,20 +310,10 @@ export function initBot() {
       const renderedSuccess = db.renderTemplate('VERIFICATION_SUCCESS');
       await ctx.reply(renderedSuccess.text, { parse_mode: 'HTML' });
 
-      // Rule 44: Qualify referral reward upon successful force-join verification!
+      // Qualify referral reward upon successful force-join verification (if not already rewarded)!
       const qualResult = db.qualifyReferral(user.id);
       if (qualResult.rewarded && qualResult.referrerId) {
-        const symbol = db.getSetting('currencySymbol');
-        try {
-          await bot.api.sendMessage(
-            qualResult.referrerId,
-            `🎉 <b>NEW REFERRAL!</b>\n━━━━━━━━━━━━━━━━━━━━━\n` +
-            `👤 <a href="tg://user?id=${user.id}">${user.first_name}</a> joined using your referral link and verified their membership!\n` +
-            `💰 <b>You earned: +${symbol}${qualResult.reward}</b>\n` +
-            `💵 <b>New Balance:</b> ${symbol}${qualResult.newBalance}`,
-            { parse_mode: 'HTML' }
-          );
-        } catch (e) {}
+        await notifyReferralJoined(qualResult.referrerId, user, qualResult);
       }
 
       const dbUser = db.getUser(user.id) || db.getOrCreateUser(user).user;
@@ -1702,6 +1690,36 @@ export async function notifyAdminWithdrawal(withdrawal) {
     );
   } catch (err) {
     console.error('Could not notify admin of withdrawal:', err.message);
+  }
+}
+
+/**
+ * Formats referral notification message sent to inviter (sender)
+ */
+export function buildReferralJoinedMessage(user, qualResult) {
+  const symbol = db.getSetting('currencySymbol') || '₹';
+  const userDisplayName = user.username
+    ? `<a href="tg://user?id=${user.id}">${user.first_name || 'User'}</a> (@${user.username})`
+    : `<a href="tg://user?id=${user.id}">${user.first_name || 'A user'}</a>`;
+
+  return (
+    `🎉 <b>NEW REFERRAL JOINED!</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `👤 <b>${userDisplayName}</b> has successfully joined the bot using your link and reward is credited to your balance!\n\n` +
+    `💰 <b>Reward Credited:</b> <b>+${symbol}${qualResult.reward.toFixed(2)}</b>\n` +
+    `💵 <b>New Balance:</b> <b>${symbol}${qualResult.newBalance.toFixed(2)}</b>`
+  );
+}
+
+/**
+ * Notify referral inviter (sender) when a new user joins via their referral link
+ */
+export async function notifyReferralJoined(referrerId, user, qualResult) {
+  if (!bot || !referrerId || !qualResult || !qualResult.rewarded) return;
+  try {
+    const text = buildReferralJoinedMessage(user, qualResult);
+    await bot.api.sendMessage(referrerId, text, { parse_mode: 'HTML' });
+  } catch (err) {
+    console.warn(`Could not send referral notification to ${referrerId}:`, err.message);
   }
 }
 

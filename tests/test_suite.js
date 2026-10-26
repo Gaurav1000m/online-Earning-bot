@@ -32,7 +32,7 @@
 
 import db from '../src/db.js';
 import config from '../src/config.js';
-import { renderTaskCard } from '../src/bot.js';
+import { renderTaskCard, buildReferralJoinedMessage } from '../src/bot.js';
 
 let passedTests = 0;
 let failedTests = 0;
@@ -151,6 +151,17 @@ async function runTestSuite() {
     assert(updatedUserA.referral_count === 1, 'Test 10: Referrer referral count incremented to 1');
     const duplicateQual = db.qualifyReferral(testUserBId);
     assert(duplicateQual.rewarded === false, 'Test 10: Duplicate referral qualification blocked (credited only once)');
+
+    // ----------------------------------------------------
+    // TEST 10b: Inviter Notification on Referral Join
+    // ----------------------------------------------------
+    const refMsg = buildReferralJoinedMessage(
+      { id: testUserBId, first_name: 'TestBob', username: `bob_${testSuffix}` },
+      qualResult
+    );
+    assert(refMsg.includes('has successfully joined the bot'), 'Test 10b: Referral message includes joined text');
+    assert(refMsg.includes('reward is credited to your balance'), 'Test 10b: Referral message confirms reward credited');
+    assert(refMsg.includes(`+${db.getSetting('currencySymbol') || '₹'}${Number(config.referralReward).toFixed(2)}`), 'Test 10b: Referral message includes +₹20.00 reward amount');
 
     // ----------------------------------------------------
     // TEST 11: Ad Session Initiation

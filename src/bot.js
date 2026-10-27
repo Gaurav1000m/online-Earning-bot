@@ -4,9 +4,38 @@ import db from './db.js';
 
 let bot = null;
 
-// User state machine for conversational withdrawal flow
+// User state machine for conversational withdrawal flow (backed by memory + db persistence)
 const userStates = new Map();
 const userAdWatchStartTime = new Map();
+
+function getUserState(userId) {
+  const mem = userStates.get(userId);
+  if (mem) return mem;
+  const dbUser = db.getUser(userId);
+  return dbUser?.withdrawal_state || null;
+}
+
+function setUserState(userId, state) {
+  if (state) {
+    userStates.set(userId, state);
+    db.updateUser(userId, { withdrawal_state: state });
+  } else {
+    userStates.delete(userId);
+    db.updateUser(userId, { withdrawal_state: null });
+  }
+}
+
+function setUserAdWatchStartTime(userId, time) {
+  userAdWatchStartTime.set(userId, time);
+  db.updateUser(userId, { ad_watch_start_time: time });
+}
+
+function getUserAdWatchStartTime(userId) {
+  const mem = userAdWatchStartTime.get(userId);
+  if (mem) return mem;
+  const dbUser = db.getUser(userId);
+  return dbUser?.ad_watch_start_time || 0;
+}
 
 /**
  * Builds the 2-column Reply Keyboard matching reference UI
@@ -88,7 +117,10 @@ async function sendTemplatedMessage(ctx, templateKey, variables = {}, extraKeybo
  */
 async function checkUserChannels(ctx, userId) {
   const enabledChannels = db.getEnabledChannels();
-  if (enabledChannels.length === 0) return { allJoined: true, missing: [] };
+  if (enabledChannels.length === 0) {
+    db.updateUser(userId, { verified_channels: true });
+    return { allJoined: true, missing: [] };
+  }
 
   const dbUser = db.getUser(userId);
   const wasVerified = Boolean(dbUser && dbUser.verified_channels);
@@ -109,6 +141,10 @@ async function checkUserChannels(ctx, userId) {
       // Telegram throws an error if user is not in the channel (e.g. PARTICIPANT_ID_INVALID, user not found)
       missing.push(ch);
     }
+  }
+
+  if (missing.length === 0) {
+    db.updateUser(userId, { verified_channels: true });
   }
 
   // If user was previously verified but has now left one or more channels -> Apply ₹10 penalty
@@ -183,6 +219,12 @@ export function initBot() {
       supports_inline_queries: false
     };
     bot = new Bot(config.botToken, { botInfo });
+
+    // Global Error Handler for Grammy Bot
+    bot.catch((err) => {
+      const ctx = err.ctx;
+      console.error(`⚠️ Telegram Bot error while processing update ${ctx?.update?.update_id}:`, err.error?.message || err.message || err);
+    });
 
     // =======================================================
     // Middleware: Maintenance Mode & Force-Join Check
@@ -282,6 +324,8 @@ export function initBot() {
         return;
       }
 
+      db.updateUser(user.id, { verified_channels: true });
+
       // If user wasn't rewarded yet (fallback), qualify and notify sender
       const qualResult = db.qualifyReferral(user.id);
       if (qualResult.rewarded && qualResult.referrerId) {
@@ -307,6 +351,7 @@ export function initBot() {
         return;
       }
 
+      db.updateUser(user.id, { verified_channels: true });
       await ctx.answerCallbackQuery({ text: '🎉 Verification Successful!' });
 
       try {
@@ -409,7 +454,7 @@ export function initBot() {
       }
 
       await ctx.answerCallbackQuery();
-      userAdWatchStartTime.set(user.id, Date.now());
+      setUserAdWatchStartTime(user.id, Date.now());
 
       const symbol = db.getSetting('currencySymbol') || '₹';
       const adReward = db.getSetting('adReward') || 5.0;
@@ -437,7 +482,7 @@ export function initBot() {
         return ctx.answerCallbackQuery({ text: check.reason, show_alert: true });
       }
 
-      const startTime = userAdWatchStartTime.get(user.id) || 0;
+      const startTime = getUserAdWatchStartTime(user.id);
       const elapsedSec = (Date.now() - startTime) / 1000;
       if (elapsedSec < 15) {
         const remaining = Math.ceil(15 - elapsedSec);
@@ -516,7 +561,7 @@ export function initBot() {
 
       await ctx.answerCallbackQuery();
 
-      userStates.set(user.id, { step: 'awaiting_payment_details', method });
+      setUserState(user.id, { step: 'awaiting_payment_details', method });
 
       let promptMsg = '';
       if (method === 'upi') {
@@ -534,7 +579,7 @@ export function initBot() {
     });
 
     bot.callbackQuery('cancel_withdrawal', async (ctx) => {
-      userStates.delete(ctx.from.id);
+      setUserState(ctx.from.id, null);
       await ctx.answerCallbackQuery({ text: 'Withdrawal cancelled.' });
       try {
         await ctx.deleteMessage();
@@ -722,31 +767,32 @@ export function initBot() {
     // =======================================================
     bot.on('message:text', async (ctx, next) => {
       const user = ctx.from;
-      const state = userStates.get(user.id);
+      const state = getUserState(user.id);
       if (!state) return next();
 
       const text = ctx.message.text.trim();
 
       // Check if user clicked a menu button while in withdrawal flow
       const s = db.getSettings();
+      const menuKeywords = ['balance', 'withdraw', 'watch ads', 'ads', 'invite', 'refer', 'bonus', 'tasks'];
       const menuButtons = [
         s.btn_balance || '💰 My Balance',
         s.btn_withdraw || '💸 Withdraw',
         s.btn_ads || '🎬 Watch Ads',
         s.btn_refer || '👥 Invite Friends',
-        s.btn_bonus || '🎁 Bonus System',
+        s.btn_bonus || '🎁 Bonus',
         s.btn_tasks || '📋 Tasks'
       ];
 
-      if (menuButtons.some(b => text.toLowerCase().includes(b.toLowerCase()))) {
-        userStates.delete(user.id);
+      if (menuButtons.some(b => text.toLowerCase().includes(b.toLowerCase())) || menuKeywords.some(k => text.toLowerCase().includes(k))) {
+        setUserState(user.id, null);
         return next();
       }
 
       if (state.step === 'awaiting_payment_details') {
         state.details = text;
         state.step = 'awaiting_amount';
-        userStates.set(user.id, state);
+        setUserState(user.id, state);
 
         const dbUser = db.getUser(user.id);
         const symbol = db.getSetting('currencySymbol');
@@ -771,7 +817,7 @@ export function initBot() {
           return;
         }
 
-        userStates.delete(user.id);
+        setUserState(user.id, null);
 
         const result = db.createWithdrawal(user.id, {
           method: state.method,
@@ -1240,16 +1286,32 @@ export function initBot() {
       );
     });
 
-    // Start Bot Long-Polling if not in webhook mode
-    const isWebhookMode = process.env.VERCEL || process.env.USE_WEBHOOK === 'true';
-    if (!isWebhookMode) {
+    // Start Bot Long-Polling if BOT_POLLING is explicitly enabled; otherwise default to Webhook mode
+    const isPollingExplicit = process.env.BOT_POLLING === 'true';
+    const isWebhookMode = Boolean(process.env.VERCEL || process.env.USE_WEBHOOK === 'true' || !isPollingExplicit);
+
+    if (!isWebhookMode && isPollingExplicit) {
       bot.start({
+        drop_pending_updates: false,
         onStart: (botInfo) => {
-          console.log(`🤖 Telegram Bot @${botInfo.username} is connected and listening for updates!`);
+          console.log(`🤖 Telegram Bot @${botInfo.username} is connected in long-polling mode!`);
         }
       });
     } else {
-      console.log('🤖 Telegram Bot initialized in Webhook mode (Grammy webhookCallback active)');
+      console.log('🤖 Telegram Bot initialized in Webhook mode');
+      // Auto-register webhook with Telegram if needed
+      if (config.webAppUrl && config.webAppUrl.startsWith('https://')) {
+        const webhookUrl = `${config.webAppUrl}/api/webhook`;
+        bot.api.getWebhookInfo().then(async (info) => {
+          if (info.url !== webhookUrl) {
+            console.log(`🔄 Auto-registering Telegram webhook to: ${webhookUrl}`);
+            await bot.api.setWebhook(webhookUrl, { drop_pending_updates: false });
+            console.log('✅ Telegram webhook verified and active on production URL!');
+          }
+        }).catch(err => {
+          console.warn('⚠️ Webhook auto-registration check:', err.message);
+        });
+      }
     }
 
     return bot;
@@ -1266,7 +1328,7 @@ async function showWelcomeAndMainMenu(ctx, user) {
   const botUser = bot.botInfo?.username || config.botUsername || 'easyandfastearn_bot';
   const refLink = `https://t.me/${botUser}?start=ref_${user.id}`;
   const rank = db.getUserWeeklyRank(user.id);
-  const symbol = db.getSetting('currencySymbol') || '$';
+  const symbol = db.getSetting('currencySymbol') || '₹';
   const refReward = db.getSetting('referralReward');
   const adReward = db.getSetting('adReward');
 
@@ -1299,7 +1361,7 @@ async function handleBalanceAction(ctx) {
   const user = ctx.from;
   const dbUser = db.getUser(user.id) || db.getOrCreateUser(user).user;
   const rank = db.getUserWeeklyRank(user.id);
-  const symbol = db.getSetting('currencySymbol') || '$';
+  const symbol = db.getSetting('currencySymbol') || '₹';
   const currency = db.getSetting('currencyName') || 'Points';
 
   const variables = {

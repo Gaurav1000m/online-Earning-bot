@@ -18,6 +18,21 @@ const gigaPubProjectId = (rawGiga && !rawGiga.includes('YOUR_') && rawGiga !== '
   ? rawGiga
   : '8839';
 
+export function sanitizeMongoUri(rawUri) {
+  if (!rawUri) return '';
+  const trimmed = String(rawUri).trim();
+  const match = trimmed.match(/^(mongodb(?:\+srv)?:\/\/)([^:]+):(.+)@([^@\/?]+)(\/?[^?]*\??.*)$/);
+  if (match) {
+    const protocol = match[1];
+    const user = match[2];
+    const pass = match[3];
+    const host = match[4];
+    const rest = match[5] || '';
+    return protocol + encodeURIComponent(decodeURIComponent(user)) + ':' + encodeURIComponent(decodeURIComponent(pass)) + '@' + host + rest;
+  }
+  return trimmed;
+}
+
 export const config = {
   // Bot & Server
   botToken,
@@ -64,7 +79,7 @@ export const config = {
   adsterraSmartLink: process.env.ADSTERRA_SMARTLINK || 'https://arwf.org/4/ef8f2a6df3e5243a89a484add434af25',
 
   // MongoDB Atlas Cloud Persistence (for Vercel & permanent cloud storage)
-  mongodbUri: (process.env.MONGODB_URI || '').trim(),
+  mongodbUri: sanitizeMongoUri(process.env.MONGODB_URI || ''),
 
   maintenanceMode: process.env.MAINTENANCE_MODE === 'true'
 };

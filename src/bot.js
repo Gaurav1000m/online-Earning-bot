@@ -1452,8 +1452,18 @@ async function handleInviteFriendsAction(ctx) {
 
   const refEarnings = ((dbUser.referral_count || 0) * refReward).toFixed(2);
 
+  // Dynamic sender earned amount for high-converting social proof
+  const earned = (dbUser.balance && dbUser.balance > 0)
+    ? dbUser.balance
+    : ((dbUser.total_earned && dbUser.total_earned > 0)
+      ? dbUser.total_earned
+      : ((dbUser.lifetime_earnings && dbUser.lifetime_earnings > 0)
+        ? dbUser.lifetime_earnings
+        : refReward || 20));
+  const senderAmount = Number(earned) % 1 === 0 ? Number(earned).toFixed(0) : Number(earned).toFixed(2);
+
   const shareText = encodeURIComponent(
-    `🎁 Join this bot to earn free cash by watching ads and referring friends! Claim your reward now: ${refLink}`
+    `Maine iss bot se ₹${senderAmount} kamaye. Aap bhi try karein aur daily free rewards paayein! 🎁🚀`
   );
   const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${shareText}`;
 

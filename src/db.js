@@ -33,7 +33,7 @@ export const DEFAULT_TEMPLATES = {
     media_url: '',
     inline_buttons: [
       [{ text: '🚀 Open Mini App', web_app: true, url: '' }],
-      [{ text: '👥 Invite Friends', url: 'https://t.me/share/url?url={{referral_link}}&text=Join+and+earn+cash!' }]
+      [{ text: '👥 Invite Friends', url: 'https://t.me/share/url?url={{referral_link}}&text=Maine+iss+bot+se+₹{{referral_reward}}+kamaye.+Aap+bhi+try+karein!+🎁🚀' }]
     ]
   },
   FORCE_JOIN_MESSAGE: {

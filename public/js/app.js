@@ -761,16 +761,34 @@ async function loadReferralData() {
 
 function handleCopyRefLink() {
   const { botLink } = getReferralLinks();
-  navigator.clipboard.writeText(botLink).then(() => {
-    showToast('📋 Referral link copied!', 'success');
+  const currentBalance = (state.user && state.user.balance > 0)
+    ? state.user.balance
+    : ((state.user && state.user.total_earned > 0)
+      ? state.user.total_earned
+      : ((state.user && state.user.lifetime_earnings > 0)
+        ? state.user.lifetime_earnings
+        : 20));
+  const senderAmount = Number(currentBalance) % 1 === 0 ? Number(currentBalance).toFixed(0) : Number(currentBalance).toFixed(2);
+  const textToCopy = `${botLink}\nMaine iss bot se ₹${senderAmount} kamaye. Aap bhi try karein aur daily free rewards paayein! 🎁🚀`;
+
+  navigator.clipboard.writeText(textToCopy).then(() => {
+    showToast('📋 Referral link & message copied!', 'success');
     hapticNotification('success');
   });
 }
 
 function handleShareRefLink() {
   const { botLink } = getReferralLinks();
+  const currentBalance = (state.user && state.user.balance > 0)
+    ? state.user.balance
+    : ((state.user && state.user.total_earned > 0)
+      ? state.user.total_earned
+      : ((state.user && state.user.lifetime_earnings > 0)
+        ? state.user.lifetime_earnings
+        : 20));
+  const senderAmount = Number(currentBalance) % 1 === 0 ? Number(currentBalance).toFixed(0) : Number(currentBalance).toFixed(2);
   const shareText = encodeURIComponent(
-    `🎁 Join this bot to earn cash by watching ads and inviting friends! Join here: ${botLink}`
+    `Maine iss bot se ₹${senderAmount} kamaye. Aap bhi try karein aur daily free rewards paayein! 🎁🚀`
   );
   const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${shareText}`;
 

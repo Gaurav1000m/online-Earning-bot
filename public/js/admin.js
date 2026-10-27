@@ -170,6 +170,7 @@ window.switchSection = function(sectionId) {
   else if (sectionId === 'channels') loadChannels();
   else if (sectionId === 'tasks') loadTasks();
   else if (sectionId === 'templates') loadTemplates();
+  else if (sectionId === 'broadcast') loadBroadcastHistory();
   else if (sectionId === 'settings') loadSettings();
   else if (sectionId === 'audit') loadAuditLogs();
 };
@@ -291,7 +292,7 @@ function renderCharts(charts) {
             backgroundColor: '#06b6d4'
           },
           {
-            label: 'Payouts ($)',
+            label: 'Payouts (₹)',
             data: charts.withdrawalAmounts,
             backgroundColor: '#10b981'
           }
@@ -322,7 +323,7 @@ async function loadUsers(search = '', filter = '') {
   if (!res.success) return;
 
   const tbody = document.getElementById('users-table-tbody');
-  const symbol = adminState.settings.currencySymbol || '$';
+  const symbol = adminState.settings.currencySymbol || '₹';
 
   if (!tbody) return;
 
@@ -375,12 +376,30 @@ window.openUserProfile = async function(userId) {
   if (!res.success) return showToast('Could not load user profile', 'error');
 
   const { user, transactions } = res;
-  const symbol = adminState.settings.currencySymbol || '$';
+  adminState.activeUserObj = user;
+  const symbol = adminState.settings.currencySymbol || '₹';
 
   document.getElementById('modal-user-name').textContent = `${user.first_name} ${user.last_name || ''}`;
   document.getElementById('modal-user-id').textContent = `ID: ${user.id} • Username: ${user.username ? '@' + user.username : 'None'}`;
   document.getElementById('modal-user-balance').textContent = `${symbol}${user.balance}`;
   document.getElementById('modal-user-referrals').textContent = `${user.referral_count || 0} invites`;
+
+  const statusEl = document.getElementById('modal-user-status');
+  if (statusEl) {
+    statusEl.className = `badge ${user.is_banned ? 'badge-rejected' : 'badge-approved'}`;
+    statusEl.textContent = user.is_banned ? 'BANNED' : 'ACTIVE';
+  }
+
+  const banBtn = document.getElementById('modal-btn-ban');
+  if (banBtn) {
+    banBtn.className = `btn btn-sm ${user.is_banned ? 'btn-success' : 'btn-danger'}`;
+    banBtn.textContent = user.is_banned ? '✅ Unban User' : '🚫 Ban User';
+  }
+
+  const walletEl = document.getElementById('modal-user-wallet');
+  if (walletEl) {
+    walletEl.textContent = user.wallet || user.wallet_upi || user.wallet_paypal || 'Not linked';
+  }
 
   const txnsBox = document.getElementById('modal-user-txns');
   if (transactions.length === 0) {
@@ -403,6 +422,37 @@ window.openUserProfile = async function(userId) {
   document.getElementById('user-profile-modal').classList.add('open');
 };
 
+window.toggleBanUser = async function() {
+  const user = adminState.activeUserObj;
+  if (!user) return;
+  const willBan = !user.is_banned;
+  if (!confirm(`Are you sure you want to ${willBan ? 'BAN' : 'UNBAN'} user #${user.id} (${user.first_name})?`)) return;
+
+  const res = await adminFetch('/api/admin/user/ban', 'POST', { userId: user.id, isBanned: willBan });
+  if (res.success) {
+    showToast(res.message || `User ${willBan ? 'banned' : 'unbanned'} successfully!`, 'success');
+    await openUserProfile(user.id);
+    loadUsers();
+  } else {
+    showToast(res.message || 'Action failed', 'error');
+  }
+};
+
+window.resetUserReferral = async function() {
+  const user = adminState.activeUserObj;
+  if (!user) return;
+  if (!confirm(`Reset referral binding for user #${user.id}? This will detach them from any inviter.`)) return;
+
+  const res = await adminFetch('/api/admin/user/reset-referral', 'POST', { userId: user.id });
+  if (res.success) {
+    showToast('Referral link reset successfully!', 'success');
+    await openUserProfile(user.id);
+    loadUsers();
+  } else {
+    showToast(res.message || 'Action failed', 'error');
+  }
+};
+
 window.submitBalanceAdjustment = async function() {
   const userId = adminState.activeUserId;
   const amount = parseFloat(document.getElementById('modal-adj-amount').value);
@@ -413,7 +463,7 @@ window.submitBalanceAdjustment = async function() {
 
   const res = await adminFetch('/api/admin/user/balance', 'POST', { userId, amount, action, reason });
   if (res.success) {
-    showToast(`Balance updated successfully! New balance: ${res.user.balance}`, 'success');
+    showToast(`Balance updated successfully! New balance: ₹${res.user.balance}`, 'success');
     openUserProfile(userId);
     loadUsers();
   } else {
@@ -441,7 +491,7 @@ async function loadWithdrawals(status = 'pending') {
   if (!res.success) return;
 
   const tbody = document.getElementById('withdrawals-table-tbody');
-  const symbol = adminState.settings.currencySymbol || '$';
+  const symbol = adminState.settings.currencySymbol || '₹';
 
   if (!tbody) return;
 
@@ -510,7 +560,7 @@ async function loadReferralsData() {
 
   if (res.success) {
     const tbody = document.getElementById('weekly-leaderboard-tbody');
-    const symbol = adminState.settings.currencySymbol || '$';
+    const symbol = adminState.settings.currencySymbol || '₹';
 
     if (tbody) {
       tbody.innerHTML = res.leaderboard.map((item, idx) => `
@@ -563,10 +613,13 @@ async function loadGigaPubSettings() {
   const s = adminState.settings;
   document.getElementById('gp-enabled').value = s.gigaPubEnabled !== false ? 'true' : 'false';
   document.getElementById('gp-project-id').value = s.gigaPubProjectId || '';
-  document.getElementById('gp-ad-reward').value = s.adReward || 0.10;
+  document.getElementById('gp-ad-reward').value = s.adReward || 5.0;
   document.getElementById('gp-daily-limit').value = s.dailyAdLimit || 20;
   document.getElementById('gp-cooldown').value = s.adCooldownSeconds || 30;
-  document.getElementById('gp-max-daily-earnings').value = s.maxDailyAdEarnings || 2.0;
+  document.getElementById('gp-max-daily-earnings').value = s.maxDailyAdEarnings || 100.0;
+  document.getElementById('gp-monetag-zone').value = s.monetagZoneId || '12128125';
+  document.getElementById('gp-adsterra-enabled').value = s.adsterraEnabled !== false ? 'true' : 'false';
+  document.getElementById('gp-adsterra-smartlink').value = s.adsterraSmartlink || 'https://arwf.org/4/ef8f2a6df3e5243a89a484add434af25';
 }
 
 window.saveGigaPubSettings = async function() {
@@ -576,6 +629,9 @@ window.saveGigaPubSettings = async function() {
   const dailyAdLimit = parseInt(document.getElementById('gp-daily-limit').value, 10);
   const adCooldownSeconds = parseInt(document.getElementById('gp-cooldown').value, 10);
   const maxDailyAdEarnings = parseFloat(document.getElementById('gp-max-daily-earnings').value);
+  const monetagZoneId = document.getElementById('gp-monetag-zone').value.trim();
+  const adsterraEnabled = document.getElementById('gp-adsterra-enabled').value === 'true';
+  const adsterraSmartlink = document.getElementById('gp-adsterra-smartlink').value.trim();
 
   const payload = {
     gigaPubEnabled,
@@ -583,15 +639,18 @@ window.saveGigaPubSettings = async function() {
     adReward,
     dailyAdLimit,
     adCooldownSeconds,
-    maxDailyAdEarnings
+    maxDailyAdEarnings,
+    monetagZoneId,
+    adsterraEnabled,
+    adsterraSmartlink
   };
 
   const res = await adminFetch('/api/admin/settings', 'POST', { settings: payload });
   if (res.success) {
-    showToast('✅ GigaPub settings saved!', 'success');
+    showToast('✅ All Ad Network settings saved!', 'success');
     adminState.settings = { ...adminState.settings, ...payload };
   } else {
-    showToast('Failed to save GigaPub settings', 'error');
+    showToast('Failed to save Ad Network settings', 'error');
   }
 };
 
@@ -630,12 +689,23 @@ async function loadChannels() {
       <td>${c.button_label}</td>
       <td>${c.is_enabled ? '<span class="badge badge-approved">ENABLED</span>' : '<span class="badge badge-rejected">DISABLED</span>'}</td>
       <td>
+        <button class="btn ${c.is_enabled ? 'btn-danger' : 'btn-success'} btn-sm" onclick="toggleChannel('${c.id}', ${c.is_enabled})">${c.is_enabled ? 'Disable' : 'Enable'}</button>
         <button class="btn btn-secondary btn-sm" onclick="editChannel('${c.id}', '${encodeURIComponent(JSON.stringify(c))}')">Edit</button>
         <button class="btn btn-danger btn-sm" onclick="deleteChannel('${c.id}')">Delete</button>
       </td>
     </tr>
   `).join('');
 }
+
+window.toggleChannel = async function(id, currentStatus) {
+  const res = await adminFetch(`/api/admin/channels/${id}`, 'PUT', { is_enabled: !currentStatus });
+  if (res.success) {
+    showToast(`Channel ${!currentStatus ? 'enabled' : 'disabled'} successfully!`, 'success');
+    loadChannels();
+  } else {
+    showToast('Failed to toggle channel status', 'error');
+  }
+};
 
 window.openChannelModal = function() {
   document.getElementById('chan-edit-id').value = '';
@@ -704,7 +774,7 @@ async function loadTasks() {
   if (!res.success) return;
 
   const tbody = document.getElementById('tasks-table-tbody');
-  const symbol = adminState.settings.currencySymbol || '$';
+  const symbol = adminState.settings.currencySymbol || '₹';
 
   if (!tbody) return;
 
@@ -722,40 +792,75 @@ async function loadTasks() {
       <td>${t.completions_count || 0} completions</td>
       <td>${t.is_active ? '<span class="badge badge-approved">ACTIVE</span>' : '<span class="badge badge-rejected">INACTIVE</span>'}</td>
       <td>
+        <button class="btn ${t.is_active ? 'btn-danger' : 'btn-success'} btn-sm" onclick="toggleTask('${t.id}', ${t.is_active})">${t.is_active ? 'Deactivate' : 'Activate'}</button>
+        <button class="btn btn-secondary btn-sm" onclick="editTask('${t.id}', '${encodeURIComponent(JSON.stringify(t))}')">Edit</button>
         <button class="btn btn-danger btn-sm" onclick="deleteTask('${t.id}')">Delete</button>
       </td>
     </tr>
   `).join('');
 }
 
+window.toggleTask = async function(id, currentStatus) {
+  const res = await adminFetch(`/api/admin/tasks/${id}`, 'PUT', { is_active: !currentStatus });
+  if (res.success) {
+    showToast(`Task ${!currentStatus ? 'activated' : 'deactivated'} successfully!`, 'success');
+    loadTasks();
+  } else {
+    showToast('Failed to toggle task status', 'error');
+  }
+};
+
+window.editTask = function(id, rawJson) {
+  const t = JSON.parse(decodeURIComponent(rawJson));
+  document.getElementById('task-edit-id').value = id;
+  document.getElementById('task-title').value = t.title || '';
+  document.getElementById('task-desc').value = t.description || '';
+  document.getElementById('task-reward').value = t.reward || '5.00';
+  document.getElementById('task-type').value = t.task_type || 'url_visit';
+  document.getElementById('task-url').value = t.target_url || '';
+  const chatEl = document.getElementById('task-chat-id');
+  if (chatEl) chatEl.value = t.chat_id || '';
+  document.getElementById('task-modal-title').textContent = 'Edit Social Task';
+  document.getElementById('task-modal').classList.add('open');
+};
+
 window.openTaskModal = function() {
   document.getElementById('task-edit-id').value = '';
   document.getElementById('task-title').value = '';
   document.getElementById('task-desc').value = '';
-  document.getElementById('task-reward').value = '0.10';
+  document.getElementById('task-reward').value = '5.00';
   document.getElementById('task-url').value = '';
+  const chatEl = document.getElementById('task-chat-id');
+  if (chatEl) chatEl.value = '';
+  document.getElementById('task-modal-title').textContent = 'Create Social Task';
   document.getElementById('task-modal').classList.add('open');
 };
 
 window.submitTaskSave = async function() {
+  const id = document.getElementById('task-edit-id').value;
   const title = document.getElementById('task-title').value.trim();
   const description = document.getElementById('task-desc').value.trim();
   const reward = parseFloat(document.getElementById('task-reward').value);
   const task_type = document.getElementById('task-type').value;
   const target_url = document.getElementById('task-url').value.trim();
+  const chat_id = document.getElementById('task-chat-id')?.value.trim() || '';
 
   if (!title || isNaN(reward)) return showToast('Please enter title and reward', 'warning');
 
-  const res = await adminFetch('/api/admin/tasks', 'POST', {
-    title, description, reward, task_type, target_url
-  });
+  const payload = { title, description, reward, task_type, target_url, chat_id };
+  let res;
+  if (id) {
+    res = await adminFetch(`/api/admin/tasks/${id}`, 'PUT', payload);
+  } else {
+    res = await adminFetch('/api/admin/tasks', 'POST', payload);
+  }
 
   if (res.success) {
-    showToast('Task created successfully!', 'success');
+    showToast(id ? 'Task updated successfully!' : 'Task created successfully!', 'success');
     closeModal('task-modal');
     loadTasks();
   } else {
-    showToast('Failed to create task', 'error');
+    showToast(res.message || 'Failed to save task', 'error');
   }
 };
 
@@ -834,9 +939,31 @@ window.sendBroadcast = async function() {
   if (res.success) {
     showToast('Broadcast queue initiated!', 'success');
     progressText.textContent = `Delivering to ${res.broadcast.total_recipients || 'target'} users...`;
+    setTimeout(loadBroadcastHistory, 1500);
   } else {
     showToast(res.message || 'Broadcast failed', 'error');
   }
+};
+
+window.loadBroadcastHistory = async function() {
+  const res = await adminFetch('/api/admin/broadcasts');
+  const tbody = document.getElementById('broadcast-history-tbody');
+  if (!tbody) return;
+
+  if (!res.success || !res.broadcasts || res.broadcasts.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">No broadcasts recorded yet.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = res.broadcasts.map(b => `
+    <tr>
+      <td><b>${b.title || 'Announcement'}</b><br/><span style="font-size:0.75rem; color:var(--text-muted);">${(b.text || '').slice(0, 50)}...</span></td>
+      <td><span class="badge badge-active">${(b.target || 'all').toUpperCase()}</span></td>
+      <td><b>${b.sent_count || 0}</b> / ${b.total_recipients || b.target_count || 0}</td>
+      <td><span class="badge ${b.status === 'completed' ? 'badge-approved' : 'badge-pending'}">${(b.status || 'queued').toUpperCase()}</span></td>
+      <td>${new Date(b.created_at || b.timestamp).toLocaleString()}</td>
+    </tr>
+  `).join('');
 };
 
 // =======================================================
@@ -844,21 +971,27 @@ window.sendBroadcast = async function() {
 // =======================================================
 
 async function loadSettings() {
-  const s = adminState.settings;
+  if (!adminState.settings || !adminState.settings.currencySymbol) {
+    const ov = await adminFetch('/api/admin/overview');
+    if (ov.success && ov.settings) {
+      adminState.settings = ov.settings;
+    }
+  }
+  const s = adminState.settings || {};
   document.getElementById('set-maintenance').value = s.maintenanceMode ? 'true' : 'false';
-  document.getElementById('set-currency-symbol').value = s.currencySymbol || '$';
-  document.getElementById('set-currency-name').value = s.currencyName || 'USD';
-  document.getElementById('set-referral-reward').value = s.referralReward || 1.0;
-  document.getElementById('set-daily-bonus').value = s.dailyBonus || 0.1;
-  document.getElementById('set-min-withdrawal').value = s.minWithdrawal || 5.0;
-  document.getElementById('set-max-withdrawal').value = s.maxWithdrawal || 1000.0;
+  document.getElementById('set-currency-symbol').value = s.currencySymbol || '₹';
+  document.getElementById('set-currency-name').value = s.currencyName || 'INR';
+  document.getElementById('set-referral-reward').value = s.referralReward !== undefined ? s.referralReward : 20.0;
+  document.getElementById('set-daily-bonus').value = s.dailyBonus !== undefined ? s.dailyBonus : 5.0;
+  document.getElementById('set-min-withdrawal').value = s.minWithdrawal !== undefined ? s.minWithdrawal : 500.0;
+  document.getElementById('set-max-withdrawal').value = s.maxWithdrawal !== undefined ? s.maxWithdrawal : 10000.0;
   document.getElementById('set-support-user').value = s.supportUsername || '';
 
   document.getElementById('btn-label-bal').value = s.btn_balance || '💰 My Balance';
   document.getElementById('btn-label-wd').value = s.btn_withdraw || '💸 Withdraw';
   document.getElementById('btn-label-ads').value = s.btn_ads || '🎬 Watch Ads';
   document.getElementById('btn-label-ref').value = s.btn_refer || '👥 Invite Friends';
-  document.getElementById('btn-label-bon').value = s.btn_bonus || '🎁 Bonus System';
+  document.getElementById('btn-label-bon').value = s.btn_bonus || '🎁 Bonus';
   document.getElementById('btn-label-tsk').value = s.btn_tasks || '📋 Tasks';
 }
 
@@ -953,7 +1086,11 @@ window.downloadExport = async function(type) {
   const token = adminState.token;
   try {
     const response = await fetch(`/api/admin/export/${type}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: {
+        'x-admin-token': token,
+        'Authorization': `Bearer ${token}`,
+        'x-telegram-init-data': tg?.initData || ''
+      }
     });
     if (!response.ok) {
       const err = await response.json();

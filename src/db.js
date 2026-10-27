@@ -438,8 +438,8 @@ class Database {
       try {
         console.log('🔄 Connecting to MongoDB Atlas for persistent cloud storage...');
         const client = new MongoClient(uri, {
-          serverSelectionTimeoutMS: 8000,
-          connectTimeoutMS: 10000,
+          serverSelectionTimeoutMS: 20000,
+          connectTimeoutMS: 25000,
           maxPoolSize: 10
         });
         await client.connect();
@@ -487,10 +487,26 @@ class Database {
         const stateDoc = await stateCol.findOne({ _id: 'global_state' });
         if (stateDoc) {
           const { _id, ...rest } = stateDoc;
+          if (Array.isArray(rest.channels) && rest.channels.length > 0) this.data.channels = rest.channels;
+          if (Array.isArray(rest.tasks) && rest.tasks.length > 0) this.data.tasks = rest.tasks;
+          if (rest.settings && typeof rest.settings === 'object') this.data.settings = { ...this.data.settings, ...rest.settings };
+          if (rest.message_templates && typeof rest.message_templates === 'object') this.data.message_templates = { ...this.data.message_templates, ...rest.message_templates };
+          if (rest.bonuses && typeof rest.bonuses === 'object') this.data.bonuses = { ...this.data.bonuses, ...rest.bonuses };
+          if (rest.weekly_leaderboards && typeof rest.weekly_leaderboards === 'object') this.data.weekly_leaderboards = { ...this.data.weekly_leaderboards, ...rest.weekly_leaderboards };
           if (Array.isArray(rest.wallet_transactions)) this.data.wallet_transactions = rest.wallet_transactions;
           if (Array.isArray(rest.withdrawals)) this.data.withdrawals = rest.withdrawals;
           if (Array.isArray(rest.task_completions)) this.data.task_completions = rest.task_completions;
           if (Array.isArray(rest.broadcasts)) this.data.broadcasts = rest.broadcasts;
+          if (Array.isArray(rest.audit_logs)) this.data.audit_logs = rest.audit_logs;
+          console.log('✅ Loaded global settings, channels, tasks, templates, and logs from MongoDB Atlas.');
+
+          if (!rest.channels || !rest.tasks || !rest.settings) {
+            await this.syncStateToMongo(this.data);
+            console.log('✅ Backfilled missing state models in MongoDB Atlas.');
+          }
+        } else {
+          // Upload initial state so cloud has all default settings, channels, and tasks
+          await this.syncStateToMongo(this.data);
         }
 
         return true;
@@ -506,23 +522,19 @@ class Database {
   }
 
   async waitForReady() {
-    if (this.isReady) return true;
     if (this.mongoInitPromise) {
-      await Promise.race([
-        this.mongoInitPromise,
-        new Promise(resolve => setTimeout(resolve, 3000))
-      ]);
+      await this.mongoInitPromise.catch(() => {});
     }
-    return true;
+    return this.isReady;
   }
 
   syncUserToMongo(user) {
-    if (!this.isMongoConnected || !this.mongoDb || !user || !user.id) return;
+    if (!this.isMongoConnected || !this.mongoDb || !user || !user.id) return Promise.resolve();
     const uid = String(user.id);
     // Ignore test users so MongoDB Atlas only stores real user data
-    if (uid.startsWith('test_') || uid.startsWith('testuser_')) return;
+    if (uid.startsWith('test_') || uid.startsWith('testuser_')) return Promise.resolve();
 
-    this.mongoDb.collection('users').updateOne(
+    return this.mongoDb.collection('users').updateOne(
       { _id: uid },
       { $set: { ...user, _id: uid } },
       { upsert: true }
@@ -532,15 +544,22 @@ class Database {
   }
 
   syncStateToMongo(dataToSave) {
-    if (!this.isMongoConnected || !this.mongoDb) return;
-    this.mongoDb.collection('state').updateOne(
+    if (!this.isMongoConnected || !this.mongoDb) return Promise.resolve();
+    return this.mongoDb.collection('state').updateOne(
       { _id: 'global_state' },
       {
         $set: {
+          channels: dataToSave.channels || [],
+          tasks: dataToSave.tasks || [],
+          settings: dataToSave.settings || {},
+          message_templates: dataToSave.message_templates || {},
+          bonuses: dataToSave.bonuses || {},
+          weekly_leaderboards: dataToSave.weekly_leaderboards || {},
           wallet_transactions: dataToSave.wallet_transactions?.slice(0, 500) || [],
           withdrawals: dataToSave.withdrawals || [],
           task_completions: dataToSave.task_completions || [],
           broadcasts: dataToSave.broadcasts || [],
+          audit_logs: dataToSave.audit_logs?.slice(0, 200) || [],
           updated_at: new Date().toISOString()
         }
       },

@@ -57,6 +57,9 @@ export function requireAdmin(req, res, next) {
 // Telegram Webhook Update Handler
 app.post('/api/webhook', async (req, res) => {
   try {
+    if (!db.isReady) {
+      await db.waitForReady().catch(() => {});
+    }
     const activeBot = getBot() || initBot();
     if (activeBot && req.body && req.body.update_id) {
       if (!activeBot.botInfo) {
@@ -289,6 +292,11 @@ app.post('/api/ads/complete', async (req, res) => {
   if (!userId) {
     return res.status(400).json({ success: false, message: 'Missing user identification' });
   }
+
+  if (!db.isReady) {
+    await db.waitForReady().catch(() => {});
+  }
+  await db.ensureUserLoaded(userId);
 
   // Ensure user exists before crediting reward
   if (!db.getUser(userId)) {

@@ -125,7 +125,7 @@ export function validateTelegramInitData(initData, botToken = config.botToken) {
 /**
  * Express middleware to authenticate Telegram WebApp requests
  */
-export function telegramAuthMiddleware(req, res, next) {
+export async function telegramAuthMiddleware(req, res, next) {
   const initData = req.headers['x-telegram-init-data'] || req.body.initData || req.query.initData;
 
   const result = validateTelegramInitData(initData);
@@ -139,8 +139,14 @@ export function telegramAuthMiddleware(req, res, next) {
   req.tgUser = result.user;
   req.isDevMode = result.isDevMode;
 
-  // Auto-register user in DB so "User not found" never occurs across any mini app endpoint
+  // Ensure DB ready if connecting to MongoDB Atlas on fresh serverless cold-start
+  if (!db.isReady) {
+    await db.waitForReady().catch(() => {});
+  }
+
+  // Auto-register and ensure user loaded in DB
   if (req.tgUser && req.tgUser.id) {
+    await db.ensureUserLoaded(req.tgUser.id);
     db.getOrCreateUser(req.tgUser);
   }
 

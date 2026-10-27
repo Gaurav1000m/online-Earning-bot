@@ -63,6 +63,9 @@ export const config = {
   // Adsterra SmartLink for High Revenue
   adsterraSmartLink: process.env.ADSTERRA_SMARTLINK || 'https://arwf.org/4/ef8f2a6df3e5243a89a484add434af25',
 
+  // MongoDB Atlas Cloud Persistence (for Vercel & permanent cloud storage)
+  mongodbUri: (process.env.MONGODB_URI || '').trim(),
+
   maintenanceMode: process.env.MAINTENANCE_MODE === 'true'
 };
 

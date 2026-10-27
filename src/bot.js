@@ -191,6 +191,12 @@ export function initBot() {
       const user = ctx.from;
       if (!user) return next();
 
+      // Ensure database is ready and user loaded from MongoDB Atlas
+      if (!db.isReady) {
+        await db.waitForReady().catch(() => {});
+      }
+      await db.ensureUserLoaded(user.id);
+
       const isAdmin = String(user.id) === String(config.adminId);
       const isMaintenance = Boolean(db.getSetting('maintenanceMode'));
 

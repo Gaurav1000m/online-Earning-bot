@@ -2,12 +2,14 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
+import { MongoClient } from 'mongodb';
 import config from './config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_DIR = process.env.VERCEL ? '/tmp/data' : path.join(__dirname, '..', 'data');
 const DB_PATH = path.join(DATA_DIR, 'database.json');
+const BACKUP_PATH = path.join(DATA_DIR, 'database.backup.json');
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
@@ -259,88 +261,134 @@ const DEFAULT_STATE = {
 
 class Database {
   constructor() {
+    this.mongoClient = null;
+    this.mongoDb = null;
+    this.isMongoConnected = false;
+    this.mongoInitPromise = null;
+    this.isReady = false;
+
+    // Load initial state safely from disk/backup
     this.data = this.load();
+
+    // If MongoDB URI is configured, initialize cloud persistence in background
+    if (config.mongodbUri) {
+      this.initMongo(config.mongodbUri).catch(err => {
+        console.error('Initial MongoDB connection error:', err.message);
+      });
+    } else {
+      this.isReady = true;
+    }
+  }
+
+  _sanitizeAndHydrateState(parsed = {}) {
+    const state = {
+      users: (parsed && typeof parsed.users === 'object' && parsed.users !== null) ? parsed.users : {},
+      wallet_transactions: Array.isArray(parsed?.wallet_transactions) ? parsed.wallet_transactions : [],
+      withdrawals: Array.isArray(parsed?.withdrawals) ? parsed.withdrawals : [],
+      channels: parsed?.channels && parsed.channels.length ? parsed.channels : DEFAULT_STATE.channels,
+      tasks: parsed?.tasks && parsed.tasks.length ? parsed.tasks : DEFAULT_STATE.tasks,
+      task_completions: Array.isArray(parsed?.task_completions) ? parsed.task_completions : [],
+      ad_sessions: (parsed && typeof parsed.ad_sessions === 'object' && parsed.ad_sessions !== null) ? parsed.ad_sessions : {},
+      ad_logs: Array.isArray(parsed?.ad_logs) ? parsed.ad_logs : [],
+      bonuses: { ...DEFAULT_STATE.bonuses, ...(parsed?.bonuses || {}) },
+      message_templates: { ...DEFAULT_TEMPLATES, ...(parsed?.message_templates || {}) },
+      broadcasts: Array.isArray(parsed?.broadcasts) ? parsed.broadcasts : [],
+      weekly_leaderboards: { ...DEFAULT_STATE.weekly_leaderboards, ...(parsed?.weekly_leaderboards || {}) },
+      audit_logs: Array.isArray(parsed?.audit_logs) ? parsed.audit_logs : [],
+      admins: parsed?.admins && parsed.admins.length ? parsed.admins : DEFAULT_STATE.admins,
+      settings: { ...DEFAULT_STATE.settings, ...(parsed?.settings || {}) }
+    };
+
+    // Ensure new requested templates are active
+    if (!state.message_templates.FORCE_JOIN_MESSAGE || state.message_templates.FORCE_JOIN_MESSAGE.text.includes('JOIN REQUIRED CHANNELS')) {
+      state.message_templates.FORCE_JOIN_MESSAGE = DEFAULT_TEMPLATES.FORCE_JOIN_MESSAGE;
+    }
+    if (!state.message_templates.WATCH_AD_MESSAGE || !state.message_templates.WATCH_AD_MESSAGE.text.includes('close (❌) the ad')) {
+      state.message_templates.WATCH_AD_MESSAGE = DEFAULT_TEMPLATES.WATCH_AD_MESSAGE;
+    }
+    if (!state.message_templates.AD_SUCCESS_MESSAGE || state.message_templates.AD_SUCCESS_MESSAGE.text.includes('🎉 You earned') || state.message_templates.AD_SUCCESS_MESSAGE.text.includes('{{ads_today}}/{{daily_ad_limit}}')) {
+      state.message_templates.AD_SUCCESS_MESSAGE = DEFAULT_TEMPLATES.AD_SUCCESS_MESSAGE;
+    }
+    if (!state.message_templates.START_MESSAGE || state.message_templates.START_MESSAGE.text.includes('0.50')) {
+      state.message_templates.START_MESSAGE = DEFAULT_TEMPLATES.START_MESSAGE;
+    }
+    if (!state.message_templates.TASK_MESSAGE || state.message_templates.TASK_MESSAGE.text.includes('Select a task below')) {
+      state.message_templates.TASK_MESSAGE = DEFAULT_TEMPLATES.TASK_MESSAGE;
+    }
+
+    // Guarantee button label is exactly "🎁 Bonus"
+    if (state.settings.btn_bonus === '🎁 Bonus System') {
+      state.settings.btn_bonus = '🎁 Bonus';
+    }
+
+    // Apply updated daily bonus streak ladder [5, 10, 15, 20, 25, 30, 35]
+    if (!state.bonuses) state.bonuses = {};
+    state.bonuses.daily_ladder = [5, 10, 15, 20, 25, 30, 35];
+
+    // Ensure tasks reward is updated to ₹5.00 per task
+    if (Array.isArray(state.tasks)) {
+      state.tasks.forEach(t => {
+        if (t.reward < 5.0) t.reward = 5.0;
+        if (t.description && t.description.includes('0.5$')) {
+          t.description = t.description.replace('0.5$', '₹5.00');
+        }
+      });
+    }
+
+    // Apply updated referral message template
+    if (!state.message_templates) state.message_templates = {};
+    state.message_templates.REFERRAL_MESSAGE = DEFAULT_TEMPLATES.REFERRAL_MESSAGE;
+
+    // Apply environment economy settings
+    state.settings.referralReward = config.referralReward;
+    state.settings.adReward = config.adReward;
+    state.settings.minWithdrawal = config.minWithdrawal;
+    state.settings.dailyAdLimit = config.dailyAdLimit;
+    state.settings.currencySymbol = config.currencySymbol;
+    state.settings.currencyName = config.currencyName;
+    state.settings.adCooldownSeconds = config.adCooldownSeconds;
+
+    return state;
   }
 
   load() {
-    try {
-      if (fs.existsSync(DB_PATH)) {
+    if (fs.existsSync(DB_PATH)) {
+      try {
         const raw = fs.readFileSync(DB_PATH, 'utf-8');
-        const parsed = JSON.parse(raw);
-
-        const state = {
-          users: parsed.users || {},
-          wallet_transactions: parsed.wallet_transactions || [],
-          withdrawals: parsed.withdrawals || [],
-          channels: parsed.channels && parsed.channels.length ? parsed.channels : DEFAULT_STATE.channels,
-          tasks: parsed.tasks && parsed.tasks.length ? parsed.tasks : DEFAULT_STATE.tasks,
-          task_completions: parsed.task_completions || [],
-          ad_sessions: parsed.ad_sessions || {},
-          ad_logs: parsed.ad_logs || [],
-          bonuses: { ...DEFAULT_STATE.bonuses, ...(parsed.bonuses || {}) },
-          message_templates: { ...DEFAULT_TEMPLATES, ...(parsed.message_templates || {}) },
-          broadcasts: parsed.broadcasts || [],
-          weekly_leaderboards: { ...DEFAULT_STATE.weekly_leaderboards, ...(parsed.weekly_leaderboards || {}) },
-          audit_logs: parsed.audit_logs || [],
-          admins: parsed.admins && parsed.admins.length ? parsed.admins : DEFAULT_STATE.admins,
-          settings: { ...DEFAULT_STATE.settings, ...(parsed.settings || {}) }
-        };
-
-        // Ensure new requested templates are active
-        if (!state.message_templates.FORCE_JOIN_MESSAGE || state.message_templates.FORCE_JOIN_MESSAGE.text.includes('JOIN REQUIRED CHANNELS')) {
-          state.message_templates.FORCE_JOIN_MESSAGE = DEFAULT_TEMPLATES.FORCE_JOIN_MESSAGE;
+        if (raw && raw.trim().length > 10) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            return this._sanitizeAndHydrateState(parsed);
+          }
         }
-        if (!state.message_templates.WATCH_AD_MESSAGE || !state.message_templates.WATCH_AD_MESSAGE.text.includes('close (❌) the ad')) {
-          state.message_templates.WATCH_AD_MESSAGE = DEFAULT_TEMPLATES.WATCH_AD_MESSAGE;
-        }
-        if (!state.message_templates.AD_SUCCESS_MESSAGE || state.message_templates.AD_SUCCESS_MESSAGE.text.includes('🎉 You earned') || state.message_templates.AD_SUCCESS_MESSAGE.text.includes('{{ads_today}}/{{daily_ad_limit}}')) {
-          state.message_templates.AD_SUCCESS_MESSAGE = DEFAULT_TEMPLATES.AD_SUCCESS_MESSAGE;
-        }
-        if (!state.message_templates.START_MESSAGE || state.message_templates.START_MESSAGE.text.includes('0.50')) {
-          state.message_templates.START_MESSAGE = DEFAULT_TEMPLATES.START_MESSAGE;
-        }
-        if (!state.message_templates.TASK_MESSAGE || state.message_templates.TASK_MESSAGE.text.includes('Select a task below')) {
-          state.message_templates.TASK_MESSAGE = DEFAULT_TEMPLATES.TASK_MESSAGE;
-        }
-
-        // Guarantee button label is exactly "🎁 Bonus"
-        if (state.settings.btn_bonus === '🎁 Bonus System') {
-          state.settings.btn_bonus = '🎁 Bonus';
-        }
-
-        // Apply updated daily bonus streak ladder [5, 10, 15, 20, 25, 30, 35]
-        if (!state.bonuses) state.bonuses = {};
-        state.bonuses.daily_ladder = [5, 10, 15, 20, 25, 30, 35];
-
-        // Ensure tasks reward is updated to ₹5.00 per task
-        if (Array.isArray(state.tasks)) {
-          state.tasks.forEach(t => {
-            if (t.reward < 5.0) t.reward = 5.0;
-            if (t.description && t.description.includes('0.5$')) {
-              t.description = t.description.replace('0.5$', '₹5.00');
-            }
-          });
-        }
-
-        // Apply updated referral message template
-        if (!state.message_templates) state.message_templates = {};
-        state.message_templates.REFERRAL_MESSAGE = DEFAULT_TEMPLATES.REFERRAL_MESSAGE;
-
-        // Apply environment economy settings
-        state.settings.referralReward = config.referralReward;
-        state.settings.adReward = config.adReward;
-        state.settings.minWithdrawal = config.minWithdrawal;
-        state.settings.dailyAdLimit = config.dailyAdLimit;
-        state.settings.currencySymbol = config.currencySymbol;
-        state.settings.currencyName = config.currencyName;
-        state.settings.adCooldownSeconds = config.adCooldownSeconds;
-
-        return state;
+      } catch (err) {
+        console.error('⚠️ Error reading primary database file:', err.message);
+        try {
+          fs.copyFileSync(DB_PATH, `${DB_PATH}.corrupted.${Date.now()}`);
+        } catch (_) {}
       }
-    } catch (err) {
-      console.error('Error loading database, initializing default schema:', err);
     }
 
+    // Automated Recovery from backup file
+    if (fs.existsSync(BACKUP_PATH)) {
+      try {
+        console.warn('⚠️ Attempting automatic recovery from database.backup.json...');
+        const backupRaw = fs.readFileSync(BACKUP_PATH, 'utf-8');
+        if (backupRaw && backupRaw.trim().length > 10) {
+          const parsedBackup = JSON.parse(backupRaw);
+          if (parsedBackup && typeof parsedBackup === 'object' && parsedBackup.users) {
+            console.log(`✅ Recovered ${Object.keys(parsedBackup.users).length} users from backup file!`);
+            const state = this._sanitizeAndHydrateState(parsedBackup);
+            this.save(state);
+            return state;
+          }
+        }
+      } catch (bErr) {
+        console.error('⚠️ Backup recovery attempt failed:', bErr.message);
+      }
+    }
+
+    console.warn('⚠️ Initializing fresh default state (no existing data found).');
     const initial = JSON.parse(JSON.stringify(DEFAULT_STATE));
     this.save(initial);
     return initial;
@@ -348,12 +396,171 @@ class Database {
 
   save(dataToSave = this.data) {
     try {
+      // 1. Maintain a rolling backup before overwriting
+      if (fs.existsSync(DB_PATH)) {
+        try {
+          const stats = fs.statSync(DB_PATH);
+          if (stats.size > 100) {
+            fs.copyFileSync(DB_PATH, BACKUP_PATH);
+          }
+        } catch (_) {}
+      }
+
+      // 2. Safe Atomic Write with physical fsync
       const tempPath = `${DB_PATH}.tmp.${Date.now()}.${Math.random().toString(36).substring(7)}`;
       fs.writeFileSync(tempPath, JSON.stringify(dataToSave, null, 2), 'utf-8');
+      try {
+        const fd = fs.openSync(tempPath, 'r+');
+        fs.fsyncSync(fd);
+        fs.closeSync(fd);
+      } catch (_) {}
       fs.renameSync(tempPath, DB_PATH);
     } catch (err) {
-      console.error('CRITICAL: Failed to atomic-save database:', err);
+      console.error('CRITICAL: Failed to atomic-save database locally:', err);
     }
+
+    // 3. Asynchronous MongoDB Atlas Sync
+    if (this.isMongoConnected && this.mongoDb) {
+      this.syncStateToMongo(dataToSave);
+    }
+  }
+
+  // =======================================================
+  // MONGODB ATLAS CLOUD PERSISTENCE & AUTO-MIGRATION
+  // =======================================================
+
+  async initMongo(uri = config.mongodbUri) {
+    if (!uri) return false;
+    if (this.mongoDb) return true;
+    if (this.mongoInitPromise) return this.mongoInitPromise;
+
+    this.mongoInitPromise = (async () => {
+      try {
+        console.log('🔄 Connecting to MongoDB Atlas for persistent cloud storage...');
+        const client = new MongoClient(uri, {
+          serverSelectionTimeoutMS: 8000,
+          connectTimeoutMS: 10000,
+          maxPoolSize: 10
+        });
+        await client.connect();
+        this.mongoClient = client;
+        this.mongoDb = client.db('telegram_bot');
+        this.isMongoConnected = true;
+        this.isReady = true;
+        console.log('✅ Connected to MongoDB Atlas! Cloud persistence active.');
+
+        const usersCol = this.mongoDb.collection('users');
+        const stateCol = this.mongoDb.collection('state');
+
+        // Check if MongoDB already has users stored
+        const cloudUserCount = await usersCol.countDocuments();
+        if (cloudUserCount > 0) {
+          console.log(`📥 Syncing ${cloudUserCount} users from MongoDB Atlas to memory cache...`);
+          const cursor = usersCol.find({});
+          const cloudUsers = {};
+          for await (const doc of cursor) {
+            const uid = String(doc.id || doc._id);
+            const { _id, ...userData } = doc;
+            cloudUsers[uid] = { ...userData, id: uid };
+          }
+          this.data.users = { ...this.data.users, ...cloudUsers };
+          console.log(`✅ Loaded ${Object.keys(this.data.users).length} total users.`);
+        } else if (Object.keys(this.data.users).length > 0) {
+          // Initial migration: upload existing local users to MongoDB Atlas
+          console.log(`📤 Initial migration: Uploading ${Object.keys(this.data.users).length} users to MongoDB Atlas...`);
+          const ops = Object.values(this.data.users).map(u => ({
+            updateOne: {
+              filter: { _id: String(u.id) },
+              update: { $set: { ...u, _id: String(u.id) } },
+              upsert: true
+            }
+          }));
+          if (ops.length > 0) {
+            await usersCol.bulkWrite(ops);
+            console.log(`✅ Initial migration complete: ${ops.length} users saved to MongoDB Atlas.`);
+          }
+        }
+
+        // Sync global state from cloud
+        const stateDoc = await stateCol.findOne({ _id: 'global_state' });
+        if (stateDoc) {
+          const { _id, ...rest } = stateDoc;
+          if (Array.isArray(rest.wallet_transactions)) this.data.wallet_transactions = rest.wallet_transactions;
+          if (Array.isArray(rest.withdrawals)) this.data.withdrawals = rest.withdrawals;
+          if (Array.isArray(rest.task_completions)) this.data.task_completions = rest.task_completions;
+          if (Array.isArray(rest.broadcasts)) this.data.broadcasts = rest.broadcasts;
+        }
+
+        return true;
+      } catch (err) {
+        console.error('⚠️ MongoDB Atlas connection error (fallback to local storage):', err.message);
+        this.isMongoConnected = false;
+        this.isReady = true;
+        return false;
+      }
+    })();
+
+    return this.mongoInitPromise;
+  }
+
+  async waitForReady() {
+    if (this.isReady) return true;
+    if (this.mongoInitPromise) {
+      await Promise.race([
+        this.mongoInitPromise,
+        new Promise(resolve => setTimeout(resolve, 3000))
+      ]);
+    }
+    return true;
+  }
+
+  syncUserToMongo(user) {
+    if (!this.isMongoConnected || !this.mongoDb || !user || !user.id) return;
+    const uid = String(user.id);
+    this.mongoDb.collection('users').updateOne(
+      { _id: uid },
+      { $set: { ...user, _id: uid } },
+      { upsert: true }
+    ).catch(err => {
+      console.error(`⚠️ MongoDB user sync error (${uid}):`, err.message);
+    });
+  }
+
+  syncStateToMongo(dataToSave) {
+    if (!this.isMongoConnected || !this.mongoDb) return;
+    this.mongoDb.collection('state').updateOne(
+      { _id: 'global_state' },
+      {
+        $set: {
+          wallet_transactions: dataToSave.wallet_transactions?.slice(0, 500) || [],
+          withdrawals: dataToSave.withdrawals || [],
+          task_completions: dataToSave.task_completions || [],
+          broadcasts: dataToSave.broadcasts || [],
+          updated_at: new Date().toISOString()
+        }
+      },
+      { upsert: true }
+    ).catch(err => {
+      console.error('⚠️ MongoDB state sync error:', err.message);
+    });
+  }
+
+  async ensureUserLoaded(userId) {
+    const id = String(userId);
+    if (this.data.users[id]) return this.data.users[id];
+    if (this.isMongoConnected && this.mongoDb) {
+      try {
+        const doc = await this.mongoDb.collection('users').findOne({ _id: id });
+        if (doc) {
+          const { _id, ...userData } = doc;
+          this.data.users[id] = { ...userData, id };
+          return this.data.users[id];
+        }
+      } catch (err) {
+        console.error(`⚠️ Error loading user ${id} from MongoDB:`, err.message);
+      }
+    }
+    return null;
   }
 
   getTodayString() {
@@ -404,6 +611,7 @@ class Database {
     }
 
     this.save();
+    this.syncUserToMongo(user);
     return txn;
   }
 
@@ -483,6 +691,7 @@ class Database {
 
       this.data.users[id] = newUser;
       this.save();
+      this.syncUserToMongo(newUser);
 
       // Rule 44: If there are 0 required force-join channels enabled, qualify immediately!
       const enabledChannels = this.getEnabledChannels();
@@ -515,6 +724,7 @@ class Database {
 
     if (changed) {
       this.save();
+      this.syncUserToMongo(user);
     }
 
     return { user, isNew: false, referrerId: user.referred_by };
@@ -558,6 +768,8 @@ class Database {
     });
 
     this.save();
+    this.syncUserToMongo(user);
+    this.syncUserToMongo(referrer);
 
     return {
       rewarded: true,
@@ -575,6 +787,7 @@ class Database {
     if (!this.data.users[id]) return null;
     this.data.users[id] = { ...this.data.users[id], ...updates, last_active: new Date().toISOString() };
     this.save();
+    this.syncUserToMongo(this.data.users[id]);
     return this.data.users[id];
   }
 
@@ -594,6 +807,7 @@ class Database {
     }
 
     this.save();
+    this.syncUserToMongo(user);
     return user;
   }
 

@@ -20,9 +20,13 @@ const state = {
 // Initialize App
 document.addEventListener('DOMContentLoaded', async () => {
   if (tg) {
-    tg.ready();
-    tg.expand();
-    if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
+    try {
+      tg.ready();
+      tg.expand();
+      if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
+    } catch (e) {
+      console.warn('Telegram WebApp SDK init warning:', e);
+    }
   }
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -30,30 +34,48 @@ document.addEventListener('DOMContentLoaded', async () => {
   const tgUser = tg?.initDataUnsafe?.user;
   const paramUserId = urlParams.get('userId') || hashParams.get('userId') || tgUser?.id;
 
+  // Immediate preview of Telegram user info if available from SDK
+  if (tgUser) {
+    const nameEl = document.getElementById('user-greeting-name');
+    if (nameEl) nameEl.textContent = tgUser.first_name || 'User';
+    const idEl = document.getElementById('user-profile-id');
+    if (idEl) idEl.textContent = tgUser.id;
+  } else if (paramUserId) {
+    const idEl = document.getElementById('user-profile-id');
+    if (idEl) idEl.textContent = paramUserId;
+  }
+
   state.initData = tg?.initData || '';
 
   // Local demo fallback if opened in browser outside Telegram
   if (!state.initData) {
-    console.warn('Running outside Telegram. Activating browser preview mode.');
+    console.warn('Running outside Telegram or initData absent. Activating browser preview mode.');
     const demoUser = {
       id: paramUserId || 6656939308,
       first_name: tgUser?.first_name || 'Tnwr',
       username: tgUser?.username || 'gaurav_tnwr00'
     };
     state.initData = `mock_${encodeURIComponent(JSON.stringify(demoUser))}`;
-    if (!paramUserId) showDemoBanner();
+    if (!paramUserId && !tgUser) showDemoBanner();
   }
 
   setupNavigation();
   setupEventListeners();
   setupWithdrawalTabs();
 
-  await loadAppConfig();
-  await syncUserData();
+  // Load config and user data in parallel
+  try {
+    await Promise.all([
+      loadAppConfig(),
+      syncUserData()
+    ]);
+  } catch (err) {
+    console.error('Initial data load error:', err);
+  }
 
   // Load GigaPub with the configured project ID
-  if (state.config?.gigaPubProjectId) {
-    window.GigaPub.init(state.config.gigaPubProjectId);
+  if (state.config?.gigaPubProjectId && window.GigaPub) {
+    window.GigaPub.init(state.config.gigaPubProjectId).catch(() => {});
   }
 
   // Initialize LibTL In-App Interstitial if available
@@ -77,10 +99,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   startTimers();
 
   // Handle URL deep links from Telegram Bot buttons (query, hash, or tg start_param)
-  const urlParams = new URLSearchParams(window.location.search);
-  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
   const tgStart = tg?.initDataUnsafe?.start_param || '';
-
   const actionParam = urlParams.get('action') || hashParams.get('action') || (tgStart === 'watch_ad' ? 'watch_ad' : '');
   const tabParam = urlParams.get('tab') || hashParams.get('tab') || (['earn', 'refer', 'wallet'].includes(tgStart) ? tgStart : '');
 
@@ -217,10 +236,10 @@ function updateUserUI() {
 
   const symbol = state.config?.currencySymbol || '₹';
   const nameEl = document.getElementById('user-greeting-name');
-  if (nameEl) nameEl.textContent = u.name;
+  if (nameEl) nameEl.textContent = u.name || u.first_name || (u.username ? '@' + u.username : `User ${u.id}`);
 
   const idEl = document.getElementById('user-profile-id');
-  if (idEl) idEl.textContent = u.id;
+  if (idEl) idEl.textContent = u.id || '...';
 
   const balNum = typeof u.balance === 'number' ? u.balance : parseFloat(u.balance || 0);
   const earnedNum = typeof u.totalEarned === 'number' ? u.totalEarned : parseFloat(u.totalEarned || balNum);
@@ -362,36 +381,48 @@ function startTimers() {
 // Navigation & Tab Switching
 function setupNavigation() {
   document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
-    item.addEventListener('click', () => {
-      switchTab(item.getAttribute('data-tab'));
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const tab = item.getAttribute('data-tab');
+      if (tab) switchTab(tab);
     });
   });
 
   document.querySelectorAll('[data-switch-tab]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      switchTab(btn.getAttribute('data-switch-tab'));
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const tab = btn.getAttribute('data-switch-tab');
+      if (tab) switchTab(tab);
     });
   });
 }
 
 function switchTab(tabId) {
-  if (state.activeTab === tabId) return;
+  if (!tabId) return;
   hapticFeedback('light');
 
   document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
-    item.classList.toggle('active', item.getAttribute('data-tab') === tabId);
+    const isTarget = item.getAttribute('data-tab') === tabId;
+    item.classList.toggle('active', isTarget);
   });
 
   document.querySelectorAll('.tab-pane').forEach(pane => {
-    pane.classList.toggle('active', pane.id === `tab-${tabId}`);
+    const isTarget = pane.id === `tab-${tabId}`;
+    pane.classList.toggle('active', isTarget);
+    pane.style.display = isTarget ? 'block' : 'none';
   });
 
   state.activeTab = tabId;
+
+  try {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (_) {}
 
   if (tabId === 'earn') loadTasks();
   if (tabId === 'refer') loadReferralData();
   if (tabId === 'wallet') loadWithdrawalHistory();
 }
+window.switchTab = switchTab;
 
 function setupWithdrawalTabs() {
   document.querySelectorAll('.wd-tab-btn').forEach(btn => {
@@ -443,7 +474,7 @@ async function handleClaimBonus() {
     state.nextClaimAt = res.nextClaimAt;
     updateUserUI();
     updateStreakLadder(res.streak);
-    showToast(`🎉 Claimed Day ${res.streak} Bonus (+${state.config.currencySymbol}${res.amount})!`, 'success');
+    showToast(`🎉 Claimed Day ${res.streak} Bonus (+${state.config?.currencySymbol || '₹'}${res.amount})!`, 'success');
     hapticNotification('success');
     spawnConfetti();
   } else {
@@ -514,7 +545,7 @@ async function handleWatchAd() {
           state.user.adsToday = claimRes.adsToday;
           state.adCooldownRemaining = claimRes.cooldownSeconds || 30;
           updateUserUI();
-          showToast(`🎬 Ad Watched! +${state.config.currencySymbol}${claimRes.reward}`, 'success');
+          showToast(`🎬 Ad Watched! +${state.config?.currencySymbol || '₹'}${claimRes.reward}`, 'success');
           hapticNotification('success');
           spawnConfetti();
         } else {
@@ -903,7 +934,7 @@ async function loadWithdrawalHistory() {
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-              <div class="text-base font-bold">${state.config.currencySymbol}${item.amount}</div>
+              <div class="text-base font-bold">${state.config?.currencySymbol || '₹'}${item.amount}</div>
               <div class="text-xs text-muted">${item.wallet}</div>
             </div>
             <div class="text-xs text-muted">${new Date(item.created_at).toLocaleDateString()}</div>

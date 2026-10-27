@@ -136,6 +136,11 @@ export async function telegramAuthMiddleware(req, res, next) {
     });
   }
 
+  const requestedUserId = req.query.userId || req.headers['x-user-id'] || req.body?.userId;
+  if (result.isDevMode && requestedUserId) {
+    result.user = { id: String(requestedUserId), first_name: `User ${requestedUserId}` };
+  }
+
   req.tgUser = result.user;
   req.isDevMode = result.isDevMode;
 
@@ -144,9 +149,9 @@ export async function telegramAuthMiddleware(req, res, next) {
     await db.waitForReady().catch(() => {});
   }
 
-  // Auto-register and ensure user loaded in DB
+  // Auto-register and ensure user loaded from MongoDB Atlas
   if (req.tgUser && req.tgUser.id) {
-    await db.ensureUserLoaded(req.tgUser.id);
+    await db.ensureUserLoaded(req.tgUser.id, true);
     db.getOrCreateUser(req.tgUser);
   }
 

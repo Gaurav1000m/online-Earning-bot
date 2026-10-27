@@ -195,7 +195,7 @@ app.post('/api/admin/login', async (req, res) => {
 // =======================================================
 
 // Sync / Load User Profile
-app.post('/api/user/sync', telegramAuthMiddleware, (req, res) => {
+app.post('/api/user/sync', telegramAuthMiddleware, async (req, res) => {
   const tgUser = req.tgUser;
   let referrerId = null;
 
@@ -204,12 +204,18 @@ app.post('/api/user/sync', telegramAuthMiddleware, (req, res) => {
     if (match) referrerId = match[1];
   }
 
+  // Ensure latest document from MongoDB Atlas is loaded
+  await db.ensureUserLoaded(tgUser.id, true);
+
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
   const { user, isNew } = db.getOrCreateUser(tgUser, referrerId, clientIp);
 
   const bonusCheck = db.canClaimDailyBonus(user.id);
   const adCheck = db.canWatchAd(user.id);
   const isAdmin = String(user.id) === String(config.adminId) || req.isDevMode;
+
+  const totalEarned = user.lifetime_earnings || user.total_earned || parseFloat(((user.balance || 0) + (user.lifetime_withdrawals || user.total_withdrawn || 0)).toFixed(2));
+  const totalWithdrawn = user.lifetime_withdrawals || user.total_withdrawn || 0;
 
   res.json({
     success: true,
@@ -218,8 +224,8 @@ app.post('/api/user/sync', telegramAuthMiddleware, (req, res) => {
       name: `${user.first_name} ${user.last_name || ''}`.trim(),
       username: user.username,
       balance: user.balance,
-      totalEarned: user.lifetime_earnings || user.total_earned || 0,
-      totalWithdrawn: user.lifetime_withdrawals || user.total_withdrawn || 0,
+      totalEarned,
+      totalWithdrawn,
       wallet: user.wallet || '',
       wallet_upi: user.wallet_upi || '',
       wallet_paypal: user.wallet_paypal || '',
@@ -227,6 +233,7 @@ app.post('/api/user/sync', telegramAuthMiddleware, (req, res) => {
       referralCount: user.referral_count || 0,
       weeklyReferrals: user.weekly_referrals || 0,
       adsToday: user.ads_today || 0,
+      adsWatched: user.ads_watched || 0,
       dailyStreak: user.daily_streak || 0,
       isBanned: user.is_banned
     },
@@ -545,7 +552,12 @@ app.get('/api/admin/overview', requireAdmin, (req, res) => {
 });
 
 // Admin Users Management (Search & Filters: Rule 47)
-app.get('/api/admin/users', requireAdmin, (req, res) => {
+app.get('/api/admin/users', requireAdmin, async (req, res) => {
+  if (!db.isReady) {
+    await db.waitForReady().catch(() => {});
+  }
+  await db.refreshFromMongo(false).catch(() => {});
+
   const search = req.query.search || '';
   const filter = req.query.filter || 'all';
   const page = parseInt(req.query.page || '1', 10);
@@ -602,8 +614,9 @@ app.get('/api/admin/export/:type', requireAdmin, (req, res) => {
 });
 
 // Admin User Profile & Transaction Ledger
-app.get('/api/admin/user/:id', requireAdmin, (req, res) => {
-  const user = db.getUser(req.params.id);
+app.get('/api/admin/user/:id', requireAdmin, async (req, res) => {
+  let user = await db.ensureUserLoaded(req.params.id, true);
+  if (!user) user = db.getUser(req.params.id);
   if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
   const txns = db.getUserTransactions(user.id, 100);
@@ -617,6 +630,22 @@ app.get('/api/admin/user/:id', requireAdmin, (req, res) => {
     withdrawals,
     referrals
   });
+});
+
+// Admin Update User Profile
+app.post('/api/admin/user/:id/update', requireAdmin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const adminId = req.adminUser?.id || config.adminId;
+    const updatedUser = await db.editUser(userId, req.body, adminId);
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    return res.json({ success: true, message: 'User updated successfully', user: updatedUser });
+  } catch (err) {
+    console.error('Error updating user:', err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // Admin Adjust User Balance

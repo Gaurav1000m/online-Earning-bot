@@ -811,6 +811,50 @@
         </button>
       </div>
 
+      <!-- Edit User Details Form -->
+      <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="font-size: 0.88rem; font-weight: 800; color: #38bdf8;">✏️ Edit User Information</div>
+          <span style="font-size: 0.72rem; color: var(--text-muted);">Syncs directly to MongoDB</span>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <div>
+            <label style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 4px;">First Name</label>
+            <input id="edit-user-first-name" type="text" class="input" placeholder="First Name">
+          </div>
+          <div>
+            <label style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Username (without @)</label>
+            <input id="edit-user-username" type="text" class="input" placeholder="Username">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <div>
+            <label style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Balance (₹)</label>
+            <input id="edit-user-balance" type="number" step="any" class="input" placeholder="Balance">
+          </div>
+          <div>
+            <label style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Referral Count</label>
+            <input id="edit-user-referrals" type="number" step="1" class="input" placeholder="Referrals">
+          </div>
+        </div>
+
+        <div style="margin-bottom: 10px;">
+          <label style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Wallet / UPI ID</label>
+          <input id="edit-user-wallet" type="text" class="input" placeholder="e.g. user@okhdfcbank">
+        </div>
+
+        <div style="margin-bottom: 12px;">
+          <label style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Admin Notes</label>
+          <input id="edit-user-notes" type="text" class="input" placeholder="Internal notes about this user">
+        </div>
+
+        <button id="btn-save-user-edits" class="btn btn-primary btn-sm" onclick="saveUserEdits()" style="width: 100%; font-weight: 700;">
+          💾 Save User Changes
+        </button>
+      </div>
+
       <!-- Quick Balance Adjustment -->
       <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 14px; margin-bottom: 20px;">
         <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 10px;">💰 Adjust Balance</div>

@@ -419,6 +419,25 @@ window.openUserProfile = async function(userId) {
     walletEl.textContent = user.wallet || user.wallet_upi || user.wallet_paypal || 'Not linked';
   }
 
+  // Populate Edit Form Inputs
+  const editName = document.getElementById('edit-user-first-name');
+  if (editName) editName.value = user.first_name || '';
+
+  const editUser = document.getElementById('edit-user-username');
+  if (editUser) editUser.value = user.username || '';
+
+  const editBal = document.getElementById('edit-user-balance');
+  if (editBal) editBal.value = user.balance !== undefined ? user.balance : 0;
+
+  const editRef = document.getElementById('edit-user-referrals');
+  if (editRef) editRef.value = user.referral_count !== undefined ? user.referral_count : 0;
+
+  const editW = document.getElementById('edit-user-wallet');
+  if (editW) editW.value = user.wallet_upi || user.wallet || '';
+
+  const editNotes = document.getElementById('edit-user-notes');
+  if (editNotes) editNotes.value = user.admin_notes || '';
+
   const txnsBox = document.getElementById('modal-user-txns');
   if (transactions.length === 0) {
     txnsBox.innerHTML = '<div style="color:var(--text-muted);">No ledger entries recorded yet.</div>';
@@ -438,6 +457,45 @@ window.openUserProfile = async function(userId) {
   }
 
   document.getElementById('user-profile-modal').classList.add('open');
+};
+
+window.saveUserEdits = async function() {
+  const userId = adminState.activeUserId;
+  if (!userId) return;
+
+  const btn = document.getElementById('btn-save-user-edits');
+  const originalText = btn ? btn.innerHTML : '💾 Save User Changes';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '💾 Saving Changes...';
+  }
+
+  const updates = {
+    first_name: document.getElementById('edit-user-first-name')?.value,
+    username: document.getElementById('edit-user-username')?.value,
+    balance: document.getElementById('edit-user-balance')?.value,
+    referral_count: document.getElementById('edit-user-referrals')?.value,
+    wallet_upi: document.getElementById('edit-user-wallet')?.value,
+    admin_notes: document.getElementById('edit-user-notes')?.value
+  };
+
+  try {
+    const res = await adminFetch(`/api/admin/user/${userId}/update`, 'POST', updates);
+    if (res.success && res.user) {
+      showToast('✅ User profile updated and synced to database!', 'success');
+      await openUserProfile(userId);
+      loadUsers();
+    } else {
+      showToast(res.message || 'Failed to update user', 'error');
+    }
+  } catch (err) {
+    showToast(err.message || 'Update error', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
 };
 
 window.toggleBanUser = async function() {

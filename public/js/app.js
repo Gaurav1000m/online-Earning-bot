@@ -25,18 +25,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
   }
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const tgUser = tg?.initDataUnsafe?.user;
+  const paramUserId = urlParams.get('userId') || hashParams.get('userId') || tgUser?.id;
+
   state.initData = tg?.initData || '';
 
   // Local demo fallback if opened in browser outside Telegram
   if (!state.initData) {
     console.warn('Running outside Telegram. Activating browser preview mode.');
     const demoUser = {
-      id: 6656939308,
-      first_name: 'Tnwr',
-      username: 'gaurav_tnwr00'
+      id: paramUserId || 6656939308,
+      first_name: tgUser?.first_name || 'Tnwr',
+      username: tgUser?.username || 'gaurav_tnwr00'
     };
     state.initData = `mock_${encodeURIComponent(JSON.stringify(demoUser))}`;
-    showDemoBanner();
+    if (!paramUserId) showDemoBanner();
   }
 
   setupNavigation();
@@ -210,25 +215,46 @@ function updateUserUI() {
   const u = state.user;
   if (!u) return;
 
+  const symbol = state.config?.currencySymbol || '₹';
   const nameEl = document.getElementById('user-greeting-name');
   if (nameEl) nameEl.textContent = u.name;
 
   const idEl = document.getElementById('user-profile-id');
   if (idEl) idEl.textContent = u.id;
 
-  document.querySelectorAll('.user-balance').forEach(el => el.textContent = u.balance.toFixed(2));
-  document.querySelectorAll('.user-total-earned').forEach(el => el.textContent = u.totalEarned.toFixed(2));
-  document.querySelectorAll('.user-total-withdrawn').forEach(el => el.textContent = u.totalWithdrawn.toFixed(2));
+  const balNum = typeof u.balance === 'number' ? u.balance : parseFloat(u.balance || 0);
+  const earnedNum = typeof u.totalEarned === 'number' ? u.totalEarned : parseFloat(u.totalEarned || balNum);
+  const withdrawnNum = typeof u.totalWithdrawn === 'number' ? u.totalWithdrawn : parseFloat(u.totalWithdrawn || 0);
+
+  document.querySelectorAll('.user-balance').forEach(el => el.textContent = balNum.toFixed(2));
+  document.querySelectorAll('.user-total-earned').forEach(el => el.textContent = earnedNum.toFixed(2));
+  document.querySelectorAll('.user-total-withdrawn').forEach(el => el.textContent = withdrawnNum.toFixed(2));
 
   // Daily Ad progress
   const adsProgressText = document.getElementById('ads-progress-text');
   const adsProgressBar = document.getElementById('ads-progress-bar');
   const maxAds = state.config?.dailyAdLimit || 20;
 
-  if (adsProgressText) adsProgressText.textContent = `${u.adsToday} / ${maxAds} Today`;
+  if (adsProgressText) adsProgressText.textContent = `${u.adsToday || 0} / ${maxAds} Today`;
   if (adsProgressBar) {
-    const pct = Math.min(100, Math.round((u.adsToday / maxAds) * 100));
+    const pct = Math.min(100, Math.round(((u.adsToday || 0) / maxAds) * 100));
     adsProgressBar.style.width = `${pct}%`;
+  }
+
+  // Update Referral Stats Strip with real database numbers
+  const refCount = u.referralCount || 0;
+  const refReward = state.config?.referralReward || 20.0;
+  const countEl = document.getElementById('ref-stat-count');
+  const earnedEl = document.getElementById('ref-stat-earned');
+  const milestoneText = document.getElementById('ref-milestone-text');
+  const milestoneBar = document.getElementById('ref-milestone-bar');
+
+  if (countEl) countEl.textContent = refCount;
+  if (earnedEl) earnedEl.textContent = `${symbol}${(refCount * refReward).toFixed(2)}`;
+  if (milestoneText) milestoneText.textContent = `${Math.min(10, refCount)} / 10 Referrals`;
+  if (milestoneBar) {
+    const pct = Math.min(100, Math.round((refCount / 10) * 100));
+    milestoneBar.style.width = `${pct}%`;
   }
 }
 

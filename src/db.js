@@ -595,23 +595,30 @@ class Database {
     });
   }
 
-  async ensureUserLoaded(userId) {
+  async ensureUserLoaded(userId, forceRefresh = false) {
     const id = String(userId);
     if (id.startsWith('test_') || id.startsWith('testuser_')) return this.data.users[id] || null;
-    if (this.data.users[id]) return this.data.users[id];
+    if (!forceRefresh && this.data.users[id]) return this.data.users[id];
+
+    if (!this.isMongoConnected || !this.mongoDb) {
+      if (this.mongoInitPromise) {
+        await this.mongoInitPromise.catch(() => {});
+      }
+    }
+
     if (this.isMongoConnected && this.mongoDb) {
       try {
         const doc = await this.mongoDb.collection('users').findOne({ _id: id });
         if (doc) {
           const { _id, ...userData } = doc;
-          this.data.users[id] = { ...userData, id };
+          this.data.users[id] = { ...this.data.users[id], ...userData, id };
           return this.data.users[id];
         }
       } catch (err) {
         console.error(`⚠️ Error loading user ${id} from MongoDB:`, err.message);
       }
     }
-    return null;
+    return this.data.users[id] || null;
   }
 
   getTodayString() {
@@ -840,6 +847,77 @@ class Database {
     this.save();
     this.syncUserToMongo(this.data.users[id]);
     return this.data.users[id];
+  }
+
+  async editUser(userId, updates, adminId = 'ADMIN') {
+    const id = String(userId);
+    let user = await this.ensureUserLoaded(id, true);
+    if (!user) user = this.getUser(id);
+    if (!user) return null;
+
+    const auditChanges = {};
+
+    if (updates.first_name !== undefined && updates.first_name !== null) {
+      const val = String(updates.first_name).trim();
+      auditChanges.first_name = { old: user.first_name, new: val };
+      user.first_name = val;
+    }
+    if (updates.last_name !== undefined) {
+      user.last_name = String(updates.last_name || '').trim();
+    }
+    if (updates.username !== undefined) {
+      const val = String(updates.username || '').replace(/^@/, '').trim();
+      auditChanges.username = { old: user.username, new: val };
+      user.username = val;
+    }
+    if (updates.balance !== undefined && updates.balance !== '' && !isNaN(parseFloat(updates.balance))) {
+      const newBal = parseFloat(parseFloat(updates.balance).toFixed(2));
+      const oldBal = parseFloat((user.balance || 0).toFixed(2));
+      if (newBal !== oldBal) {
+        auditChanges.balance = { old: oldBal, new: newBal };
+        const diff = parseFloat((newBal - oldBal).toFixed(2));
+        user.balance = newBal;
+        this.recordTransaction({
+          userId: id,
+          amount: diff,
+          type: diff >= 0 ? 'ADMIN_CREDIT' : 'ADMIN_DEBIT',
+          referenceId: `ADM-EDIT-${Date.now()}`,
+          description: `Admin manual profile balance update to ₹${newBal.toFixed(2)} (${diff >= 0 ? '+' : ''}${diff})`
+        });
+      }
+    }
+    if (updates.referral_count !== undefined && updates.referral_count !== '' && !isNaN(parseInt(updates.referral_count, 10))) {
+      const newRef = parseInt(updates.referral_count, 10);
+      auditChanges.referral_count = { old: user.referral_count, new: newRef };
+      user.referral_count = newRef;
+    }
+    if (updates.wallet_upi !== undefined) {
+      const val = String(updates.wallet_upi || '').trim();
+      auditChanges.wallet_upi = { old: user.wallet_upi, new: val };
+      user.wallet_upi = val;
+      user.wallet = val;
+    }
+    if (updates.wallet !== undefined && !updates.wallet_upi) {
+      const val = String(updates.wallet || '').trim();
+      user.wallet = val;
+      user.wallet_upi = val;
+    }
+    if (updates.is_banned !== undefined) {
+      user.is_banned = Boolean(updates.is_banned);
+      auditChanges.is_banned = user.is_banned;
+    }
+    if (updates.admin_notes !== undefined) {
+      user.admin_notes = String(updates.admin_notes || '').trim();
+      auditChanges.admin_notes = user.admin_notes;
+    }
+    user.last_active = new Date().toISOString();
+
+    this.data.users[id] = user;
+    this.save();
+    await this.syncUserToMongo(user);
+
+    this.logAudit(adminId, 'UPDATE_USER', id, auditChanges);
+    return user;
   }
 
   setWallet(userId, { method = 'upi', details }) {

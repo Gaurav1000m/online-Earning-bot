@@ -22,7 +22,7 @@
         Please enter the admin password or secret key to access the control panel.
       </p>
       <div class="form-group">
-        <input id="login-password" type="password" class="input" placeholder="Admin Secret / Password">
+        <input id="login-password" type="password" class="input" placeholder="Admin Secret / Password" onkeydown="if(event.key==='Enter') handleAdminLogin()">
       </div>
       <button class="btn btn-primary" onclick="handleAdminLogin()" style="width: 100%;">
         Authenticate & Enter
@@ -115,6 +115,9 @@
         <span id="maintenance-badge" class="badge" style="display: none; background: rgba(239,68,68,0.2); color: #f87171;">
           🚧 Maintenance Mode ON
         </span>
+        <button class="btn btn-secondary btn-sm" onclick="refreshCurrentSection()" title="Refresh database cache and data">
+          🔄 Refresh
+        </button>
         <button class="btn btn-secondary btn-sm" onclick="location.href='/'">
           📱 Open Mini App
         </button>

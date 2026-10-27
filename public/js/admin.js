@@ -26,6 +26,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupAdminNav();
   setupSidebarToggle();
 
+  const pwdInput = document.getElementById('login-password');
+  if (pwdInput) {
+    pwdInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleAdminLogin();
+    });
+  }
+
   // Try auto-login via Telegram WebApp initData if token is missing
   if (!adminState.token && tg?.initData) {
     await autoLoginWithTelegram();
@@ -86,6 +93,7 @@ async function adminFetch(endpoint, method = 'GET', body = null) {
     headers: {
       'Content-Type': 'application/json',
       'x-admin-token': adminState.token,
+      'Authorization': `Bearer ${adminState.token}`,
       'x-telegram-init-data': tg?.initData || ''
     }
   };
@@ -106,7 +114,17 @@ async function adminFetch(endpoint, method = 'GET', body = null) {
 
 async function loadInitialData() {
   await loadOverview();
+  if (adminState.activeSection && adminState.activeSection !== 'dashboard') {
+    switchSection(adminState.activeSection);
+  }
 }
+
+window.refreshCurrentSection = async function() {
+  showToast('Refreshing live data from database...', 'info');
+  await loadOverview();
+  switchSection(adminState.activeSection || 'dashboard');
+  showToast('Data refreshed successfully!', 'success');
+};
 
 // Navigation & Section Switching
 function setupAdminNav() {
@@ -555,7 +573,7 @@ window.reviewWithdrawalAction = async function(withdrawalId, status) {
 // =======================================================
 
 async function loadReferralsData() {
-  const res = await adminFetch('/api/referrals/list');
+  const res = await adminFetch('/api/admin/referrals');
   const suspRes = await adminFetch('/api/admin/suspicious');
 
   if (res.success) {

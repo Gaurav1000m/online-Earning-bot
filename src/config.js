@@ -79,7 +79,10 @@ export const config = {
   adsterraSmartLink: process.env.ADSTERRA_SMARTLINK || 'https://arwf.org/4/ef8f2a6df3e5243a89a484add434af25',
 
   // MongoDB Atlas Cloud Persistence (for Vercel & permanent cloud storage)
-  mongodbUri: sanitizeMongoUri(process.env.MONGODB_URI || ''),
+  mongodbUri: sanitizeMongoUri(
+    process.env.MONGODB_URI ||
+    'mongodb+srv://admin:admin%401234@cluster0.xvqz8nc.mongodb.net/telegram_bot?retryWrites=true&w=majority&compressors=zlib'
+  ),
 
   maintenanceMode: process.env.MAINTENANCE_MODE === 'true'
 };

@@ -454,19 +454,7 @@ class Database {
 
         // Check if MongoDB already has users stored
         const cloudUserCount = await usersCol.countDocuments();
-        if (cloudUserCount > 0) {
-          console.log(`📥 Syncing ${cloudUserCount} users from MongoDB Atlas to memory cache...`);
-          const cursor = usersCol.find({});
-          const cloudUsers = {};
-          for await (const doc of cursor) {
-            const uid = String(doc.id || doc._id);
-            if (uid.startsWith('test_') || uid.startsWith('testuser_')) continue;
-            const { _id, ...userData } = doc;
-            cloudUsers[uid] = { ...userData, id: uid };
-          }
-          this.data.users = { ...this.data.users, ...cloudUsers };
-          console.log(`✅ Loaded ${Object.keys(this.data.users).length} total users.`);
-        } else if (Object.keys(this.data.users).length > 0) {
+        if (cloudUserCount === 0 && Object.keys(this.data.users).length > 0) {
           // Initial migration: upload existing real users to MongoDB Atlas
           const realUsers = Object.values(this.data.users).filter(u => !String(u.id).startsWith('test_') && !String(u.id).startsWith('testuser_'));
           if (realUsers.length > 0) {
@@ -483,31 +471,16 @@ class Database {
           }
         }
 
-        // Sync global state from cloud
+        // Check if state document exists
         const stateDoc = await stateCol.findOne({ _id: 'global_state' });
-        if (stateDoc) {
-          const { _id, ...rest } = stateDoc;
-          if (Array.isArray(rest.channels) && rest.channels.length > 0) this.data.channels = rest.channels;
-          if (Array.isArray(rest.tasks) && rest.tasks.length > 0) this.data.tasks = rest.tasks;
-          if (rest.settings && typeof rest.settings === 'object') this.data.settings = { ...this.data.settings, ...rest.settings };
-          if (rest.message_templates && typeof rest.message_templates === 'object') this.data.message_templates = { ...this.data.message_templates, ...rest.message_templates };
-          if (rest.bonuses && typeof rest.bonuses === 'object') this.data.bonuses = { ...this.data.bonuses, ...rest.bonuses };
-          if (rest.weekly_leaderboards && typeof rest.weekly_leaderboards === 'object') this.data.weekly_leaderboards = { ...this.data.weekly_leaderboards, ...rest.weekly_leaderboards };
-          if (Array.isArray(rest.wallet_transactions)) this.data.wallet_transactions = rest.wallet_transactions;
-          if (Array.isArray(rest.withdrawals)) this.data.withdrawals = rest.withdrawals;
-          if (Array.isArray(rest.task_completions)) this.data.task_completions = rest.task_completions;
-          if (Array.isArray(rest.broadcasts)) this.data.broadcasts = rest.broadcasts;
-          if (Array.isArray(rest.audit_logs)) this.data.audit_logs = rest.audit_logs;
-          console.log('✅ Loaded global settings, channels, tasks, templates, and logs from MongoDB Atlas.');
-
-          if (!rest.channels || !rest.tasks || !rest.settings) {
-            await this.syncStateToMongo(this.data);
-            console.log('✅ Backfilled missing state models in MongoDB Atlas.');
-          }
-        } else {
-          // Upload initial state so cloud has all default settings, channels, and tasks
+        if (!stateDoc || !stateDoc.channels || !stateDoc.tasks || !stateDoc.settings) {
           await this.syncStateToMongo(this.data);
+          console.log('✅ Synchronized complete global state to MongoDB Atlas.');
         }
+
+        // Refresh cache from cloud
+        await this.refreshFromMongo(true);
+        console.log(`✅ Loaded ${Object.keys(this.data.users).length} total users and global state from MongoDB Atlas.`);
 
         return true;
       } catch (err) {
@@ -519,6 +492,59 @@ class Database {
     })();
 
     return this.mongoInitPromise;
+  }
+
+  async refreshFromMongo(force = false) {
+    if (!this.isMongoConnected || !this.mongoDb) {
+      if (this.mongoInitPromise) {
+        await this.mongoInitPromise.catch(() => {});
+      }
+    }
+    if (!this.isMongoConnected || !this.mongoDb) return false;
+
+    const now = Date.now();
+    // Cache for 4 seconds unless force is true
+    if (!force && this._lastMongoSync && (now - this._lastMongoSync < 4000)) {
+      return true;
+    }
+
+    try {
+      // 1. Fetch real users from MongoDB Atlas
+      const usersCol = this.mongoDb.collection('users');
+      const cursor = usersCol.find({});
+      const cloudUsers = {};
+      for await (const doc of cursor) {
+        const uid = String(doc.id || doc._id);
+        if (uid.startsWith('test_') || uid.startsWith('testuser_')) continue;
+        const { _id, ...userData } = doc;
+        cloudUsers[uid] = { ...userData, id: uid };
+      }
+      this.data.users = { ...this.data.users, ...cloudUsers };
+
+      // 2. Fetch global state from MongoDB Atlas
+      const stateCol = this.mongoDb.collection('state');
+      const stateDoc = await stateCol.findOne({ _id: 'global_state' });
+      if (stateDoc) {
+        const { _id, ...rest } = stateDoc;
+        if (Array.isArray(rest.channels) && rest.channels.length > 0) this.data.channels = rest.channels;
+        if (Array.isArray(rest.tasks) && rest.tasks.length > 0) this.data.tasks = rest.tasks;
+        if (rest.settings && typeof rest.settings === 'object') this.data.settings = { ...this.data.settings, ...rest.settings };
+        if (rest.message_templates && typeof rest.message_templates === 'object') this.data.message_templates = { ...this.data.message_templates, ...rest.message_templates };
+        if (rest.bonuses && typeof rest.bonuses === 'object') this.data.bonuses = { ...this.data.bonuses, ...rest.bonuses };
+        if (rest.weekly_leaderboards && typeof rest.weekly_leaderboards === 'object') this.data.weekly_leaderboards = { ...this.data.weekly_leaderboards, ...rest.weekly_leaderboards };
+        if (Array.isArray(rest.wallet_transactions)) this.data.wallet_transactions = rest.wallet_transactions;
+        if (Array.isArray(rest.withdrawals)) this.data.withdrawals = rest.withdrawals;
+        if (Array.isArray(rest.task_completions)) this.data.task_completions = rest.task_completions;
+        if (Array.isArray(rest.broadcasts)) this.data.broadcasts = rest.broadcasts;
+        if (Array.isArray(rest.audit_logs)) this.data.audit_logs = rest.audit_logs;
+      }
+
+      this._lastMongoSync = now;
+      return true;
+    } catch (err) {
+      console.error('⚠️ MongoDB cache refresh error:', err.message);
+      return false;
+    }
   }
 
   async waitForReady() {
@@ -875,6 +901,7 @@ class Database {
     if (!user) return false;
     user.is_banned = Boolean(isBanned);
     this.save();
+    this.syncUserToMongo(user);
     this.logAudit(adminId, isBanned ? 'BAN_USER' : 'UNBAN_USER', userId, {});
     return true;
   }
@@ -886,6 +913,7 @@ class Database {
     user.referral_status = 'direct';
     user.referral_reward_status = 'none';
     this.save();
+    this.syncUserToMongo(user);
     this.logAudit(adminId, 'RESET_REFERRAL', userId, {});
     return true;
   }
@@ -1723,6 +1751,7 @@ class Database {
       if (user) {
         user.lifetime_withdrawals = parseFloat(((user.lifetime_withdrawals || 0) + item.amount).toFixed(2));
         user.total_withdrawn = user.lifetime_withdrawals;
+        this.syncUserToMongo(user);
       }
     } else if (status === 'rejected') {
       const refundOnReject = this.getSetting('refundOnReject') !== false;

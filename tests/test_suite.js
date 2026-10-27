@@ -391,6 +391,17 @@ async function runTestSuite() {
     assert(db.getSetting('maintenanceMode') === false, 'Test 26: Maintenance mode disabled');
 
     // ----------------------------------------------------
+    // CLEANUP: Remove test-generated users & transactions
+    // ----------------------------------------------------
+    const testIds = [testUserAId, testUserBId, testUserCId, `test_self_${testSuffix}`];
+    testIds.forEach(id => {
+      delete db.data.users[id];
+    });
+    db.data.wallet_transactions = db.data.wallet_transactions.filter(t => !testIds.includes(String(t.user_id)));
+    db.data.task_completions = db.data.task_completions.filter(c => !testIds.includes(String(c.user_id)));
+    db.save();
+
+    // ----------------------------------------------------
     // SUMMARY
     // ----------------------------------------------------
     console.log('\n====================================================');

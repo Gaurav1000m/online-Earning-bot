@@ -460,22 +460,24 @@ class Database {
           const cloudUsers = {};
           for await (const doc of cursor) {
             const uid = String(doc.id || doc._id);
+            if (uid.startsWith('test_') || uid.startsWith('testuser_')) continue;
             const { _id, ...userData } = doc;
             cloudUsers[uid] = { ...userData, id: uid };
           }
           this.data.users = { ...this.data.users, ...cloudUsers };
           console.log(`✅ Loaded ${Object.keys(this.data.users).length} total users.`);
         } else if (Object.keys(this.data.users).length > 0) {
-          // Initial migration: upload existing local users to MongoDB Atlas
-          console.log(`📤 Initial migration: Uploading ${Object.keys(this.data.users).length} users to MongoDB Atlas...`);
-          const ops = Object.values(this.data.users).map(u => ({
-            updateOne: {
-              filter: { _id: String(u.id) },
-              update: { $set: { ...u, _id: String(u.id) } },
-              upsert: true
-            }
-          }));
-          if (ops.length > 0) {
+          // Initial migration: upload existing real users to MongoDB Atlas
+          const realUsers = Object.values(this.data.users).filter(u => !String(u.id).startsWith('test_') && !String(u.id).startsWith('testuser_'));
+          if (realUsers.length > 0) {
+            console.log(`📤 Initial migration: Uploading ${realUsers.length} real users to MongoDB Atlas...`);
+            const ops = realUsers.map(u => ({
+              updateOne: {
+                filter: { _id: String(u.id) },
+                update: { $set: { ...u, _id: String(u.id) } },
+                upsert: true
+              }
+            }));
             await usersCol.bulkWrite(ops);
             console.log(`✅ Initial migration complete: ${ops.length} users saved to MongoDB Atlas.`);
           }
@@ -517,6 +519,9 @@ class Database {
   syncUserToMongo(user) {
     if (!this.isMongoConnected || !this.mongoDb || !user || !user.id) return;
     const uid = String(user.id);
+    // Ignore test users so MongoDB Atlas only stores real user data
+    if (uid.startsWith('test_') || uid.startsWith('testuser_')) return;
+
     this.mongoDb.collection('users').updateOne(
       { _id: uid },
       { $set: { ...user, _id: uid } },
@@ -547,6 +552,7 @@ class Database {
 
   async ensureUserLoaded(userId) {
     const id = String(userId);
+    if (id.startsWith('test_') || id.startsWith('testuser_')) return this.data.users[id] || null;
     if (this.data.users[id]) return this.data.users[id];
     if (this.isMongoConnected && this.mongoDb) {
       try {

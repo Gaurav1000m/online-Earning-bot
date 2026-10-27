@@ -668,10 +668,11 @@
                 <th>Delivered</th>
                 <th>Status</th>
                 <th>Date</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody id="broadcast-history-tbody">
-              <tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">Loading broadcast history...</td></tr>
+              <tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted);">Loading broadcast history...</td></tr>
             </tbody>
           </table>
         </div>
@@ -829,6 +830,38 @@
       <div id="modal-user-txns" style="max-height: 200px; overflow-y: auto; font-size: 0.8rem; border: 1px solid var(--border-color); border-radius: 10px; padding: 10px;">
         Loading ledger...
       </div>
+    </div>
+  </div>
+
+  <!-- Quick Balance Modal -->
+  <div id="quick-balance-modal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 440px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 id="quick-bal-title" style="font-weight: 800;">➕ Add User Balance</h3>
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('quick-balance-modal')">✕</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Telegram User ID</label>
+        <input id="quick-bal-userid" type="text" class="input" placeholder="e.g. 6656939308">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Adjustment Type</label>
+        <select id="quick-bal-action" class="input">
+          <option value="add">➕ Credit (+ Add Balance)</option>
+          <option value="cut">➖ Debit (- Deduct Balance)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount (₹)</label>
+        <input id="quick-bal-amount" type="number" step="any" class="input" placeholder="e.g. 50">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reason / Note (Optional)</label>
+        <input id="quick-bal-reason" type="text" class="input" placeholder="e.g. Special bonus or correction">
+      </div>
+      <button id="quick-bal-submit-btn" class="btn btn-primary" onclick="submitQuickBalance()" style="width: 100%;">
+        Confirm & Apply Adjustment
+      </button>
     </div>
   </div>
 

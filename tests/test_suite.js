@@ -368,6 +368,11 @@ async function runTestSuite() {
     assert(typeof broadcastRecord.total_recipients === 'number', 'Test 24: Broadcast recipient count tracked');
     assert(broadcastRecord.status === 'pending', 'Test 24: Initial broadcast state is pending');
 
+    const delRes = db.deleteBroadcast(broadcastRecord.id, 'admin_test');
+    assert(delRes === true, 'Test 24b: Broadcast successfully deleted');
+    const lookupBc = db.getBroadcasts().find(b => b.id === broadcastRecord.id);
+    assert(!lookupBc, 'Test 24c: Deleted broadcast no longer present in broadcasts list');
+
     // ----------------------------------------------------
     // TEST 25: User Ban and Access Restriction
     // ----------------------------------------------------

@@ -972,34 +972,79 @@ export function initBot() {
 
     bot.command('addbal', async (ctx) => {
       if (String(ctx.from.id) !== String(config.adminId)) return;
-      const args = ctx.match.split(' ');
-      if (args.length < 2) return ctx.reply('Usage: /addbal <userId> <amount>');
+      const args = (ctx.match || '').trim().split(/\s+/);
+      if (args.length < 2 || !args[0] || !args[1]) return ctx.reply('Usage: /addbal <userId> <amount> [reason]');
       const targetId = args[0].trim();
       const amount = parseFloat(args[1]);
-      if (isNaN(amount) || amount <= 0) return ctx.reply('Invalid amount');
+      if (isNaN(amount) || amount <= 0) return ctx.reply('⚠️ Invalid amount. Must be a positive number.');
+      const reason = args.slice(2).join(' ') || 'Bot Admin Credit';
 
-      const user = db.addBalance(targetId, amount, 'bot_command', ctx.from.id);
-      if (!user) return ctx.reply(`User ${targetId} not found.`);
-      await ctx.reply(`✅ Credited +${amount} to ${user.first_name} (${targetId}). New balance: ${user.balance}`);
+      await db.ensureUserLoaded(targetId);
+      const user = db.addBalance(targetId, amount, reason, ctx.from.id);
+      if (!user) return ctx.reply(`❌ User ${targetId} not found in database.`);
+
+      const symbol = db.getSetting('currencySymbol') || '₹';
+
+      // Notify recipient user
+      ctx.api.sendMessage(
+        targetId,
+        `🎉 <b>Balance Credited!</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `💰 Admin credited <b>+${symbol}${amount.toFixed(2)}</b> to your account balance.\n` +
+        `📝 Note: <i>${reason}</i>\n\n` +
+        `💳 Current Balance: <b>${symbol}${user.balance.toFixed(2)}</b>`,
+        { parse_mode: 'HTML' }
+      ).catch(() => {});
+
+      await ctx.reply(
+        `✅ <b>Balance Credited Successfully!</b>\n━━━━━━━━━━━━━━━━━━━━━\n` +
+        `👤 User: <b>${user.first_name}</b> (<code>${targetId}</code>)\n` +
+        `➕ Added: <b>+${symbol}${amount.toFixed(2)}</b>\n` +
+        `💵 New Balance: <b>${symbol}${user.balance.toFixed(2)}</b>\n` +
+        `📝 Note: <i>${reason}</i>`,
+        { parse_mode: 'HTML' }
+      );
     });
 
     bot.command('cutbal', async (ctx) => {
       if (String(ctx.from.id) !== String(config.adminId)) return;
-      const args = ctx.match.split(' ');
-      if (args.length < 2) return ctx.reply('Usage: /cutbal <userId> <amount>');
+      const args = (ctx.match || '').trim().split(/\s+/);
+      if (args.length < 2 || !args[0] || !args[1]) return ctx.reply('Usage: /cutbal <userId> <amount> [reason]');
       const targetId = args[0].trim();
       const amount = parseFloat(args[1]);
-      if (isNaN(amount) || amount <= 0) return ctx.reply('Invalid amount');
+      if (isNaN(amount) || amount <= 0) return ctx.reply('⚠️ Invalid amount. Must be a positive number.');
+      const reason = args.slice(2).join(' ') || 'Bot Admin Debit';
 
-      const user = db.cutBalance(targetId, amount, 'bot_command', ctx.from.id);
-      if (!user) return ctx.reply(`User ${targetId} not found.`);
-      await ctx.reply(`✂️ Deducted -${amount} from ${user.first_name} (${targetId}). New balance: ${user.balance}`);
+      await db.ensureUserLoaded(targetId);
+      const user = db.cutBalance(targetId, amount, reason, ctx.from.id);
+      if (!user) return ctx.reply(`❌ User ${targetId} not found in database.`);
+
+      const symbol = db.getSetting('currencySymbol') || '₹';
+
+      // Notify recipient user
+      ctx.api.sendMessage(
+        targetId,
+        `⚠️ <b>Balance Adjustment</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `✂️ Admin deducted <b>-${symbol}${amount.toFixed(2)}</b> from your account balance.\n` +
+        `📝 Note: <i>${reason}</i>\n\n` +
+        `💳 Current Balance: <b>${symbol}${user.balance.toFixed(2)}</b>`,
+        { parse_mode: 'HTML' }
+      ).catch(() => {});
+
+      await ctx.reply(
+        `✂️ <b>Balance Deducted Successfully!</b>\n━━━━━━━━━━━━━━━━━━━━━\n` +
+        `👤 User: <b>${user.first_name}</b> (<code>${targetId}</code>)\n` +
+        `➖ Deducted: <b>-${symbol}${amount.toFixed(2)}</b>\n` +
+        `💵 New Balance: <b>${symbol}${user.balance.toFixed(2)}</b>\n` +
+        `📝 Note: <i>${reason}</i>`,
+        { parse_mode: 'HTML' }
+      );
     });
 
     bot.command('ban', async (ctx) => {
       if (String(ctx.from.id) !== String(config.adminId)) return;
-      const targetId = ctx.match.trim();
+      const targetId = (ctx.match || '').trim();
       if (!targetId) return ctx.reply('Usage: /ban <userId>');
+      await db.ensureUserLoaded(targetId);
       const ok = db.banUser(targetId, true, ctx.from.id);
       if (ok) await ctx.reply(`🚫 User ${targetId} has been suspended.`);
       else await ctx.reply(`User ${targetId} not found.`);
@@ -1007,8 +1052,9 @@ export function initBot() {
 
     bot.command('unban', async (ctx) => {
       if (String(ctx.from.id) !== String(config.adminId)) return;
-      const targetId = ctx.match.trim();
+      const targetId = (ctx.match || '').trim();
       if (!targetId) return ctx.reply('Usage: /unban <userId>');
+      await db.ensureUserLoaded(targetId);
       const ok = db.banUser(targetId, false, ctx.from.id);
       if (ok) await ctx.reply(`✅ User ${targetId} has been reinstated.`);
       else await ctx.reply(`User ${targetId} not found.`);
@@ -1016,12 +1062,13 @@ export function initBot() {
 
     bot.command('checkbal', async (ctx) => {
       if (String(ctx.from.id) !== String(config.adminId)) return;
-      const targetId = ctx.match.trim();
+      const targetId = (ctx.match || '').trim();
       if (!targetId) return ctx.reply('Usage: /checkbal <userId>');
+      await db.ensureUserLoaded(targetId);
       const target = db.getUser(targetId);
-      if (!target) return ctx.reply('User not found.');
+      if (!target) return ctx.reply(`❌ User ${targetId} not found.`);
 
-      const symbol = db.getSetting('currencySymbol');
+      const symbol = db.getSetting('currencySymbol') || '₹';
       const txns = db.getUserTransactions(targetId, 5);
 
       let txnSummary = txns.map(t => `• [${t.type}] ${t.amount > 0 ? '+' : ''}${t.amount} (Bal: ${t.balance_after})`).join('\n');
@@ -1060,6 +1107,7 @@ export function initBot() {
         );
       }
 
+      await db.refreshFromMongo().catch(() => {});
       const users = Object.values(db.data.users);
       const statusMsg = await ctx.reply(`📢 Broadcasting announcement to <b>${users.length}</b> registered users...`, { parse_mode: 'HTML' });
 
@@ -1071,7 +1119,7 @@ export function initBot() {
           if (replyMsg) {
             await ctx.api.copyMessage(u.id, ctx.chat.id, replyMsg.message_id);
           } else {
-            await bot.api.sendMessage(
+            await ctx.api.sendMessage(
               u.id,
               `📢 <b>ANNOUNCEMENT</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n${text}`,
               { parse_mode: 'HTML' }
@@ -1091,6 +1139,7 @@ export function initBot() {
           text: replyMsg ? '[Replied Media/Message]' : text,
           target: 'all'
         }, user.id);
+        db.syncStateToMongo(db.data);
       } catch {}
 
       const reportText =

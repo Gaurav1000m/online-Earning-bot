@@ -481,9 +481,13 @@ window.submitBalanceAdjustment = async function() {
 
   const res = await adminFetch('/api/admin/user/balance', 'POST', { userId, amount, action, reason });
   if (res.success) {
-    showToast(`Balance updated successfully! New balance: ₹${res.user.balance}`, 'success');
+    const symbol = adminState.settings?.currencySymbol || '₹';
+    showToast(`Balance updated successfully! New balance: ${symbol}${res.user.balance}`, 'success');
+    document.getElementById('modal-adj-amount').value = '';
+    document.getElementById('modal-adj-reason').value = '';
     openUserProfile(userId);
     loadUsers();
+    loadOverview();
   } else {
     showToast(res.message || 'Balance adjustment failed', 'error');
   }
@@ -951,15 +955,19 @@ window.sendBroadcast = async function() {
   const box = document.getElementById('bc-progress-box');
   const progressText = document.getElementById('bc-progress-text');
   box.style.display = 'block';
-  progressText.textContent = '🚀 Broadcast launched! Delivering in background...';
+  progressText.textContent = '🚀 Delivering broadcast to users... Please wait.';
 
   const res = await adminFetch('/api/admin/broadcast', 'POST', { title, target, text });
   if (res.success) {
-    showToast('Broadcast queue initiated!', 'success');
-    progressText.textContent = `Delivering to ${res.broadcast.total_recipients || 'target'} users...`;
-    setTimeout(loadBroadcastHistory, 1500);
+    const sent = res.broadcast?.sent_count || 0;
+    const total = res.broadcast?.total_recipients || 0;
+    showToast(`Broadcast delivered to ${sent}/${total} users!`, 'success');
+    progressText.textContent = `✅ Completed! Sent to ${sent} users (Failed: ${res.broadcast?.failed_count || 0}).`;
+    document.getElementById('bc-text').value = '';
+    loadBroadcastHistory();
   } else {
     showToast(res.message || 'Broadcast failed', 'error');
+    progressText.textContent = `❌ Broadcast failed: ${res.message || 'Unknown error'}`;
   }
 };
 
@@ -969,7 +977,7 @@ window.loadBroadcastHistory = async function() {
   if (!tbody) return;
 
   if (!res.success || !res.broadcasts || res.broadcasts.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">No broadcasts recorded yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted);">No broadcasts recorded yet.</td></tr>';
     return;
   }
 
@@ -980,8 +988,22 @@ window.loadBroadcastHistory = async function() {
       <td><b>${b.sent_count || 0}</b> / ${b.total_recipients || b.target_count || 0}</td>
       <td><span class="badge ${b.status === 'completed' ? 'badge-approved' : 'badge-pending'}">${(b.status || 'queued').toUpperCase()}</span></td>
       <td>${new Date(b.created_at || b.timestamp).toLocaleString()}</td>
+      <td>
+        <button class="btn btn-danger btn-sm" onclick="deleteBroadcast('${b.id}')">🗑️ Delete</button>
+      </td>
     </tr>
   `).join('');
+};
+
+window.deleteBroadcast = async function(broadcastId) {
+  if (!confirm('Are you sure you want to delete this broadcast record?')) return;
+  const res = await adminFetch(`/api/admin/broadcast/${broadcastId}`, 'DELETE');
+  if (res.success) {
+    showToast('Broadcast record deleted successfully!', 'success');
+    loadBroadcastHistory();
+  } else {
+    showToast(res.message || 'Failed to delete broadcast', 'error');
+  }
 };
 
 // =======================================================
@@ -1092,12 +1114,47 @@ window.closeModal = function(modalId) {
 };
 
 window.openBalanceModalQuick = function(action = 'add') {
-  const userId = prompt('Enter Telegram User ID to adjust balance:');
-  if (!userId) return;
-  openUserProfile(userId.trim()).then(() => {
-    const sel = document.getElementById('modal-adj-action');
-    if (sel) sel.value = action;
-  });
+  const titleEl = document.getElementById('quick-bal-title');
+  const actionSel = document.getElementById('quick-bal-action');
+  const btnEl = document.getElementById('quick-bal-submit-btn');
+  const amountInput = document.getElementById('quick-bal-amount');
+  const reasonInput = document.getElementById('quick-bal-reason');
+
+  if (action === 'cut') {
+    if (titleEl) titleEl.textContent = '➖ Deduct User Balance';
+    if (actionSel) actionSel.value = 'cut';
+    if (btnEl) btnEl.textContent = '✂️ Confirm & Deduct Balance';
+  } else {
+    if (titleEl) titleEl.textContent = '➕ Add User Balance';
+    if (actionSel) actionSel.value = 'add';
+    if (btnEl) btnEl.textContent = '💰 Confirm & Add Balance';
+  }
+
+  if (amountInput) amountInput.value = '';
+  if (reasonInput) reasonInput.value = '';
+
+  document.getElementById('quick-balance-modal')?.classList.add('open');
+};
+
+window.submitQuickBalance = async function() {
+  const userId = document.getElementById('quick-bal-userid')?.value.trim();
+  const action = document.getElementById('quick-bal-action')?.value || 'add';
+  const amount = parseFloat(document.getElementById('quick-bal-amount')?.value);
+  const reason = document.getElementById('quick-bal-reason')?.value.trim() || (action === 'add' ? 'Admin credit' : 'Admin debit');
+
+  if (!userId) return showToast('Please enter Telegram User ID', 'warning');
+  if (isNaN(amount) || amount <= 0) return showToast('Please enter a valid amount', 'warning');
+
+  const res = await adminFetch('/api/admin/user/balance', 'POST', { userId, amount, action, reason });
+  if (res.success) {
+    const symbol = adminState.settings?.currencySymbol || '₹';
+    showToast(`Balance ${action === 'add' ? 'credited' : 'deducted'} successfully! User now has: ${symbol}${res.user.balance}`, 'success');
+    closeModal('quick-balance-modal');
+    loadOverview();
+    if (adminState.activeSection === 'users') loadUsers();
+  } else {
+    showToast(res.message || 'Balance adjustment failed', 'error');
+  }
 };
 
 window.downloadExport = async function(type) {

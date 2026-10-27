@@ -620,13 +620,14 @@ app.get('/api/admin/user/:id', requireAdmin, (req, res) => {
 });
 
 // Admin Adjust User Balance
-app.post('/api/admin/user/balance', requireAdmin, (req, res) => {
+app.post('/api/admin/user/balance', requireAdmin, async (req, res) => {
   const { userId, amount, action, reason } = req.body;
   const val = parseFloat(amount);
   if (isNaN(val) || val <= 0) {
     return res.status(400).json({ success: false, message: 'Invalid amount' });
   }
 
+  await db.ensureUserLoaded(userId);
   const adminId = req.adminUser?.id || config.adminId;
   let user;
 
@@ -637,6 +638,32 @@ app.post('/api/admin/user/balance', requireAdmin, (req, res) => {
   }
 
   if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+  // Real-time Telegram notification to user
+  const activeBot = getBot() || initBot();
+  if (activeBot) {
+    const symbol = db.getSetting('currencySymbol') || '₹';
+    if (action === 'add') {
+      activeBot.api.sendMessage(
+        userId,
+        `🎉 <b>Balance Credited!</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `💰 Admin credited <b>+${symbol}${val.toFixed(2)}</b> to your account balance.\n` +
+        `📝 Note: <i>${reason || 'Bonus Credit'}</i>\n\n` +
+        `💳 Current Balance: <b>${symbol}${user.balance.toFixed(2)}</b>`,
+        { parse_mode: 'HTML' }
+      ).catch(() => {});
+    } else {
+      activeBot.api.sendMessage(
+        userId,
+        `⚠️ <b>Balance Adjustment</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `✂️ Admin deducted <b>-${symbol}${val.toFixed(2)}</b> from your account balance.\n` +
+        `📝 Note: <i>${reason || 'Adjustment'}</i>\n\n` +
+        `💳 Current Balance: <b>${symbol}${user.balance.toFixed(2)}</b>`,
+        { parse_mode: 'HTML' }
+      ).catch(() => {});
+    }
+  }
+
   res.json({ success: true, user });
 });
 
@@ -767,51 +794,72 @@ app.post('/api/admin/broadcast', requireAdmin, async (req, res) => {
   const { title, text, target } = req.body;
   if (!text) return res.status(400).json({ success: false, message: 'Broadcast text required' });
 
+  await db.waitForReady().catch(() => {});
+  await db.refreshFromMongo().catch(() => {});
+
+  const activeBot = getBot() || initBot();
+  if (!activeBot) {
+    return res.status(500).json({ success: false, message: 'Telegram Bot is not initialized or BOT_TOKEN is missing.' });
+  }
+
   const bc = db.createBroadcast(req.body, req.adminUser?.id);
 
-  // Background broadcast job
-  (async () => {
-    let recipients = Object.values(db.data.users);
+  let recipients = Object.values(db.data.users);
+  if (target === 'active') recipients = recipients.filter(u => !u.is_banned);
+  else if (target === 'with_balance') recipients = recipients.filter(u => (u.balance || 0) > 0);
+  else if (target === 'watched_ads') recipients = recipients.filter(u => (u.ads_watched || 0) > 0);
+  else if (target === 'referrals') recipients = recipients.filter(u => (u.referral_count || 0) > 0);
 
-    if (target === 'active') recipients = recipients.filter(u => !u.is_banned);
-    else if (target === 'with_balance') recipients = recipients.filter(u => (u.balance || 0) > 0);
-    else if (target === 'watched_ads') recipients = recipients.filter(u => (u.ads_watched || 0) > 0);
-    else if (target === 'referrals') recipients = recipients.filter(u => (u.referral_count || 0) > 0);
+  bc.total_recipients = recipients.length;
+  bc.status = 'sending';
 
-    bc.total_recipients = recipients.length;
-    bc.status = 'sending';
+  let sent = 0;
+  let failed = 0;
 
-    let sent = 0;
-    let failed = 0;
-
-    for (const u of recipients) {
-      if (!bot) break;
-      try {
-        await bot.api.sendMessage(
-          u.id,
-          `📢 <b>${title || 'ANNOUNCEMENT'}</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n${text}`,
-          { parse_mode: 'HTML' }
-        );
-        sent++;
-      } catch (e) {
-        failed++;
-      }
-      bc.sent_count = sent;
-      bc.failed_count = failed;
-      // Telegram rate-limit delay
+  for (const u of recipients) {
+    try {
+      await activeBot.api.sendMessage(
+        u.id,
+        `📢 <b>${title || 'ANNOUNCEMENT'}</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n${text}`,
+        { parse_mode: 'HTML' }
+      );
+      sent++;
+    } catch (e) {
+      console.warn(`Broadcast send error to ${u.id}:`, e.message);
+      failed++;
+    }
+    bc.sent_count = sent;
+    bc.failed_count = failed;
+    if (recipients.length > 1) {
       await new Promise(r => setTimeout(r, 40));
     }
+  }
 
-    bc.status = 'completed';
-    bc.finished_at = new Date().toISOString();
-    db.save();
-  })().catch(err => console.error('Broadcast runner error:', err));
+  bc.status = 'completed';
+  bc.finished_at = new Date().toISOString();
+  db.save();
+  db.syncStateToMongo(db.data);
 
   res.json({ success: true, broadcast: bc });
 });
 
 app.get('/api/admin/broadcasts', requireAdmin, (req, res) => {
   res.json({ success: true, broadcasts: db.getBroadcasts() });
+});
+
+// Admin Delete Broadcast
+app.delete('/api/admin/broadcast/:id', requireAdmin, (req, res) => {
+  const { id } = req.params;
+  const ok = db.deleteBroadcast(id, req.adminUser?.id);
+  if (!ok) return res.status(404).json({ success: false, message: 'Broadcast not found' });
+  res.json({ success: true, message: 'Broadcast deleted successfully' });
+});
+
+app.post('/api/admin/broadcast/delete', requireAdmin, (req, res) => {
+  const { id } = req.body;
+  const ok = db.deleteBroadcast(id, req.adminUser?.id);
+  if (!ok) return res.status(404).json({ success: false, message: 'Broadcast not found' });
+  res.json({ success: true, message: 'Broadcast deleted successfully' });
 });
 
 // Admin Suspicious Referrals

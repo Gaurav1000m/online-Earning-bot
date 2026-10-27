@@ -1929,6 +1929,17 @@ class Database {
     return this.data.broadcasts || [];
   }
 
+  deleteBroadcast(broadcastId, adminId = 'ADMIN') {
+    if (!this.data.broadcasts) this.data.broadcasts = [];
+    const index = this.data.broadcasts.findIndex(b => String(b.id) === String(broadcastId));
+    if (index === -1) return false;
+    const removed = this.data.broadcasts.splice(index, 1)[0];
+    this.save();
+    this.syncStateToMongo(this.data);
+    this.logAudit(adminId, 'DELETE_BROADCAST', broadcastId, { title: removed.title });
+    return true;
+  }
+
   // =======================================================
   // 14. AUDIT LOGS & SETTINGS
   // =======================================================

@@ -4,6 +4,31 @@
 
 const tg = window.Telegram?.WebApp;
 
+// Global URL scheme guard to prevent net::ERR_UNKNOWN_URL_SCHEME in Telegram WebView
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('a');
+  if (link) {
+    const href = link.getAttribute('href') || '';
+    if (href.startsWith('intent:') || href.startsWith('market:') || href.startsWith('alipays:') || href.startsWith('app:')) {
+      e.preventDefault();
+      e.stopPropagation();
+      console.warn('Blocked unhandled native scheme to protect Telegram WebView:', href);
+      return;
+    }
+    if (href.startsWith('https://t.me/') || href.startsWith('tg://')) {
+      if (tg?.openTelegramLink) {
+        e.preventDefault();
+        tg.openTelegramLink(href);
+      }
+    } else if (href.startsWith('http://') || href.startsWith('https://')) {
+      if (link.target === '_blank' && tg?.openLink && !href.includes(window.location.host)) {
+        e.preventDefault();
+        tg.openLink(href);
+      }
+    }
+  }
+}, true);
+
 const state = {
   user: null,
   config: null,
@@ -595,13 +620,13 @@ async function loadTasks() {
 
       if (isCompleted) {
         return `
-          <div style="padding:14px; border-radius:14px; background:rgba(16, 185, 129, 0.08); border:1px solid rgba(16, 185, 129, 0.28); margin-bottom:12px; transition:all 0.2s ease;">
+          <div style="padding:14px; border-radius:14px; background:#f0fdf4; border:1.5px solid #bbf7d0; margin-bottom:12px; box-shadow:0 2px 8px rgba(15,23,42,0.03); transition:all 0.2s ease;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
               <div style="display:flex; align-items:center; gap:10px;">
                 <span style="font-size:1.6rem;">${t.icon || '📌'}</span>
                 <div>
-                  <div class="text-sm font-bold" style="color:#ffffff;">Task #${taskNum}: ${t.title}</div>
-                  <div class="text-xs" style="color:#10b981; font-weight:700;">💰 Reward: ${symbol}${rewardFormatted} ${currencyName}</div>
+                  <div class="text-sm font-bold" style="color:#0f172a;">Task #${taskNum}: ${t.title}</div>
+                  <div class="text-xs" style="color:#16a34a; font-weight:800;">💰 Reward: ${symbol}${rewardFormatted} ${currencyName}</div>
                 </div>
               </div>
               <span class="badge badge-approved" style="font-size:0.75rem; padding:4px 10px;">
@@ -609,8 +634,8 @@ async function loadTasks() {
               </span>
             </div>
             
-            <div style="background:rgba(16, 185, 129, 0.12); border:1px solid rgba(16, 185, 129, 0.25); border-radius:10px; padding:10px 12px; margin-top:8px; font-size:0.8rem; color:#a7f3d0; line-height:1.45;">
-              <div style="font-weight:700; color:#34d399; margin-bottom:2px;">
+            <div style="background:#dcfce7; border:1px solid #86efac; border-radius:10px; padding:10px 12px; margin-top:8px; font-size:0.8rem; color:#166534; line-height:1.45;">
+              <div style="font-weight:800; color:#15803d; margin-bottom:2px;">
                 ✅ Status: COMPLETED & REWARDED (+${symbol}${rewardFormatted})
               </div>
               <div>
@@ -620,11 +645,11 @@ async function loadTasks() {
 
             <div style="display:flex; gap:8px; margin-top:10px;">
               ${t.target_url ? `
-                <button class="btn btn-secondary btn-sm" style="flex:1; font-size:0.78rem; padding:7px 10px; opacity:0.85;" onclick="openTaskUrl('${t.target_url}')">
+                <button class="btn btn-secondary btn-sm" style="flex:1; font-size:0.78rem; padding:7px 10px;" onclick="openTaskUrl('${t.target_url}')">
                   ${t.task_type === 'channel_join' ? '📢 View Channel' : '🔗 View Link'}
                 </button>
               ` : ''}
-              <button class="btn btn-sm" disabled style="flex:1; font-size:0.78rem; padding:7px 10px; background:rgba(16, 185, 129, 0.2); color:#34d399; border:1px solid rgba(16, 185, 129, 0.4); cursor:default;">
+              <button class="btn btn-sm" disabled style="flex:1; font-size:0.78rem; padding:7px 10px; background:#dcfce7; color:#15803d; border:1px solid #86efac; cursor:default;">
                 ✅ Rewarded
               </button>
             </div>
@@ -633,13 +658,13 @@ async function loadTasks() {
       }
 
       return `
-        <div style="padding:14px; border-radius:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); margin-bottom:12px; transition:all 0.2s ease;">
+        <div style="padding:14px; border-radius:14px; background:#ffffff; border:1.5px solid #e2e8f0; margin-bottom:12px; box-shadow:0 2px 8px rgba(15,23,42,0.04); transition:all 0.2s ease;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
             <div style="display:flex; align-items:center; gap:10px;">
               <span style="font-size:1.6rem;">${t.icon || '📌'}</span>
               <div>
-                <div class="text-sm font-bold">Task #${taskNum}: ${t.title}</div>
-                <div class="text-xs" style="color:#60a5fa; font-weight:700;">💰 Reward: ${symbol}${rewardFormatted} ${currencyName}</div>
+                <div class="text-sm font-bold" style="color:#0f172a;">Task #${taskNum}: ${t.title}</div>
+                <div class="text-xs" style="color:#2563eb; font-weight:800;">💰 Reward: ${symbol}${rewardFormatted} ${currencyName}</div>
               </div>
             </div>
             <span class="badge badge-pending" style="font-size:0.75rem; padding:4px 10px;">
@@ -650,10 +675,10 @@ async function loadTasks() {
           <div class="text-xs text-muted" style="margin-bottom:8px; line-height:1.45;">
             ${desc}
             <br>
-            <span style="color:#cbd5e1;">After that click <b>Joined ☑️</b> button to verify and continue.</span>
+            <span style="color:#475569; font-weight:600;">After that click <b>Joined ☑️</b> button to verify and continue.</span>
           </div>
 
-          <div style="background:rgba(245, 158, 11, 0.08); border:1px solid rgba(245, 158, 11, 0.2); border-radius:8px; padding:6px 10px; margin-bottom:10px; font-size:0.72rem; color:#fde68a; line-height:1.35;">
+          <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:8px 10px; margin-bottom:10px; font-size:0.75rem; color:#92400e; line-height:1.35;">
             ⚠️ <b>Important:</b> Task will be checked and reviewed by our team carefully. Only real and verified completions will be rewarded.
           </div>
 
@@ -663,7 +688,7 @@ async function loadTasks() {
                 ${t.task_type === 'channel_join' ? '📌 Join Channel' : '🚀 Open Task'}
               </button>
             ` : ''}
-            <button class="btn btn-primary btn-sm" id="btn-task-${t.id}" style="flex:1; font-size:0.8rem; padding:8px 10px; background:linear-gradient(135deg, #10b981, #059669);" onclick="completeTaskAction('${t.id}')">
+            <button class="btn btn-primary btn-sm" id="btn-task-${t.id}" style="flex:1; font-size:0.8rem; padding:8px 10px;" onclick="completeTaskAction('${t.id}')">
               Joined ☑️
             </button>
           </div>
@@ -784,7 +809,7 @@ async function loadReferralData() {
           return `
             <div class="leaderboard-item ${rankClass}">
               <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; font-size:0.9rem; font-weight:bold;">
+                <div style="width:32px; height:32px; border-radius:50%; background:#f1f5f9; color:#0f172a; display:flex; align-items:center; justify-content:center; font-size:0.9rem; font-weight:bold;">
                   ${idx === 0 ? '👑' : (idx < 3 ? '⭐' : (idx + 1))}
                 </div>
                 <div>
@@ -792,7 +817,7 @@ async function loadReferralData() {
                   <div class="text-xs text-muted">${rankBadge}</div>
                 </div>
               </div>
-              <div class="text-sm font-bold text-white">${item.weekly_referrals || item.referral_count} invites</div>
+              <div class="text-sm font-bold" style="color:#0f172a;">${item.weekly_referrals || item.referral_count} invites</div>
             </div>
           `;
         }).join('');
@@ -949,14 +974,14 @@ async function loadWithdrawalHistory() {
       else if (item.status === 'rejected') badgeClass = 'badge-rejected';
 
       return `
-        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:14px; padding:12px; margin-bottom:10px;">
+        <div style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:14px; padding:12px 14px; margin-bottom:10px; box-shadow:0 2px 6px rgba(15,23,42,0.03);">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
             <span class="text-xs font-semibold text-muted">#${item.id}</span>
             <span class="badge ${badgeClass}">${item.status.toUpperCase()}</span>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-              <div class="text-base font-bold">${state.config?.currencySymbol || '₹'}${item.amount}</div>
+              <div class="text-base font-bold" style="color:#0f172a;">${state.config?.currencySymbol || '₹'}${item.amount}</div>
               <div class="text-xs text-muted">${item.wallet}</div>
             </div>
             <div class="text-xs text-muted">${new Date(item.created_at).toLocaleDateString()}</div>

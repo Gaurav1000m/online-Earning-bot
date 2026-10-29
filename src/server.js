@@ -968,6 +968,38 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'admin.html'));
 });
 
+// Legal & Google AdSense Policy Pages
+app.get('/privacy', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'privacy.html'));
+});
+app.get('/terms', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'terms.html'));
+});
+app.get('/about', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'about.html'));
+});
+app.get('/contact', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'contact.html'));
+});
+app.get('/disclaimer', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'disclaimer.html'));
+});
+
+// SEO & Google AdSense Verification Files
+app.get('/ads.txt', (req, res) => {
+  res.type('text/plain').sendFile(path.join(__dirname, '..', 'public', 'ads.txt'));
+});
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain').sendFile(path.join(__dirname, '..', 'public', 'robots.txt'));
+});
+app.get('/sitemap.xml', (req, res) => {
+  res.type('application/xml').sendFile(path.join(__dirname, '..', 'public', 'sitemap.xml'));
+});
+app.get('/sw.js', (req, res) => {
+  res.set('Service-Worker-Allowed', '/');
+  res.type('application/javascript').sendFile(path.join(__dirname, '..', 'public', 'sw.js'));
+});
+
 // Fallback to Mini App
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));

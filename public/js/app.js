@@ -78,6 +78,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.GigaPub.init(state.config.gigaPubProjectId).catch(() => {});
   }
 
+  // Register Service Worker for Monetag push notifications (sw.js)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+
   startTimers();
 
   // Handle URL deep links from Telegram Bot buttons (query, hash, or tg start_param)

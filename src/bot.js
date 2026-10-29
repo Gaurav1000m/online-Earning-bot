@@ -1539,10 +1539,6 @@ async function handleWatchAdsAction(ctx) {
   } else {
     keyboard.text('🎬 Open Ad', 'bot_watch_ad').row();
   }
-  const adsterraLink = config.adsterraSmartLink || 'https://arwf.org/4/ef8f2a6df3e5243a89a484add434af25';
-  keyboard.url('⚡ High Earning SmartLink', adsterraLink).row();
-  keyboard.url('🔥 Sponsor Offer 1', 'https://uplcm.com/4/11717959').row();
-  keyboard.url('💎 Sponsor Offer 2', 'https://uplcm.com/4/11717884');
 
   // Note: Open Mini App button removed as requested
   await sendTemplatedMessage(ctx, 'WATCH_AD_MESSAGE', variables, keyboard);

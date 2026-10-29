@@ -8,17 +8,11 @@
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   
+  <!-- Monetag Verification Meta Tag -->
+  <meta name="monetag" content="a24ab915786f5dfe0b600f54f207545a">
+
   <!-- GigaPub Ads SDK (Project ID: 8839) -->
   <script src="https://ad.gigapub.tech/script?id=8839"></script>
-  
-  <!-- LibTL Monetag Ad SDK -->
-  <script src="//libtl.com/sdk.js" data-zone="12128125" data-sdk="show_12128125"></script>
-
-  <!-- Adsterra Popunder Ad -->
-  <script data-cfasync="false" src="https://afders.org/1/b6262f40f50dda62da5b5aac789fcdb9"></script>
-
-  <!-- Adsterra Social Bar Ad -->
-  <script data-cfasync="false" src="https://bicea.org/14/348e9c67639db1ba7c32454c2b29b9c3"></script>
 
   <style>
     :root {
@@ -339,40 +333,6 @@
         <span>▶️ Watch Rewarded Ad (+₹5.00)</span>
       </button>
 
-      <!-- Adsterra SmartLink Direct Earning Card -->
-      <div class="smartlink-card">
-        <div class="smartlink-header">
-          <span class="smartlink-title">🔥 Adsterra SmartLink</span>
-          <span class="smartlink-badge">HIGH REVENUE</span>
-        </div>
-        <a href="https://arwf.org/4/ef8f2a6df3e5243a89a484add434af25" target="_blank" rel="noopener noreferrer" class="smartlink-btn">
-          <span>⚡ Visit High Earning SmartLink</span>
-        </a>
-
-        <!-- Extra Direct Sponsor Links -->
-        <div class="direct-links-grid">
-          <a href="https://uplcm.com/4/11717959" target="_blank" rel="noopener noreferrer" class="direct-link-pill">
-            <span>🚀 Sponsor Link 1</span>
-          </a>
-          <a href="https://uplcm.com/4/11717884" target="_blank" rel="noopener noreferrer" class="direct-link-pill">
-            <span>💎 Sponsor Link 2</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- Adsterra 300x250 Banner in Ad Player -->
-      <div style="display:flex; justify-content:center; overflow:hidden; border-radius:10px; margin-top:14px; background:rgba(0,0,0,0.2); padding:4px;">
-        <script type="text/javascript">
-          atOptions = {
-            'key' : 'd865c26aff9f89dd3c6230053011e636',
-            'format' : 'iframe',
-            'height' : 250,
-            'width' : 300,
-            'params' : {}
-          };
-        </script>
-        <script type="text/javascript" src="https://bicea.org/22/d865c26aff9f89dd3c6230053011e636"></script>
-      </div>
     </div>
 
     <!-- Completed & Return to Bot View -->
@@ -434,26 +394,6 @@
             console.warn('GigaPub ad was closed before completion:', e);
             if (statusText) {
               statusText.textContent = '⚠️ Ad was closed before completion. Watch the full ad to receive ₹5.00.';
-            }
-            if (watchAdBtn) {
-              watchAdBtn.disabled = false;
-              watchAdBtn.innerHTML = '▶️ Watch Rewarded Ad (+₹5.00)';
-            }
-          });
-        return;
-      }
-
-      // 2. Fallback to LibTL Rewarded Interstitial
-      if (typeof window.show_12128125 === 'function') {
-        window.show_12128125()
-          .then(async () => {
-            console.log('✅ LibTL ad completed successfully');
-            await handleAdCompletion();
-          })
-          .catch(e => {
-            console.warn('LibTL ad closed early:', e);
-            if (statusText) {
-              statusText.textContent = '⚠️ Ad was closed early. Complete the full ad to earn.';
             }
             if (watchAdBtn) {
               watchAdBtn.disabled = false;

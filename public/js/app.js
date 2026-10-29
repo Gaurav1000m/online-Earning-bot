@@ -78,24 +78,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.GigaPub.init(state.config.gigaPubProjectId).catch(() => {});
   }
 
-  // Initialize LibTL In-App Interstitial if available
-  if (typeof window.show_12128125 === 'function') {
-    try {
-      window.show_12128125({
-        type: 'inApp',
-        inAppSettings: {
-          frequency: 2,
-          capping: 0.1,
-          interval: 30,
-          timeout: 5,
-          everyPage: false
-        }
-      });
-    } catch (e) {
-      console.warn('LibTL inApp init error:', e);
-    }
-  }
-
   startTimers();
 
   // Handle URL deep links from Telegram Bot buttons (query, hash, or tg start_param)
@@ -515,13 +497,10 @@ async function handleWatchAd() {
       return;
     }
 
-    // 2. Call official GigaPub SDK (ID: 8839), fallback to LibTL
+    // 2. Call official GigaPub SDK (ID: 8839)
     const triggerAd = () => {
       if (typeof window.showGiga === 'function') {
         return window.showGiga();
-      }
-      if (typeof window.show_12128125 === 'function') {
-        return window.show_12128125();
       }
       if (window.GigaPub && typeof window.GigaPub.showRewardedAd === 'function') {
         return window.GigaPub.showRewardedAd();

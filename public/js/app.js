@@ -367,20 +367,30 @@ function startTimers() {
 
 // Navigation & Tab Switching
 function setupNavigation() {
-  document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.preventDefault();
-      const tab = item.getAttribute('data-tab');
+  const attachHandler = (el, getTab) => {
+    let handled = false;
+    const trigger = (e) => {
+      const tab = getTab();
       if (tab) switchTab(tab);
+    };
+
+    el.addEventListener('pointerdown', (e) => {
+      handled = true;
+      trigger(e);
+      setTimeout(() => { handled = false; }, 350);
     });
+
+    el.addEventListener('click', (e) => {
+      if (!handled) trigger(e);
+    });
+  };
+
+  document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
+    attachHandler(item, () => item.getAttribute('data-tab'));
   });
 
   document.querySelectorAll('[data-switch-tab]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const tab = btn.getAttribute('data-switch-tab');
-      if (tab) switchTab(tab);
-    });
+    attachHandler(btn, () => btn.getAttribute('data-switch-tab'));
   });
 }
 
@@ -405,9 +415,13 @@ function switchTab(tabId) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (_) {}
 
+  if (tabId === 'home') updateUserUI();
   if (tabId === 'earn') loadTasks();
   if (tabId === 'refer') loadReferralData();
-  if (tabId === 'wallet') loadWithdrawalHistory();
+  if (tabId === 'wallet') {
+    updateWithdrawalUI();
+    loadWithdrawalHistory();
+  }
 }
 window.switchTab = switchTab;
 
@@ -555,6 +569,13 @@ async function handleWatchAd() {
 async function loadTasks() {
   const container = document.getElementById('tasks-container-list');
   if (!container) return;
+
+  if (!container.children.length || container.innerText.includes('Loading')) {
+    container.innerHTML = `
+      <div class="skeleton" style="height:86px; margin-bottom:10px;"></div>
+      <div class="skeleton" style="height:86px; margin-bottom:10px;"></div>
+    `;
+  }
 
   const res = await apiRequest('/api/tasks/list');
   if (res.success && res.tasks) {
@@ -710,6 +731,15 @@ async function loadReferralData() {
   const { botLink } = getReferralLinks();
   const linkInput = document.getElementById('ref-link-display');
   if (linkInput) linkInput.value = botLink;
+
+  const leadEl = document.getElementById('leaderboard-list');
+  const listEl = document.getElementById('my-referrals-list');
+  if (leadEl && (!leadEl.children.length || leadEl.innerText.includes('Loading'))) {
+    leadEl.innerHTML = '<div class="skeleton" style="height:48px; margin-bottom:8px;"></div><div class="skeleton" style="height:48px; margin-bottom:8px;"></div>';
+  }
+  if (listEl && (!listEl.children.length || listEl.innerText.includes('Loading'))) {
+    listEl.innerHTML = '<div class="skeleton" style="height:48px; margin-bottom:8px;"></div>';
+  }
 
   const res = await apiRequest('/api/referrals/list');
   if (res.success) {
@@ -900,9 +930,17 @@ async function handleSubmitWithdrawal() {
 }
 
 async function loadWithdrawalHistory() {
-  const res = await apiRequest('/api/withdraw/history');
   const container = document.getElementById('withdrawal-history-list');
   if (!container) return;
+
+  if (!container.children.length || container.innerText.includes('Loading')) {
+    container.innerHTML = `
+      <div class="skeleton" style="height:60px; margin-bottom:8px;"></div>
+      <div class="skeleton" style="height:60px; margin-bottom:8px;"></div>
+    `;
+  }
+
+  const res = await apiRequest('/api/withdraw/history');
 
   if (res.success && res.history && res.history.length > 0) {
     container.innerHTML = res.history.map(item => {

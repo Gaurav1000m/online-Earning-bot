@@ -520,6 +520,7 @@ class Database {
         cloudUsers[uid] = { ...userData, id: uid };
       }
       this.data.users = { ...this.data.users, ...cloudUsers };
+      this.save();
 
       // 2. Fetch global state from MongoDB Atlas
       const stateCol = this.mongoDb.collection('state');
@@ -608,11 +609,44 @@ class Database {
 
     if (this.isMongoConnected && this.mongoDb) {
       try {
-        const doc = await this.mongoDb.collection('users').findOne({ _id: id });
+        const numId = !isNaN(Number(userId)) ? Number(userId) : null;
+        const query = {
+          $or: [
+            { _id: id },
+            { id: id }
+          ]
+        };
+        if (numId !== null) {
+          query.$or.push({ _id: numId }, { id: numId });
+        }
+        const doc = await this.mongoDb.collection('users').findOne(query);
         if (doc) {
           const { _id, ...userData } = doc;
-          this.data.users[id] = { ...this.data.users[id], ...userData, id };
-          return this.data.users[id];
+          const uid = String(doc.id || doc._id || id);
+          const bal = typeof userData.balance === 'number' ? userData.balance : parseFloat(userData.balance || 0);
+          const earned = typeof userData.total_earned === 'number' ? userData.total_earned : parseFloat(userData.total_earned || userData.lifetime_earnings || bal);
+          const lifeEarned = typeof userData.lifetime_earnings === 'number' ? userData.lifetime_earnings : parseFloat(userData.lifetime_earnings || earned);
+          const withdrawn = typeof userData.total_withdrawn === 'number' ? userData.total_withdrawn : parseFloat(userData.total_withdrawn || userData.lifetime_withdrawals || 0);
+
+          this.data.users[uid] = {
+            ...(this.data.users[uid] || {}),
+            ...userData,
+            id: uid,
+            balance: bal,
+            total_earned: earned,
+            lifetime_earnings: lifeEarned,
+            total_withdrawn: withdrawn,
+            lifetime_withdrawals: withdrawn,
+            referral_count: typeof userData.referral_count === 'number' ? userData.referral_count : parseInt(userData.referral_count || 0, 10),
+            weekly_referrals: typeof userData.weekly_referrals === 'number' ? userData.weekly_referrals : parseInt(userData.weekly_referrals || 0, 10),
+            ads_watched: typeof userData.ads_watched === 'number' ? userData.ads_watched : parseInt(userData.ads_watched || 0, 10),
+            wallet: userData.wallet || userData.wallet_upi || '',
+            wallet_upi: userData.wallet_upi || (userData.wallet && !userData.wallet.includes('@email') ? userData.wallet : ''),
+            wallet_paypal: userData.wallet_paypal || (userData.wallet && userData.wallet.includes('@email') ? userData.wallet : ''),
+            wallet_bank: userData.wallet_bank || null
+          };
+          this.save();
+          return this.data.users[uid];
         }
       } catch (err) {
         console.error(`⚠️ Error loading user ${id} from MongoDB:`, err.message);
@@ -693,7 +727,16 @@ class Database {
     const id = String(tgUser.id);
     const today = this.getTodayString();
 
-    if (!this.data.users[id]) {
+    let existingUser = this.data.users[id];
+    if (!existingUser) {
+      const altKey = Object.keys(this.data.users).find(k => String(k).trim() === id);
+      if (altKey) {
+        existingUser = this.data.users[altKey];
+        this.data.users[id] = existingUser;
+      }
+    }
+
+    if (!existingUser) {
       const referralCode = `ref_${id}`;
 
       let referredBy = null;

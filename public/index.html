@@ -135,32 +135,70 @@
       </div>
     </section>
 
-    <!-- Daily Streak Bonus Card -->
-    <section class="card" style="margin-bottom:18px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:1.6rem;">🎁</span>
+    <!-- Gamified Daily Streak Bonus Hub -->
+    <section class="card streak-hub-card" style="margin-bottom:18px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="streak-flame-icon">🔥</div>
           <div>
-            <div class="text-sm font-bold">Daily Streak Bonus</div>
-            <div class="text-xs text-muted">Current Streak: <b id="streak-days-count" class="text-primary">1</b> Days</div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <h2 class="text-base font-black" style="margin:0; color:#0f172a;">Daily Streak Hub</h2>
+              <span class="streak-badge-count">🔥 <b id="streak-days-count">1</b> Day</span>
+            </div>
+            <div class="text-xs text-muted" style="margin-top:2px;">Check in daily & grow rewards up to ₹35.00!</div>
           </div>
         </div>
-        <span id="bonus-timer-text" class="text-xs text-muted font-semibold">Ready to Claim</span>
+        <span id="bonus-timer-text" class="status-chip status-ready">✨ Ready</span>
       </div>
 
-      <!-- 7-Day Streak Pills (5, 10, 15, 20, 25, 30, 35) -->
-      <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; margin-bottom:14px; text-align:center;">
-        <div class="streak-pill" data-day="1"><div class="text-xs text-muted">D1</div><b style="font-size:0.75rem;">5</b></div>
-        <div class="streak-pill" data-day="2"><div class="text-xs text-muted">D2</div><b style="font-size:0.75rem;">10</b></div>
-        <div class="streak-pill" data-day="3"><div class="text-xs text-muted">D3</div><b style="font-size:0.75rem;">15</b></div>
-        <div class="streak-pill" data-day="4"><div class="text-xs text-muted">D4</div><b style="font-size:0.75rem;">20</b></div>
-        <div class="streak-pill" data-day="5"><div class="text-xs text-muted">D5</div><b style="font-size:0.75rem;">25</b></div>
-        <div class="streak-pill" data-day="6"><div class="text-xs text-muted">D6</div><b style="font-size:0.75rem;">30</b></div>
-        <div class="streak-pill" data-day="7"><div class="text-xs text-muted">D7</div><b style="font-size:0.75rem;">35</b></div>
+      <!-- Gamified 7-Day Rewards Ladder -->
+      <div class="streak-ladder-grid">
+        <div class="streak-day-card" data-day="1">
+          <div class="streak-day-badge">Day 1</div>
+          <div class="streak-day-icon">🪙</div>
+          <div class="streak-day-amount">+₹<b>5</b></div>
+          <div class="streak-status-dot"></div>
+        </div>
+        <div class="streak-day-card" data-day="2">
+          <div class="streak-day-badge">Day 2</div>
+          <div class="streak-day-icon">🪙</div>
+          <div class="streak-day-amount">+₹<b>10</b></div>
+          <div class="streak-status-dot"></div>
+        </div>
+        <div class="streak-day-card" data-day="3">
+          <div class="streak-day-badge">Day 3</div>
+          <div class="streak-day-icon">🪙</div>
+          <div class="streak-day-amount">+₹<b>15</b></div>
+          <div class="streak-status-dot"></div>
+        </div>
+        <div class="streak-day-card" data-day="4">
+          <div class="streak-day-badge">Day 4</div>
+          <div class="streak-day-icon">🪙</div>
+          <div class="streak-day-amount">+₹<b>20</b></div>
+          <div class="streak-status-dot"></div>
+        </div>
+        <div class="streak-day-card" data-day="5">
+          <div class="streak-day-badge">Day 5</div>
+          <div class="streak-day-icon">🪙</div>
+          <div class="streak-day-amount">+₹<b>25</b></div>
+          <div class="streak-status-dot"></div>
+        </div>
+        <div class="streak-day-card" data-day="6">
+          <div class="streak-day-badge">Day 6</div>
+          <div class="streak-day-icon">💎</div>
+          <div class="streak-day-amount">+₹<b>30</b></div>
+          <div class="streak-status-dot"></div>
+        </div>
+        <div class="streak-day-card streak-grand-day" data-day="7">
+          <div class="streak-day-badge">Day 7 👑</div>
+          <div class="streak-day-icon">🎁</div>
+          <div class="streak-day-amount">+₹<b>35</b></div>
+          <div class="streak-status-dot"></div>
+        </div>
       </div>
 
-      <button id="claim-bonus-btn" class="btn btn-success">
-        🎁 Claim Daily Bonus
+      <button id="claim-bonus-btn" class="btn btn-claim-bonus">
+        <span>🎁 Claim Daily Streak Bonus</span>
       </button>
     </section>
 
@@ -506,7 +544,21 @@
 
     <!-- Payout Method Selector -->
     <section class="card" style="margin-bottom:16px;">
-      <label class="text-xs text-muted" style="display:block; margin-bottom:8px;">Choose Withdrawal Method</label>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <label class="text-xs text-muted" style="font-weight:700;">Payout Destination</label>
+        <span id="linked-account-pill" class="badge badge-approved" style="display:none; font-size:0.7rem;">Saved in MongoDB</span>
+      </div>
+
+      <div id="linked-account-display" style="display:none; background:#f0fdf4; border:1.5px solid #bbf7d0; border-radius:12px; padding:10px 14px; margin-bottom:12px; font-size:0.8rem; color:#166534;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#15803d;">Active Linked Account</div>
+            <div id="linked-account-val" style="font-weight:800; font-size:0.92rem; margin-top:2px;"></div>
+          </div>
+          <span style="font-size:1.4rem;">✅</span>
+        </div>
+      </div>
+
       <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-bottom:12px;">
         <button class="btn btn-secondary btn-sm wd-tab-btn active" data-method="upi">🇮🇳 UPI</button>
         <button class="btn btn-secondary btn-sm wd-tab-btn" data-method="paypal">💳 PayPal</button>
@@ -570,27 +622,35 @@
   </main>
 
   <!-- ======================================================== -->
-  <!-- FLOATING BOTTOM NAVIGATION BAR -->
+  <!-- GOOGLE APPS MATERIAL YOU BOTTOM NAVIGATION BAR -->
   <!-- ======================================================== -->
   <nav class="bottom-nav">
     <div class="nav-item active" data-tab="home" onclick="switchTab('home')">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-      <span>Home</span>
+      <div class="nav-icon-wrapper">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      </div>
+      <span class="nav-label">Home</span>
     </div>
 
     <div class="nav-item" data-tab="earn" onclick="switchTab('earn')">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <span>Earn</span>
+      <div class="nav-icon-wrapper">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <span class="nav-label">Earn</span>
     </div>
 
     <div class="nav-item" data-tab="refer" onclick="switchTab('refer')">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-      <span>Refer</span>
+      <div class="nav-icon-wrapper">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      </div>
+      <span class="nav-label">Refer</span>
     </div>
 
     <div class="nav-item" data-tab="wallet" onclick="switchTab('wallet')">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-      <span>Wallet</span>
+      <div class="nav-icon-wrapper">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+      </div>
+      <span class="nav-label">Wallet</span>
     </div>
   </nav>
 

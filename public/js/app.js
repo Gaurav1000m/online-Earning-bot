@@ -59,7 +59,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   const tgUser = tg?.initDataUnsafe?.user;
   const paramUserId = urlParams.get('userId') || hashParams.get('userId') || tgUser?.id;
 
-  // Immediate preview of Telegram user info if available from SDK
+  // Immediate preview of Telegram user info if available from SDK or cached profile
+  try {
+    const cached = JSON.parse(localStorage.getItem('cached_user_profile') || 'null');
+    if (cached && (String(cached.id) === String(paramUserId) || !paramUserId)) {
+      state.user = cached;
+      updateUserUI();
+      updateWithdrawalUI();
+    }
+  } catch (_) {}
+
   if (tgUser) {
     const nameEl = document.getElementById('user-greeting-name');
     if (nameEl) nameEl.textContent = tgUser.first_name || 'User';
@@ -134,11 +143,13 @@ function showDemoBanner() {
 
 // API Fetch Helper
 async function apiRequest(endpoint, method = 'GET', body = null) {
+  const currentUid = String(state.user?.id || new URLSearchParams(window.location.search).get('userId') || tg?.initDataUnsafe?.user?.id || '');
   const options = {
     method,
     headers: {
       'Content-Type': 'application/json',
-      'x-telegram-init-data': state.initData
+      'x-telegram-init-data': state.initData,
+      'x-user-id': currentUid
     }
   };
   if (body) options.body = JSON.stringify(body);
@@ -169,6 +180,10 @@ async function syncUserData() {
     state.isAdmin = res.isAdmin;
     state.withdrawalEligibility = res.withdrawalEligibility;
 
+    try {
+      localStorage.setItem('cached_user_profile', JSON.stringify(res.user));
+    } catch (_) {}
+
     if (res.bonus) {
       state.nextClaimAt = res.bonus.nextClaimAt || 0;
       updateStreakLadder(res.bonus.streak, res.bonus.ladder);
@@ -194,30 +209,25 @@ function updateStreakLadder(currentStreak = 0, ladder = []) {
 
   const effectiveLadder = (ladder && ladder.length > 0) ? ladder : (state.bonusLadder || [5, 10, 15, 20, 25, 30, 35]);
 
-  document.querySelectorAll('.streak-pill').forEach(pill => {
-    const day = parseInt(pill.getAttribute('data-day'), 10);
-    const amtEl = pill.querySelector('b');
+  document.querySelectorAll('.streak-day-card, .streak-pill').forEach(card => {
+    const day = parseInt(card.getAttribute('data-day'), 10);
+    const amtEl = card.querySelector('b');
     if (amtEl && effectiveLadder[day - 1] !== undefined) {
       amtEl.textContent = effectiveLadder[day - 1];
     }
 
+    card.classList.remove('claimed', 'active-today', 'locked', 'completed', 'current');
+    const statusDot = card.querySelector('.streak-status-dot');
+
     if (day <= currentStreak) {
-      pill.classList.add('completed');
-      pill.classList.remove('current');
-      pill.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-      pill.style.color = '#ffffff';
-      pill.style.borderColor = '#10b981';
+      card.classList.add('claimed', 'completed');
+      if (statusDot) statusDot.innerHTML = '✓';
     } else if (day === currentStreak + 1) {
-      pill.classList.remove('completed');
-      pill.classList.add('current');
-      pill.style.background = 'rgba(59, 130, 246, 0.15)';
-      pill.style.color = '#60a5fa';
-      pill.style.borderColor = 'rgba(59, 130, 246, 0.4)';
+      card.classList.add('active-today', 'current');
+      if (statusDot) statusDot.innerHTML = 'TODAY';
     } else {
-      pill.classList.remove('completed', 'current');
-      pill.style.background = 'rgba(255,255,255,0.04)';
-      pill.style.color = 'var(--text-muted)';
-      pill.style.borderColor = 'rgba(255,255,255,0.08)';
+      card.classList.add('locked');
+      if (statusDot) statusDot.innerHTML = '🔒';
     }
   });
 }
@@ -290,6 +300,7 @@ function updateUserUI() {
 }
 
 function updateWithdrawalUI() {
+  const u = state.user || {};
   const elig = state.withdrawalEligibility || {
     eligible: false,
     requiredReferrals: 10,
@@ -299,6 +310,47 @@ function updateWithdrawalUI() {
     remainingReferrals: 10,
     remainingAds: 30
   };
+
+  // Pre-fill saved wallet / account details from MongoDB so data is never blank
+  const upiInput = document.getElementById('input-upi-id');
+  const paypalInput = document.getElementById('input-paypal-email');
+  const bankNameInput = document.getElementById('input-bank-name');
+  const bankAccInput = document.getElementById('input-bank-acc');
+  const bankIfscInput = document.getElementById('input-bank-ifsc');
+  const linkedAccountDisplay = document.getElementById('linked-account-display');
+  const linkedAccountPill = document.getElementById('linked-account-pill');
+  const linkedAccountVal = document.getElementById('linked-account-val');
+
+  if (upiInput && !upiInput.value) {
+    upiInput.value = u.wallet_upi || (u.wallet && !u.wallet.includes('@email') && !u.wallet.includes('A/C:') ? u.wallet : '');
+  }
+  if (paypalInput && !paypalInput.value) {
+    paypalInput.value = u.wallet_paypal || (u.wallet && (u.wallet.includes('@gmail') || u.wallet.includes('@yahoo') || u.wallet.includes('@outlook') || u.wallet.includes('@email')) ? u.wallet : '');
+  }
+  if (u.wallet_bank) {
+    if (typeof u.wallet_bank === 'object') {
+      if (bankNameInput && !bankNameInput.value) bankNameInput.value = u.wallet_bank.bank_name || '';
+      if (bankAccInput && !bankAccInput.value) bankAccInput.value = u.wallet_bank.account_number || '';
+      if (bankIfscInput && !bankIfscInput.value) bankIfscInput.value = u.wallet_bank.ifsc || '';
+    }
+  }
+
+  // Display active linked account banner if previously saved
+  let linkedText = u.wallet_upi || u.wallet_paypal;
+  if (!linkedText && u.wallet_bank) {
+    linkedText = typeof u.wallet_bank === 'object'
+      ? `${u.wallet_bank.bank_name || 'Bank'} (A/C: ${u.wallet_bank.account_number || ''})`
+      : String(u.wallet_bank);
+  }
+  if (!linkedText && u.wallet) {
+    linkedText = u.wallet;
+  }
+
+  if (linkedText && linkedAccountDisplay && linkedAccountVal) {
+    linkedAccountDisplay.style.display = 'block';
+    if (linkedAccountPill) linkedAccountPill.style.display = 'inline-block';
+    linkedAccountVal.textContent = linkedText;
+  }
 
   const lockCard = document.getElementById('wd-lock-card');
   const submitBtn = document.getElementById('submit-withdraw-btn');
@@ -358,16 +410,20 @@ function startTimers() {
 
     if (!state.nextClaimAt || now >= state.nextClaimAt) {
       btn.disabled = false;
-      timerText.textContent = 'Ready to Claim!';
-      timerText.className = 'text-xs text-success font-semibold';
+      btn.classList.remove('btn-disabled');
+      btn.innerHTML = '<span>🎁 Claim Daily Streak Bonus</span>';
+      timerText.textContent = '✨ Ready';
+      timerText.className = 'status-chip status-ready';
     } else {
       btn.disabled = true;
+      btn.classList.add('btn-disabled');
       const diffSec = Math.floor((state.nextClaimAt - now) / 1000);
       const hours = Math.floor(diffSec / 3600);
       const minutes = Math.floor((diffSec % 3600) / 60);
       const seconds = diffSec % 60;
-      timerText.textContent = `Claim in ${hours}h ${minutes}m ${seconds}s`;
-      timerText.className = 'text-xs text-muted font-semibold';
+      btn.innerHTML = `<span>⏳ Next Bonus in ${hours}h ${minutes}m ${seconds}s</span>`;
+      timerText.textContent = `⏳ ${hours}h ${minutes}m`;
+      timerText.className = 'status-chip status-waiting';
     }
   }, 1000);
 
@@ -509,7 +565,7 @@ async function handleClaimBonus() {
     if (res.nextClaimAt) state.nextClaimAt = res.nextClaimAt;
   }
 
-  btn.innerHTML = '🎁 Claim Daily Bonus';
+  btn.innerHTML = '<span>🎁 Claim Daily Streak Bonus</span>';
 }
 
 // 2. Watch Rewarded Ad with GigaPub Integration (window.showGiga)

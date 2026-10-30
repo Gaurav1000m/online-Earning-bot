@@ -286,77 +286,91 @@ body {
   font-weight: 500;
 }
 
-/* Redesigned Floating Bottom Navigation Bar (White + RGB Glow) */
+/* ======================================================== */
+/* GOOGLE APPS MATERIAL YOU (M3) BOTTOM NAVIGATION BAR      */
+/* ======================================================== */
 .bottom-nav {
   position: fixed;
-  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-  left: 14px;
-  right: 14px;
-  height: 68px;
-  background: var(--nav-bg);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  border: 1.5px solid rgba(226, 232, 240, 0.95);
-  border-radius: 32px;
-  box-shadow: var(--shadow-dock);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(72px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: #ffffff;
+  border-top: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.06);
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 0 8px;
   z-index: 999999 !important;
   pointer-events: auto !important;
   touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .nav-item {
   flex: 1;
-  height: 52px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 3px;
-  border-radius: 20px;
-  color: #64748b;
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: #475569;
   cursor: pointer;
-  user-select: none;
-  -webkit-user-select: none;
   position: relative;
   pointer-events: auto !important;
+  transition: transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-icon-wrapper {
+  width: 58px;
+  height: 32px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.22s cubic-bezier(0.2, 0, 0, 1);
+  background: transparent;
 }
 
 .nav-item svg {
   width: 22px;
   height: 22px;
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), stroke 0.2s ease;
-  stroke: #64748b;
+  stroke: #475569;
+  stroke-width: 2;
+  transition: stroke 0.2s ease, transform 0.2s ease;
 }
 
-.nav-item span {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.2px;
-  transition: color 0.2s ease;
+.nav-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15px;
+  color: #475569;
+  line-height: 1.1;
+  transition: color 0.2s ease, font-weight 0.2s ease;
 }
 
-.nav-item.active {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(6, 182, 212, 0.12));
+/* Material You Active State (Google Blue pill & icon) */
+.nav-item.active .nav-icon-wrapper {
+  background: #c2e7ff; /* Google M3 Active Pill Container */
+  transform: scale(1.02);
 }
 
 .nav-item.active svg {
-  transform: scale(1.15);
-  stroke: #2563eb;
-  filter: drop-shadow(0 2px 6px rgba(37, 99, 235, 0.45));
+  stroke: #001d35; /* Google M3 on-secondary-container */
+  stroke-width: 2.3;
 }
 
-.nav-item.active span {
-  color: #2563eb;
-  font-weight: 900;
+.nav-item.active .nav-label {
+  color: #0b57d0; /* Google Primary Blue */
+  font-weight: 800;
 }
 
 .nav-item:active {
-  transform: scale(0.92);
+  transform: scale(0.95);
 }
 
 /* Badges & Pills */
@@ -425,47 +439,212 @@ body {
   box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
 }
 
-/* 7-Day Streak Pills - Multicolor RGB Progression */
-.streak-pill {
+/* ======================================================== */
+/* GAMIFIED DAILY STREAK BONUS HUB & PROGRESSION LADDER     */
+/* ======================================================== */
+.streak-hub-card {
+  background: #ffffff;
+  border: 1.5px solid #fed7aa;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 6px 24px rgba(249, 115, 22, 0.08), 0 1px 3px rgba(15, 23, 42, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.streak-hub-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #f59e0b, #f97316, #ef4444);
+}
+
+.streak-flame-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ffedd5, #fee2e2);
+  border: 1.5px solid #fdba74;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
+  animation: flamePulse 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes flamePulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(249, 115, 22, 0.3)); }
+  100% { transform: scale(1.08); filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.5)); }
+}
+
+.streak-badge-count {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 9999px;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  transition: all 0.25s ease;
+}
+
+.status-chip.status-ready {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+  animation: readyPulse 2s infinite ease-in-out;
+}
+
+@keyframes readyPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.04); }
+}
+
+.status-chip.status-waiting {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.streak-ladder-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.streak-day-card {
   background: #ffffff;
   border: 1.5px solid #e2e8f0;
-  border-radius: var(--radius-md);
-  padding: 9px 4px;
-  transition: all 0.25s ease;
+  border-radius: 12px;
+  padding: 8px 2px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  justify-content: center;
+  text-align: center;
+  gap: 2px;
+  transition: all 0.22s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.streak-day-card .streak-day-num {
+  font-size: 0.62rem;
+  font-weight: 700;
   color: #64748b;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
 }
 
-.streak-pill.completed {
-  background: var(--success-gradient);
-  color: #ffffff;
-  border-color: #10b981;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+.streak-day-card .streak-icon-wrap {
+  font-size: 1.15rem;
+  margin: 3px 0;
+  line-height: 1;
+  transition: transform 0.2s ease;
 }
 
-.streak-pill.completed .text-muted {
-  color: rgba(255, 255, 255, 0.85) !important;
+.streak-day-card .streak-reward-val {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #0f172a;
 }
 
-.streak-pill.current {
-  background: var(--primary-gradient);
-  color: #ffffff;
-  border-color: #2563eb;
-  box-shadow: 0 0 16px rgba(37, 99, 235, 0.55);
-  animation: streakPulse 2s infinite ease-in-out;
+/* Claimed Day */
+.streak-day-card.claimed {
+  background: #f0fdf4;
+  border-color: #86efac;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.1);
 }
 
-.streak-pill.current .text-muted {
-  color: rgba(255, 255, 255, 0.85) !important;
+.streak-day-card.claimed .streak-day-num {
+  color: #16a34a;
 }
 
-@keyframes streakPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
+.streak-day-card.claimed .streak-reward-val {
+  color: #15803d;
+}
+
+/* Active Today */
+.streak-day-card.active-today {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2.5px rgba(59, 130, 246, 0.25), 0 4px 12px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+.streak-day-card.active-today .streak-day-num {
+  color: #2563eb;
+  font-weight: 800;
+}
+
+.streak-day-card.active-today .streak-icon-wrap {
+  transform: scale(1.15);
+}
+
+.streak-day-card.active-today .streak-reward-val {
+  color: #1d4ed8;
+  font-weight: 900;
+}
+
+/* Locked Day */
+.streak-day-card.locked {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  opacity: 0.72;
+}
+
+/* Grand Day (Day 7) */
+.streak-day-card.streak-grand-day {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-color: #f59e0b;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
+}
+
+.streak-day-card.streak-grand-day .streak-day-num {
+  color: #d97706;
+  font-weight: 800;
+}
+
+.streak-day-card.streak-grand-day .streak-reward-val {
+  color: #b45309;
+  font-weight: 900;
+}
+
+/* Claim Button */
+.btn-claim-bonus {
+  background: linear-gradient(135deg, #2563eb 0%, #06b6d4 50%, #10b981 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.32);
+  transition: transform 0.18s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.btn-claim-bonus:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn-claim-bonus.btn-disabled,
+.btn-claim-bonus:disabled {
+  background: #e2e8f0 !important;
+  color: #94a3b8 !important;
+  box-shadow: none !important;
+  border: 1.5px solid #cbd5e1 !important;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* Referral Section Enhancements */

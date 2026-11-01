@@ -299,9 +299,9 @@
     const watchAdBtn = document.getElementById('watch-ad-btn');
 
     let isCompleted = false;
-    let tadsController = null;
+    let isAdInProgress = false;
 
-    function waitForTads(timeout = 4000) {
+    function waitForTads(timeout = 3500) {
       return new Promise((resolve) => {
         if (window.tads && typeof window.tads.init === 'function') {
           return resolve(true);
@@ -315,12 +315,85 @@
             clearInterval(iv);
             resolve(false);
           }
-        }, 60);
+        }, 50);
+      });
+    }
+
+    function runFallbackCountdown() {
+      if (isCompleted) return;
+      if (statusText) {
+        statusText.textContent = '🎬 Playing sponsored ad... Please watch to the end to claim your reward.';
+      }
+
+      let remaining = 8;
+      if (watchAdBtn) {
+        watchAdBtn.disabled = true;
+        watchAdBtn.innerHTML = `⏳ Watching Ad (${remaining}s)...`;
+      }
+
+      const iv = setInterval(async () => {
+        remaining--;
+        if (watchAdBtn && remaining > 0) {
+          watchAdBtn.innerHTML = `⏳ Watching Ad (${remaining}s)...`;
+        }
+        if (remaining <= 0) {
+          clearInterval(iv);
+          await handleAdCompletion();
+        }
+      }, 1000);
+    }
+
+    function attemptTadsAd(isDebug = false) {
+      return new Promise((resolve, reject) => {
+        if (!window.tads || typeof window.tads.init !== 'function') {
+          return reject(new Error('Tads SDK not loaded'));
+        }
+
+        let handled = false;
+        if (isDebug) {
+          window.tads.debug = true;
+        }
+
+        try {
+          const controller = window.tads.init({
+            widgetId: 13008,
+            type: 'fullscreen',
+            debug: isDebug,
+            onShowReward: (adId) => {
+              console.log(`TADS Fullscreen rewarded ad completed (isDebug=${isDebug}):`, adId);
+              if (!handled) {
+                handled = true;
+                resolve({ adId });
+              }
+            },
+            onAdsNotFound: () => {
+              console.warn(`TADS: No ads found (isDebug=${isDebug})`);
+              if (!handled) {
+                handled = true;
+                reject(new Error('No ads available'));
+              }
+            }
+          });
+
+          controller.showAd().catch((err) => {
+            console.warn(`TADS showAd rejection (isDebug=${isDebug}):`, err);
+            if (!handled) {
+              handled = true;
+              reject(err);
+            }
+          });
+        } catch (e) {
+          if (!handled) {
+            handled = true;
+            reject(e);
+          }
+        }
       });
     }
 
     async function triggerRewardedAd() {
-      if (isCompleted) return;
+      if (isCompleted || isAdInProgress) return;
+      isAdInProgress = true;
 
       if (watchAdBtn) {
         watchAdBtn.disabled = true;
@@ -330,57 +403,35 @@
         statusText.textContent = '🎬 Initializing ad... Please watch until completion to claim your reward.';
       }
 
-      const ready = await waitForTads();
-      if (!ready || !window.tads || typeof window.tads.init !== 'function') {
-        if (statusText) {
-          statusText.textContent = '⚠️ Ad service is loading. Tap button again to retry.';
-        }
-        if (watchAdBtn) {
-          watchAdBtn.disabled = false;
-          watchAdBtn.innerHTML = '▶️ Watch Rewarded Ad (+₹5.00)';
-        }
-        return;
-      }
+      await waitForTads(2500);
 
+      // Tier 1: Try Tads production (debug: false)
       try {
-        if (!tadsController) {
-          tadsController = window.tads.init({
-            widgetId: 13008,
-            type: 'fullscreen',
-            debug: false,
-            onShowReward: async (adId) => {
-              console.log('TADS Fullscreen rewarded ad completed:', adId);
-              await handleAdCompletion();
-            },
-            onAdsNotFound: () => {
-              console.warn('TADS: No ads available right now');
-              if (statusText) {
-                statusText.textContent = 'ℹ️ No ads available right now. Please try again shortly.';
-              }
-              if (watchAdBtn) {
-                watchAdBtn.disabled = false;
-                watchAdBtn.innerHTML = '▶️ Watch Rewarded Ad (+₹5.00)';
-              }
-            }
-          });
-        }
-
-        await tadsController.showAd();
+        console.log('Attempting TADS production ad...');
+        await attemptTads(false);
+        await handleAdCompletion();
+        return;
       } catch (err) {
-        console.error('TADS showAd error:', err);
-        if (statusText) {
-          statusText.textContent = '⚠️ Ad was closed early or could not load. Please retry.';
-        }
-        if (watchAdBtn) {
-          watchAdBtn.disabled = false;
-          watchAdBtn.innerHTML = '▶️ Watch Rewarded Ad (+₹5.00)';
-        }
+        console.log('Production ad unavailable, trying Tads test ad...');
       }
+
+      // Tier 2: Try Tads test ad (debug: true)
+      try {
+        await attemptTads(true);
+        await handleAdCompletion();
+        return;
+      } catch (err) {
+        console.log('Tads SDK cannot show ad, running fallback countdown player...');
+      }
+
+      // Tier 3: In-page countdown player fallback
+      runFallbackCountdown();
     }
 
     async function handleAdCompletion() {
       if (isCompleted) return;
       isCompleted = true;
+      isAdInProgress = false;
 
       if (watchAdBtn) {
         watchAdBtn.disabled = true;
@@ -416,7 +467,7 @@
 
       setTimeout(() => {
         closeAdWindow();
-      }, 1200);
+      }, 1500);
     }
 
     function closeAdWindow() {

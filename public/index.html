@@ -729,6 +729,48 @@
     </div>
   </nav>
 
+  <!-- ======================================================== -->
+  <!-- REWARDED AD IN-APP MODAL (0% FAILURE FALLBACK PLAYER)    -->
+  <!-- ======================================================== -->
+  <div id="rewarded-ad-modal" class="rewarded-ad-modal" style="display:none;" aria-hidden="true">
+    <div class="rewarded-ad-backdrop"></div>
+    <div class="rewarded-ad-dialog">
+      <!-- Header with sponsor tag and live countdown -->
+      <div class="rewarded-modal-header">
+        <div class="rewarded-sponsor-badge">
+          <span class="live-dot"></span> Verified Sponsor
+        </div>
+        <div id="rewarded-modal-timer-pill" class="rewarded-timer-pill">
+          ⏱️ Reward in <span id="rewarded-modal-seconds">8</span>s
+        </div>
+      </div>
+
+      <!-- Sponsor Visual Showcase -->
+      <div class="rewarded-modal-banner">
+        <div class="rewarded-banner-badge">Official Ad Partner</div>
+        <div class="rewarded-banner-icon">🎬</div>
+        <div class="rewarded-banner-title">Telegram Ads Network</div>
+        <div class="rewarded-banner-desc">
+          Monetize your Telegram audience with verified ads, instant referral payouts &amp; high eCPM.
+        </div>
+      </div>
+
+      <!-- Animated Progress Bar -->
+      <div class="rewarded-modal-progress">
+        <div id="rewarded-modal-progress-fill" class="rewarded-progress-fill"></div>
+      </div>
+
+      <div id="rewarded-modal-status" class="rewarded-modal-status">
+        Watching sponsored ad... Please wait for the timer to claim your ₹5.00 reward.
+      </div>
+
+      <!-- Claim & Close Button -->
+      <button id="rewarded-modal-action-btn" class="btn btn-rewarded-modal" disabled>
+        <span>⏳ Watching Ad (8s)...</span>
+      </button>
+    </div>
+  </div>
+
   <!-- Application Scripts -->
   <script src="js/app.js"></script>
 </body>

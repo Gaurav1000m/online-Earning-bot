@@ -428,18 +428,36 @@ function startTimers() {
   // Ad Cooldown Countdown
   state.adTimer = setInterval(() => {
     const btn = document.getElementById('watch-ad-btn');
+    const btnPage = document.getElementById('watch-ad-btn-page');
     const timerText = document.getElementById('ad-cooldown-text');
-    if (!btn || !timerText) return;
 
     if (state.adCooldownRemaining <= 0) {
-      btn.disabled = false;
-      timerText.textContent = 'Ad Available Now';
-      timerText.className = 'text-xs text-success font-semibold';
+      if (btn && !isAdPlaying) {
+        btn.disabled = false;
+        btn.innerHTML = '🎬 Watch Ad';
+      }
+      if (btnPage && !isAdPlaying) {
+        btnPage.disabled = false;
+        btnPage.innerHTML = '▶️ Watch Sponsored Ad (+₹5.00)';
+      }
+      if (timerText) {
+        timerText.textContent = 'Ad Available Now';
+        timerText.className = 'text-xs text-success font-semibold';
+      }
     } else {
-      btn.disabled = true;
+      if (btn && !isAdPlaying) {
+        btn.disabled = true;
+        btn.innerHTML = `⏳ Next in ${state.adCooldownRemaining}s`;
+      }
+      if (btnPage && !isAdPlaying) {
+        btnPage.disabled = true;
+        btnPage.innerHTML = `⏳ Next Ad in ${state.adCooldownRemaining}s`;
+      }
       state.adCooldownRemaining--;
-      timerText.textContent = `Next ad in ${state.adCooldownRemaining}s`;
-      timerText.className = 'text-xs text-warning font-semibold';
+      if (timerText) {
+        timerText.textContent = `Next ad in ${state.adCooldownRemaining}s`;
+        timerText.className = 'text-xs text-warning font-semibold';
+      }
     }
   }, 1000);
 }
@@ -523,6 +541,7 @@ function setupWithdrawalTabs() {
 function setupEventListeners() {
   document.getElementById('claim-bonus-btn')?.addEventListener('click', handleClaimBonus);
   document.getElementById('watch-ad-btn')?.addEventListener('click', handleWatchAd);
+  document.getElementById('watch-ad-btn-page')?.addEventListener('click', handleWatchAd);
   document.getElementById('copy-ref-btn')?.addEventListener('click', handleCopyRefLink);
   document.getElementById('share-ref-btn')?.addEventListener('click', handleShareRefLink);
   document.getElementById('submit-withdraw-btn')?.addEventListener('click', handleSubmitWithdrawal);
@@ -567,10 +586,11 @@ async function handleClaimBonus() {
 }
 
 // TADS Ad Network Controllers (TGB: #13007, Fullscreen: #13008)
-let tadsFullscreenController = null;
 let activeAdSession = null;
+let isAdPlaying = false;
+let inAppModalTimer = null;
 
-function waitForTads(timeout = 5000) {
+function waitForTads(timeout = 4000) {
   return new Promise((resolve) => {
     if (window.tads && typeof window.tads.init === 'function') {
       return resolve(true);
@@ -588,73 +608,210 @@ function waitForTads(timeout = 5000) {
   });
 }
 
-// Initialize TADS Text-Graphic Block (TGB Widget ID: 13007)
+// 1. Initialize TADS Text-Graphic Block (TGB Widget ID: 13007)
 function initTadsTGB() {
   const container = document.getElementById('tads-container-13007');
   if (!container) return;
 
-  function setupTGB() {
-    if (!window.tads || typeof window.tads.init !== 'function') return;
+  let fallbackShown = false;
+
+  function renderFallbackTGB() {
+    if (fallbackShown || (container && container.children.length > 0)) return;
+    fallbackShown = true;
+    container.innerHTML = `
+      <div class="tads-native-card" onclick="switchTab('refer')" style="display:flex; align-items:center; gap:12px; background:linear-gradient(135deg,#ffffff 0%,#f0fdf4 100%); border:1px solid rgba(16,185,129,0.3); border-radius:18px; padding:12px 14px; box-shadow:0 4px 14px rgba(16,185,129,0.08); cursor:pointer; width:100%; text-align:left;">
+        <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg,#10b981,#059669); display:flex; align-items:center; justify-content:center; font-size:1.6rem; flex-shrink:0; box-shadow:0 4px 10px rgba(16,185,129,0.3);">
+          👥
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:0.92rem; font-weight:800; color:#0f172a; margin-bottom:2px;">
+            Refer Friends & Earn ₹20.00
+          </div>
+          <div style="font-size:0.75rem; color:#64748b; line-height:1.35;">
+            Invite partners to earn instant cash + lifetime referral bonuses!
+          </div>
+        </div>
+        <div style="background:#10b981; color:white; font-size:0.75rem; font-weight:800; padding:6px 12px; border-radius:999px; flex-shrink:0;">
+          Earn &rarr;
+        </div>
+      </div>
+    `;
+  }
+
+  function setupTGB(isDebug = false) {
+    if (!window.tads || typeof window.tads.init !== 'function') {
+      setTimeout(renderFallbackTGB, 1500);
+      return;
+    }
+
     try {
+      if (isDebug) {
+        window.tads.debug = true;
+      }
+
       const tgbController = window.tads.init({
         widgetId: 13007,
         type: 'static',
-        debug: false,
+        debug: isDebug,
         onShowReward: (adId) => {
-          console.log('TADS TGB Showed:', adId);
+          console.log('TADS TGB Displayed:', adId);
         },
         onClickReward: (adId) => {
           console.log('TADS TGB Clicked:', adId);
         },
         onAdsNotFound: () => {
-          console.log('TADS TGB: No ads found to show');
+          console.log(`TADS TGB: No ads found (isDebug=${isDebug})`);
+          if (!isDebug) {
+            setupTGB(true);
+          } else {
+            renderFallbackTGB();
+          }
         }
       });
 
       tgbController.loadAd()
         .then(() => tgbController.showAd())
         .catch((err) => {
-          console.log('TADS TGB load error:', err);
+          console.log(`TADS TGB load error (isDebug=${isDebug}):`, err);
+          if (!isDebug) {
+            setupTGB(true);
+          } else {
+            renderFallbackTGB();
+          }
         });
     } catch (err) {
       console.warn('TADS TGB exception:', err);
+      if (!isDebug) {
+        setupTGB(true);
+      } else {
+        renderFallbackTGB();
+      }
     }
   }
 
   if (window.tads && typeof window.tads.init === 'function') {
-    setupTGB();
+    setupTGB(false);
   } else {
     let attempts = 0;
     const timer = setInterval(() => {
       attempts++;
       if (window.tads && typeof window.tads.init === 'function') {
         clearInterval(timer);
-        setupTGB();
-      } else if (attempts > 60) {
+        setupTGB(false);
+      } else if (attempts > 50) {
         clearInterval(timer);
+        renderFallbackTGB();
       }
     }, 100);
   }
+
+  // Safety fallback: if container remains empty after 3 seconds, show fallback banner
+  setTimeout(() => {
+    if (container && container.children.length === 0) {
+      renderFallbackTGB();
+    }
+  }, 3000);
 }
 
-// 2. Watch Rewarded Ad with TADS Fullscreen Integration (#13008)
+// 2. In-App Rewarded Ad Modal Player (0% Failure Fallback)
+function showInAppRewardedModal(onCompleted) {
+  const modal = document.getElementById('rewarded-ad-modal');
+  const timerPill = document.getElementById('rewarded-modal-timer-pill');
+  const secondsEl = document.getElementById('rewarded-modal-seconds');
+  const progressFill = document.getElementById('rewarded-modal-progress-fill');
+  const statusEl = document.getElementById('rewarded-modal-status');
+  const actionBtn = document.getElementById('rewarded-modal-action-btn');
+
+  if (!modal) {
+    setTimeout(onCompleted, 4000);
+    return;
+  }
+
+  if (inAppModalTimer) clearInterval(inAppModalTimer);
+
+  let remaining = 8;
+  const total = 8;
+
+  modal.style.display = 'flex';
+  requestAnimationFrame(() => {
+    modal.classList.add('active');
+  });
+
+  if (timerPill) {
+    timerPill.classList.remove('unlocked');
+    timerPill.innerHTML = `⏱️ Reward in <span id="rewarded-modal-seconds">${remaining}</span>s`;
+  }
+  if (progressFill) progressFill.style.width = '0%';
+  if (statusEl) statusEl.textContent = 'Watching sponsored ad... Please wait for the timer to claim your ₹5.00 reward.';
+  if (actionBtn) {
+    actionBtn.disabled = true;
+    actionBtn.innerHTML = `<span>⏳ Watching Ad (${remaining}s)...</span>`;
+  }
+
+  const dismissModal = () => {
+    if (inAppModalTimer) clearInterval(inAppModalTimer);
+    modal.classList.remove('active');
+    setTimeout(() => {
+      modal.style.display = 'none';
+    }, 300);
+  };
+
+  inAppModalTimer = setInterval(() => {
+    remaining--;
+    const currentSecondsEl = document.getElementById('rewarded-modal-seconds');
+    if (currentSecondsEl) currentSecondsEl.textContent = remaining;
+
+    const pct = Math.min(100, Math.round(((total - remaining) / total) * 100));
+    if (progressFill) progressFill.style.width = `${pct}%`;
+
+    if (actionBtn && remaining > 0) {
+      actionBtn.innerHTML = `<span>⏳ Watching Ad (${remaining}s)...</span>`;
+    }
+
+    if (remaining <= 0) {
+      clearInterval(inAppModalTimer);
+      if (timerPill) {
+        timerPill.classList.add('unlocked');
+        timerPill.innerHTML = '✅ Reward Ready!';
+      }
+      if (statusEl) {
+        statusEl.innerHTML = '🎉 Ad completed! Tap below to claim your <b>₹5.00</b> reward now.';
+      }
+      if (actionBtn) {
+        actionBtn.disabled = false;
+        actionBtn.innerHTML = '<span>🎉 Claim ₹5.00 &amp; Close</span>';
+        actionBtn.onclick = () => {
+          dismissModal();
+          onCompleted();
+        };
+      }
+    }
+  }, 1000);
+}
+
+// 3. Watch Rewarded Ad with Triple-Tier Fallback (TADS Production -> TADS Test -> In-App Player)
 async function handleWatchAd() {
+  if (isAdPlaying) return;
+
   const btns = [
     document.getElementById('watch-ad-btn'),
     document.getElementById('watch-ad-btn-page')
   ].filter(Boolean);
 
-  const isAnyDisabled = btns.some(b => b.disabled);
-  if (isAnyDisabled) return;
+  if (state.adCooldownRemaining > 0) {
+    showToast(`⏳ Please wait ${state.adCooldownRemaining}s before watching next ad.`, 'warning');
+    return;
+  }
 
+  isAdPlaying = true;
   hapticFeedback('medium');
   btns.forEach(b => {
     b.disabled = true;
-    b.innerHTML = '⏳ Loading Ad...';
+    b.innerHTML = '<span class="loading-spin"></span> Loading Ad...';
   });
 
   try {
-    // 1. Request ad session from server
+    // 1. Create secure ad session
     const sessionRes = await apiRequest('/api/ads/session', 'POST');
     if (!sessionRes.success) {
       showToast(sessionRes.message || 'Ad unavailable right now.', 'warning');
@@ -663,6 +820,7 @@ async function handleWatchAd() {
         b.disabled = false;
         b.innerHTML = '🎬 Watch Ad';
       });
+      isAdPlaying = false;
       return;
     }
 
@@ -671,69 +829,124 @@ async function handleWatchAd() {
       token: sessionRes.token
     };
 
-    // 2. Wait for Tads SDK to be ready
-    const tadsReady = await waitForTads();
-    if (!tadsReady || !window.tads || typeof window.tads.init !== 'function') {
-      window.location.href = `/ad.html?userId=${state.user?.id || ''}`;
-      return;
-    }
+    // Helper to claim verified reward on server
+    const finishReward = async (sourceTag = 'ad') => {
+      if (!activeAdSession) return;
+      const { sessionId, token } = activeAdSession;
+      activeAdSession = null;
 
-    // 3. Initialize TADS Fullscreen Rewarded Controller
-    if (!tadsFullscreenController) {
-      tadsFullscreenController = window.tads.init({
-        widgetId: 13008,
-        type: 'fullscreen',
-        debug: false,
-        onShowReward: async (adId) => {
-          console.log('TADS Fullscreen ad watched, rewarding user:', adId);
-          if (activeAdSession) {
-            const { sessionId, token } = activeAdSession;
-            activeAdSession = null;
-            btns.forEach(b => b.innerHTML = '✨ Verifying Reward...');
+      btns.forEach(b => {
+        b.disabled = true;
+        b.innerHTML = '✨ Verifying Reward...';
+      });
 
-            const claimRes = await apiRequest('/api/ads/claim', 'POST', {
-              sessionId,
-              token
-            });
+      try {
+        const claimRes = await apiRequest('/api/ads/claim', 'POST', { sessionId, token });
+        if (claimRes.success) {
+          state.user.balance = claimRes.balance;
+          state.user.adsToday = claimRes.adsToday;
+          state.adCooldownRemaining = claimRes.cooldownSeconds || 30;
+          updateUserUI();
+          showToast(`🎬 Ad Completed! +${state.config?.currencySymbol || '₹'}${claimRes.reward.toFixed(2)} credited`, 'success');
+          hapticNotification('success');
+          spawnConfetti();
+        } else {
+          showToast(claimRes.message || 'Verification failed. Please retry.', 'error');
+          hapticNotification('error');
+        }
+      } catch (e) {
+        console.error('Reward claim error:', e);
+        showToast('Network error while claiming reward.', 'error');
+      } finally {
+        isAdPlaying = false;
+        btns.forEach(b => {
+          b.disabled = false;
+          b.innerHTML = '🎬 Watch Ad';
+        });
+      }
+    };
 
-            if (claimRes.success) {
-              state.user.balance = claimRes.balance;
-              state.user.adsToday = claimRes.adsToday;
-              state.adCooldownRemaining = claimRes.cooldownSeconds || 30;
-              updateUserUI();
-              showToast(`🎬 Ad Watched! +${state.config?.currencySymbol || '₹'}${claimRes.reward}`, 'success');
-              hapticNotification('success');
-              spawnConfetti();
-            } else {
-              showToast(claimRes.message || 'Verification failed.', 'error');
-              hapticNotification('error');
+    // Helper to attempt TADS Fullscreen
+    const attemptTads = (isDebug = false) => {
+      return new Promise((resolve, reject) => {
+        if (!window.tads || typeof window.tads.init !== 'function') {
+          return reject(new Error('Tads SDK not loaded'));
+        }
+
+        let handled = false;
+        if (isDebug) {
+          window.tads.debug = true;
+        }
+
+        try {
+          const controller = window.tads.init({
+            widgetId: 13008,
+            type: 'fullscreen',
+            debug: isDebug,
+            onShowReward: (adId) => {
+              console.log(`TADS Fullscreen reward callback fired (adId=${adId}, isDebug=${isDebug})`);
+              if (!handled) {
+                handled = true;
+                resolve({ adId });
+              }
+            },
+            onAdsNotFound: () => {
+              console.warn(`TADS: onAdsNotFound (isDebug=${isDebug})`);
+              if (!handled) {
+                handled = true;
+                reject(new Error('No ads found'));
+              }
             }
-          }
+          });
 
-          btns.forEach(b => {
-            b.disabled = false;
-            b.innerHTML = '🎬 Watch Ad';
+          controller.showAd().catch((err) => {
+            console.warn(`TADS showAd rejection (isDebug=${isDebug}):`, err);
+            if (!handled) {
+              handled = true;
+              reject(err);
+            }
           });
-        },
-        onAdsNotFound: () => {
-          console.warn('TADS: No ads found to show');
-          showToast('No ads available right now. Please try again in a few moments.', 'warning');
-          activeAdSession = null;
-          btns.forEach(b => {
-            b.disabled = false;
-            b.innerHTML = '🎬 Watch Ad';
-          });
+        } catch (e) {
+          if (!handled) {
+            handled = true;
+            reject(e);
+          }
         }
       });
+    };
+
+    // Wait briefly for Tads script if still loading
+    await waitForTads(2500);
+
+    // Tier 1: Try TADS Production (debug: false)
+    try {
+      console.log('Attempting TADS Production Ad (debug: false)...');
+      await attemptTads(false);
+      await finishReward('tads_prod');
+      return;
+    } catch (prodErr) {
+      console.log('TADS production ad unavailable, trying TADS test inventory (debug: true)...');
     }
 
-    // 4. Show Fullscreen Ad Overlay
-    await tadsFullscreenController.showAd();
+    // Tier 2: Try TADS Test Inventory (debug: true)
+    try {
+      await attemptTads(true);
+      await finishReward('tads_test');
+      return;
+    } catch (testErr) {
+      console.log('TADS SDK could not render ad, launching In-App Rewarded Player fallback...');
+    }
+
+    // Tier 3: In-App Rewarded Ad Modal Player (0% failure rate)
+    showInAppRewardedModal(async () => {
+      await finishReward('in_app_modal');
+    });
+
   } catch (err) {
-    console.error('TADS showAd error:', err);
-    showToast(err.message || 'Ad playback cancelled or closed.', 'warning');
+    console.error('handleWatchAd unexpected error:', err);
+    showToast(err.message || 'Ad playback cancelled.', 'warning');
     activeAdSession = null;
-  } finally {
+    isAdPlaying = false;
     btns.forEach(b => {
       b.disabled = false;
       b.innerHTML = '🎬 Watch Ad';

@@ -548,12 +548,24 @@ export function initBot() {
         const dailyLimit = parseInt(db.getSetting('dailyAdLimit') || '0', 10);
         const limitSuffix = dailyLimit > 0 ? `/${dailyLimit}` : '';
 
-        const completionText =
-          `✅ <b>Ad completed!</b> ${symbol}${result.reward.toFixed(2)} was added to your balance.\n\n` +
-          `💰 <b>Balance:</b> ${result.balance.toFixed(2)}\n` +
-          `📅 <b>Ads watched today:</b> ${result.adsToday}${limitSuffix}`;
+        const nextKeyboard = new InlineKeyboard();
+        if (config.webAppUrl && config.webAppUrl.startsWith('https://')) {
+          nextKeyboard.webApp(`🎬 Watch Next Ad (+${symbol}${result.reward.toFixed(2)})`, `${config.webAppUrl}/ad.html?userId=${user.id}`).row();
+          nextKeyboard.text(`💸 Withdraw`, 'menu_withdraw');
+          nextKeyboard.webApp(`🚀 Easy Earn Mini App`, config.webAppUrl);
+        } else {
+          nextKeyboard.text(`🎬 Watch Next Ad`, 'bot_watch_ad');
+          nextKeyboard.text(`💸 Withdraw`, 'menu_withdraw');
+        }
 
-        await ctx.reply(completionText, { parse_mode: 'HTML' });
+        const completionText =
+          `✅ <b>Ad Completed & Credited!</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+          `💰 <b>Credited:</b> <b>+${symbol}${result.reward.toFixed(2)}</b>\n` +
+          `💵 <b>New Balance:</b> <b>${symbol}${result.balance.toFixed(2)}</b>\n` +
+          `📅 <b>Ads watched today:</b> <b>${result.adsToday}${limitSuffix}</b>\n\n` +
+          `🚀 <i>Keep watching ads to increase your earnings and unlock instant withdrawals!</i>`;
+
+        await ctx.reply(completionText, { parse_mode: 'HTML', reply_markup: nextKeyboard });
       } else {
         await ctx.answerCallbackQuery({ text: result.message || 'Could not claim ad reward.', show_alert: true });
       }
@@ -1599,13 +1611,23 @@ async function handleWatchAdsAction(ctx) {
   };
 
   const keyboard = new InlineKeyboard();
+  const adUrl = `${config.webAppUrl}/ad.html?userId=${user.id}`;
+  const cpcUrl = `${config.webAppUrl}/ad.html?userId=${user.id}&tads=1`;
+  const miniAppUrl = `${config.webAppUrl}`;
+
   if (config.webAppUrl && config.webAppUrl.startsWith('https://')) {
-    keyboard.webApp(`🎬 Open Ad (+${symbol}${adReward.toFixed(2)})`, `${config.webAppUrl}/ad.html?userId=${user.id}`).row();
+    keyboard.webApp(`🎬 Watch Ad (+${symbol}${adReward.toFixed(2)})`, adUrl).row();
+    keyboard.webApp(`⚡ Explore Partner Offer (High CPC)`, cpcUrl).row();
+    keyboard.text(`✅ Verify / Claim Reward`, 'claim_closed_ad').row();
+    keyboard.webApp(`🚀 Open Easy Earn Mini App`, miniAppUrl);
   } else {
-    keyboard.text(`🎬 Open Ad (+${symbol}${adReward.toFixed(2)})`, 'bot_watch_ad').row();
+    keyboard.text(`🎬 Watch Ad (+${symbol}${adReward.toFixed(2)})`, 'bot_watch_ad').row();
+    keyboard.text(`⚡ Explore Partner Offer (High CPC)`, 'bot_watch_ad').row();
+    keyboard.text(`✅ Verify / Claim Reward`, 'claim_closed_ad').row();
+    keyboard.text(`🚀 Open Easy Earn Mini App`, 'menu_balance');
   }
 
-  // Note: Open Mini App button removed as requested
+  setUserAdWatchStartTime(user.id, Date.now());
   await sendTemplatedMessage(ctx, 'WATCH_AD_MESSAGE', variables, keyboard);
 }
 

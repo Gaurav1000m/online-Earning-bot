@@ -137,7 +137,7 @@
             needInvites: 'You need to invite at least 5 friends',
             completeAllTasks: 'Please complete all tasks first',
             needAds: 'You need to watch at least 80 ads',
-            shareText: 'Join PayPlus to earn money by watching short ads 📱\nThe easiest way to make $100 daily 💰',
+            shareText: 'Join Easy Earn to earn money by watching short ads 📱\nThe easiest way to make $100 daily 💰',
             // Validation
             validTRC20: 'Valid USDT TRC20 address',
             invalidTRC20: 'Invalid — TRC20 addresses start with T and are 34 characters',
@@ -169,7 +169,7 @@
             // Ban screen
             banBadge: '⚠ Account Suspended',
             banTitle: 'You Have Been Banned',
-            banDesc: 'Your account has been suspended by the admin due to a violation of our rules and community guidelines.<br><br>You can no longer access PayPlus Rewards.',
+            banDesc: 'Your account has been suspended by the admin due to a violation of our rules and community guidelines.<br><br>You can no longer access Easy Earn Rewards.',
             banBtn: 'Contact Support',
             // Withdrawal unlock sub-text
             withdrawUnlockSub: 'Complete the steps below to unlock your withdrawal.',
@@ -294,7 +294,7 @@
             needInvites: 'باید حداقل 5 دوست دعوت کنید',
             completeAllTasks: 'لطفاً ابتدا همه وظایف را تکمیل کنید',
             needAds: 'باید حداقل 80 آگهی تماشا کنید',
-            shareText: 'به PayPlus بپیوندید و با تماشای آگهی‌های کوتاه درآمد کسب کنید 📱\nآسان‌ترین راه برای کسب 100 دلار در روز 💰',
+            shareText: 'به Easy Earn بپیوندید و با تماشای آگهی‌های کوتاه درآمد کسب کنید 📱\nآسان‌ترین راه برای کسب 100 دلار در روز 💰',
             // Validation
             validTRC20: 'آدرس معتبر USDT TRC20',
             invalidTRC20: 'نامعتبر — آدرس‌های TRC20 با T شروع می‌شوند و 34 کاراکتر دارند',
@@ -326,7 +326,7 @@
             // Ban screen
             banBadge: '⚠ حساب معلق شد',
             banTitle: 'شما مسدود شده‌اید',
-            banDesc: 'حساب شما توسط مدیر به دلیل نقض قوانین و دستورالعمل‌های ما معلق شده است.<br><br>شما دیگر نمی‌توانید به PayPlus Rewards دسترسی داشته باشید.',
+            banDesc: 'حساب شما توسط مدیر به دلیل نقض قوانین و دستورالعمل‌های ما معلق شده است.<br><br>شما دیگر نمی‌توانید به Easy Earn Rewards دسترسی داشته باشید.',
             banBtn: 'تماس با پشتیبانی',
             // Withdrawal unlock sub-text
             withdrawUnlockSub: 'برای باز کردن قفل برداشت، مراحل زیر را کامل کنید.',
@@ -451,7 +451,7 @@
             needInvites: 'Necesitas invitar al menos a 5 amigos',
             completeAllTasks: 'Por favor completa todas las tareas primero',
             needAds: 'Necesitas ver al menos 80 anuncios',
-            shareText: 'Únete a PayPlus para ganar dinero viendo anuncios cortos 📱\nLa forma más fácil de ganar $100 diarios 💰',
+            shareText: 'Únete a Easy Earn para ganar dinero viendo anuncios cortos 📱\nLa forma más fácil de ganar $100 diarios 💰',
             // Validation
             validTRC20: 'Dirección USDT TRC20 válida',
             invalidTRC20: 'Inválida — las direcciones TRC20 comienzan con T y tienen 34 caracteres',
@@ -483,7 +483,7 @@
             // Ban screen
             banBadge: '⚠ Cuenta Suspendida',
             banTitle: 'Has Sido Bloqueado',
-            banDesc: 'Tu cuenta ha sido suspendida por el administrador debido a una violación de nuestras reglas y directrices de la comunidad.<br><br>Ya no puedes acceder a PayPlus Rewards.',
+            banDesc: 'Tu cuenta ha sido suspendida por el administrador debido a una violación de nuestras reglas y directrices de la comunidad.<br><br>Ya no puedes acceder a Easy Earn Rewards.',
             banBtn: 'Contactar soporte',
             // Withdrawal unlock sub-text
             withdrawUnlockSub: 'Completa los pasos a continuación para desbloquear tu retiro.',
@@ -608,7 +608,7 @@
             needInvites: 'تحتاج إلى دعوة 5 أصدقاء على الأقل',
             completeAllTasks: 'يرجى إكمال جميع المهام أولاً',
             needAds: 'تحتاج إلى مشاهدة 80 إعلانات على الأقل',
-            shareText: 'انضم إلى PayPlus لكسب المال بمشاهدة إعلانات قصيرة 📱\nأسهل طريقة لكسب $100 يوميًا 💰',
+            shareText: 'انضم إلى Easy Earn لكسب المال بمشاهدة إعلانات قصيرة 📱\nأسهل طريقة لكسب $100 يوميًا 💰',
             // Validation
             validTRC20: 'عنوان USDT TRC20 صالح',
             invalidTRC20: 'غير صالح — عناوين TRC20 تبدأ بـ T وطولها 34 حرفاً',
@@ -640,7 +640,7 @@
             // Ban screen
             banBadge: '⚠ حساب موقوف',
             banTitle: 'تم حظرك',
-            banDesc: 'تم تعليق حسابك من قبل المشرف بسبب انتهاك قواعدنا وإرشادات المجتمع.<br><br>لم يعد بإمكانك الوصول إلى PayPlus Rewards.',
+            banDesc: 'تم تعليق حسابك من قبل المشرف بسبب انتهاك قواعدنا وإرشادات المجتمع.<br><br>لم يعد بإمكانك الوصول إلى Easy Earn Rewards.',
             banBtn: 'التواصل مع الدعم',
             // Withdrawal unlock sub-text
             withdrawUnlockSub: 'أكمل الخطوات أدناه لفتح السحب.',
@@ -765,7 +765,7 @@
             needInvites: 'Vous devez inviter au moins 5 amis',
             completeAllTasks: 'Veuillez compléter toutes les tâches d\'abord',
             needAds: 'Vous devez regarder au moins 80 publicités',
-            shareText: 'Rejoignez PayPlus pour gagner de l\'argent en regardant des pubs courtes 📱\nLa façon la plus facile de gagner $100 par jour 💰',
+            shareText: 'Rejoignez Easy Earn pour gagner de l\'argent en regardant des pubs courtes 📱\nLa façon la plus facile de gagner $100 par jour 💰',
             // Validation
             validTRC20: 'Adresse USDT TRC20 valide',
             invalidTRC20: 'Invalide — les adresses TRC20 commencent par T et font 34 caractères',
@@ -797,7 +797,7 @@
             // Ban screen
             banBadge: '⚠ Compte Suspendu',
             banTitle: 'Vous Avez Été Bloqué',
-            banDesc: 'Votre compte a été suspendu par l\'administrateur en raison d\'une violation de nos règles et directives communautaires.<br><br>Vous ne pouvez plus accéder à PayPlus Rewards.',
+            banDesc: 'Votre compte a été suspendu par l\'administrateur en raison d\'une violation de nos règles et directives communautaires.<br><br>Vous ne pouvez plus accéder à Easy Earn Rewards.',
             banBtn: 'Contacter le support',
             // Withdrawal unlock sub-text
             withdrawUnlockSub: 'Complétez les étapes ci-dessous pour débloquer votre retrait.',
@@ -922,7 +922,7 @@
             needInvites: 'Нужно пригласить не менее 5 друзей',
             completeAllTasks: 'Пожалуйста, сначала выполните все задания',
             needAds: 'Нужно посмотреть не менее 80 реклам',
-            shareText: 'Присоединяйся к PayPlus и зарабатывай деньги, смотря короткую рекламу 📱\nСамый простой способ зарабатывать $100 в день 💰',
+            shareText: 'Присоединяйся к Easy Earn и зарабатывай деньги, смотря короткую рекламу 📱\nСамый простой способ зарабатывать $100 в день 💰',
             // Validation
             validTRC20: 'Адрес USDT TRC20 действителен',
             invalidTRC20: 'Недействителен — адреса TRC20 начинаются с T и содержат 34 символа',
@@ -954,7 +954,7 @@
             // Ban screen
             banBadge: '⚠ Аккаунт Заблокирован',
             banTitle: 'Вы Заблокированы',
-            banDesc: 'Ваш аккаунт был заблокирован администратором за нарушение наших правил и руководящих принципов сообщества.<br><br>Вы больше не можете получить доступ к PayPlus Rewards.',
+            banDesc: 'Ваш аккаунт был заблокирован администратором за нарушение наших правил и руководящих принципов сообщества.<br><br>Вы больше не можете получить доступ к Easy Earn Rewards.',
             banBtn: 'Связаться с поддержкой',
             // Withdrawal unlock sub-text
             withdrawUnlockSub: 'Выполните шаги ниже, чтобы разблокировать вывод средств.',
@@ -1079,7 +1079,7 @@
             needInvites: 'Você precisa convidar pelo menos 5 amigos',
             completeAllTasks: 'Por favor complete todas as tarefas primeiro',
             needAds: 'Você precisa assistir pelo menos 80 anúncios',
-            shareText: 'Junte-se ao PayPlus para ganhar dinheiro assistindo anúncios curtos 📱\nA maneira mais fácil de ganhar $100 por dia 💰',
+            shareText: 'Junte-se ao Easy Earn para ganhar dinheiro assistindo anúncios curtos 📱\nA maneira mais fácil de ganhar $100 por dia 💰',
             // Validation
             validTRC20: 'Endereço USDT TRC20 válido',
             invalidTRC20: 'Inválido — endereços TRC20 começam com T e têm 34 caracteres',
@@ -1111,7 +1111,7 @@
             // Ban screen
             banBadge: '⚠ Conta Suspensa',
             banTitle: 'Você Foi Bloqueado',
-            banDesc: 'Sua conta foi suspensa pelo administrador devido a uma violação das nossas regras e diretrizes da comunidade.<br><br>Você não pode mais acessar o PayPlus Rewards.',
+            banDesc: 'Sua conta foi suspensa pelo administrador devido a uma violação das nossas regras e diretrizes da comunidade.<br><br>Você não pode mais acessar o Easy Earn Rewards.',
             banBtn: 'Contactar suporte',
             // Withdrawal unlock sub-text
             withdrawUnlockSub: 'Complete as etapas abaixo para desbloquear seu saque.',
@@ -1236,7 +1236,7 @@
             needInvites: 'आपको कम से कम 5 दोस्तों को आमंत्रित करना होगा',
             completeAllTasks: 'पहले सभी कार्य पूरे करें',
             needAds: 'आपको कम से कम 80 विज्ञापन देखने होंगे',
-            shareText: 'PayPlus से जुड़ें और छोटे वीडियो विज्ञापन देखकर पैसे कमाएं 📱\nरोज़ $100 कमाने का सबसे आसान तरीका 💰',
+            shareText: 'Easy Earn से जुड़ें और छोटे वीडियो विज्ञापन देखकर पैसे कमाएं 📱\nरोज़ $100 कमाने का सबसे आसान तरीका 💰',
             // Validation
             validTRC20: 'USDT TRC20 पता मान्य है',
             invalidTRC20: 'अमान्य — TRC20 पते T से शुरू होते हैं और 34 अक्षर लंबे होते हैं',
@@ -1268,7 +1268,7 @@
             // Ban screen
             banBadge: '⚠ खाता निलंबित',
             banTitle: 'आपको ब्लॉक कर दिया गया है',
-            banDesc: 'हमारे नियमों और सामुदायिक दिशा-निर्देशों के उल्लंघन के कारण प्रशासक द्वारा आपका खाता निलंबित कर दिया गया है।<br><br>आप अब PayPlus Rewards तक पहुंच नहीं सकते।',
+            banDesc: 'हमारे नियमों और सामुदायिक दिशा-निर्देशों के उल्लंघन के कारण प्रशासक द्वारा आपका खाता निलंबित कर दिया गया है।<br><br>आप अब Easy Earn Rewards तक पहुंच नहीं सकते।',
             banBtn: 'सहायता से संपर्क करें',
             // Withdrawal unlock sub-text
             withdrawUnlockSub: 'निकासी अनलॉक करने के लिए नीचे दिए गए चरण पूरे करें।',
@@ -1393,7 +1393,7 @@
             needInvites: 'Anda perlu mengundang setidaknya 5 teman',
             completeAllTasks: 'Harap selesaikan semua tugas terlebih dahulu',
             needAds: 'Anda perlu menonton setidaknya 80 iklan',
-            shareText: 'Bergabunglah ke PayPlus dan hasilkan uang dengan menonton iklan pendek 📱\nCara termudah untuk menghasilkan $100 per hari 💰',
+            shareText: 'Bergabunglah ke Easy Earn dan hasilkan uang dengan menonton iklan pendek 📱\nCara termudah untuk menghasilkan $100 per hari 💰',
             // Validation
             validTRC20: 'Alamat USDT TRC20 valid',
             invalidTRC20: 'Tidak valid — alamat TRC20 dimulai dengan T dan memiliki 34 karakter',
@@ -1425,7 +1425,7 @@
             // Ban screen
             banBadge: '⚠ Akun Ditangguhkan',
             banTitle: 'Anda Telah Diblokir',
-            banDesc: 'Akun Anda telah ditangguhkan oleh administrator karena melanggar aturan dan pedoman komunitas kami.<br><br>Anda tidak lagi dapat mengakses PayPlus Rewards.',
+            banDesc: 'Akun Anda telah ditangguhkan oleh administrator karena melanggar aturan dan pedoman komunitas kami.<br><br>Anda tidak lagi dapat mengakses Easy Earn Rewards.',
             banBtn: 'Hubungi dukungan',
             // Withdrawal unlock sub-text
             withdrawUnlockSub: 'Selesaikan langkah-langkah di bawah untuk membuka penarikan Anda.',
@@ -1550,7 +1550,7 @@
             needInvites: 'En az 5 arkadaş davet etmeniz gerekiyor',
             completeAllTasks: 'Lütfen önce tüm görevleri tamamlayın',
             needAds: 'En az 80 reklam izlemeniz gerekiyor',
-            shareText: 'PayPlus\'a katılın ve kısa video reklamları izleyerek para kazanın 📱\nGünde $100 kazanmanın en kolay yolu 💰',
+            shareText: 'Easy Earn\'a katılın ve kısa video reklamları izleyerek para kazanın 📱\nGünde $100 kazanmanın en kolay yolu 💰',
             // Validation
             validTRC20: 'USDT TRC20 adresi geçerli',
             invalidTRC20: 'Geçersiz — TRC20 adresleri T ile başlar ve 34 karakter uzunluğundadır',
@@ -1582,7 +1582,7 @@
             // Ban screen
             banBadge: '⚠ Hesap Askıya Alındı',
             banTitle: 'Engellendiniz',
-            banDesc: 'Hesabınız, kurallarımızı ve topluluk yönergelerimizi ihlal ettiğiniz için yönetici tarafından askıya alınmıştır.<br><br>PayPlus Rewards\'a artık erişemezsiniz.',
+            banDesc: 'Hesabınız, kurallarımızı ve topluluk yönergelerimizi ihlal ettiğiniz için yönetici tarafından askıya alınmıştır.<br><br>Easy Earn Rewards\'a artık erişemezsiniz.',
             banBtn: 'Destekle iletişime geç',
             // Withdrawal unlock sub-text
             withdrawUnlockSub: 'Çekiminizin kilidini açmak için aşağıdaki adımları tamamlayın.',
@@ -2077,16 +2077,22 @@
 
             renderTasks(data.completedChannels || [], data.completedBots || [], data.completedYoutube || []);
 
-            // Invite link — fetch bot username dynamically
+            // Invite link & support — fetch bot info dynamically
             (async () => {
-                let botUsername = 'AiMusicCreaterBot';
+                let botUsername = 'easyandfastearn_bot';
+                let supportHandle = 'gaurav_tnwr00';
                 try {
                     const bi = await fetch('/api/bot-info');
                     const bd = await bi.json();
                     if (bd.username) botUsername = bd.username;
+                    if (bd.support) supportHandle = bd.support;
                 } catch (e) {}
                 document.getElementById('inviteLink').textContent =
                     `https://t.me/${botUsername}/app?startapp=${data.telegramId}`;
+                const supportLink = document.querySelector('.support-btn');
+                if (supportLink) supportLink.href = `https://t.me/${supportHandle}`;
+                const banBtn = document.getElementById('banBtn');
+                if (banBtn) banBtn.href = `https://t.me/${supportHandle}`;
             })();
 
             document.getElementById('totalInvites').textContent = data.totalInvites || 0;
@@ -2185,7 +2191,7 @@
         }
 
         // YouTube
-        const ytChannels = [{ id: 'kaliboy002_yt', url: 'https://www.youtube.com/@PayPlusNews' }];
+        const ytChannels = [{ id: 'easyearn_channel', url: 'https://t.me/allinonemodz4u' }];
         document.getElementById('ytProgressCount').textContent = `${youtubeDone} / ${ytChannels.length}`;
         document.getElementById('ytProgressBar').style.width   = `${(youtubeDone / ytChannels.length) * 100}%`;
         const ytBtn = document.getElementById('subscribeYoutubeBtn');
@@ -2224,7 +2230,7 @@
                 renderTasks(
                     channels.slice(0, channelsDone).map(c => c.id),
                     bots.slice(0, botsDone).map(b => b.id),
-                    Array(youtubeDone).fill('kaliboy002_yt')
+                    Array(youtubeDone).fill('easyearn_channel')
                 );
             } else {
                 showToast(t('allYoutubeDone'));

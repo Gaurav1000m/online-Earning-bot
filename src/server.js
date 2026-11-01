@@ -618,28 +618,32 @@ app.post('/api/user', async (req, res) => {
   }
 });
 
-// 2. PayPlus Bot Info
+// 2. Easy Earn Bot Info
 app.get('/api/bot-info', (req, res) => {
   const activeBot = getBot();
   const username = activeBot?.botInfo?.username || config.botUsername || 'easyandfastearn_bot';
-  res.json({ username: username.replace(/^@/, '') });
+  res.json({
+    username: username.replace(/^@/, ''),
+    support: 'gaurav_tnwr00',
+    channel: 'allinonemodz4u'
+  });
 });
 
-// 3. PayPlus Tasks Config
+// 3. Easy Earn Tasks Config
 app.get('/api/tasks-config', (req, res) => {
   const allChannels = db.getChannels().map((c, i) => ({
-    id: `chan_${i + 1}`,
-    username: c.username ? c.username.replace(/^@/, '') : 'easyandfastearn',
-    title: c.title || 'Official Channel'
+    id: c.id || `chan_${i + 1}`,
+    username: c.username ? c.username.replace(/^@/, '') : 'allinonemodz4u',
+    title: c.name || c.title || 'Official Channel'
   }));
 
   const defaultBots = [
-    { id: 'bot_1', username: 'Dollar_EarningBot', title: 'Dollar Earning Bot' },
-    { id: 'bot_2', username: 'FreeCashRewardsBot', title: 'Free Cash Rewards' }
+    { id: 'bot_1', username: 'easyandfastearn_bot', title: 'Easy Earn Bot' },
+    { id: 'bot_2', username: 'Dollar_EarningBot', title: 'Dollar Earning Bot' }
   ];
 
   res.json({
-    channels: allChannels.length > 0 ? allChannels : [{ id: 'chan_1', username: 'tadsagency', title: 'Official Channel' }],
+    channels: allChannels.length > 0 ? allChannels : [{ id: 'chan_allinonemodz', username: 'allinonemodz4u', title: 'Official Channel' }],
     bots: defaultBots
   });
 });

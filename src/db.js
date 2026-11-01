@@ -67,7 +67,7 @@ export const DEFAULT_TEMPLATES = {
     inline_buttons: []
   },
   WATCH_AD_MESSAGE: {
-    text: `🎬 <b>Watch & Explore Ads</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n💰 <b>Reward:</b> <b>+{{currency_symbol}}{{ad_reward}}</b> per ad\n⚡ <b>Rule:</b> Tap <b>"🎬 Open Ad"</b> below, stay on the sponsor page for <b>10 seconds</b>, and your balance is credited instantly!\n\n📊 <b>Ads watched today:</b> {{ads_today_display}}\n\n👇 Tap below to start:`,
+    text: `🎬 <b>Watch Ads & Earn Cash</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n💰 <b>Reward per Ad:</b> <b>+{{currency_symbol}}{{ad_reward}}</b>\n📊 <b>Ads Watched Today:</b> {{ads_today_display}}\n\n⚡ <b>Instructions:</b>\n1️⃣ Tap <b>"🎬 Watch Ad"</b> below to view sponsor ads.\n2️⃣ Explore the advertiser site for <b>10 seconds</b>.\n3️⃣ Return to claim your reward instantly!\n\n💡 <i>Tip: Explore high CPC partner offers for maximum revenue.</i>`,
     media_type: 'none',
     media_url: '',
     inline_buttons: []

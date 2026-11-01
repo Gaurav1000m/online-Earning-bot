@@ -53,6 +53,15 @@
   --radius-lg: 16px;
   --radius-md: 12px;
   --radius-sm: 8px;
+
+  /* Telegram Theme Variable Overrides (guarantees external SDKs like TADS render clean light backgrounds) */
+  --tg-theme-bg-color: #ffffff;
+  --tg-theme-secondary-bg-color: #f1f5f9;
+  --tg-theme-text-color: #0f172a;
+  --tg-theme-hint-color: #64748b;
+  --tg-theme-link-color: #2563eb;
+  --tg-theme-button-color: #2563eb;
+  --tg-theme-button-text-color: #ffffff;
 }
 
 * {
@@ -1044,21 +1053,21 @@ div[id*='tads-container-'] .tads-text {
 .rewarded-ad-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
 }
 
 .rewarded-ad-dialog {
   position: relative;
   z-index: 2;
-  background: #ffffff;
+  background: #ffffff !important;
   border-radius: 28px;
   padding: 24px 20px;
   width: 100%;
   max-width: 380px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
-  border: 1.5px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 25px 60px rgba(37, 99, 235, 0.18) !important;
+  border: 1.5px solid rgba(226, 232, 240, 0.9) !important;
   text-align: center;
   transform: scale(0.92);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1126,12 +1135,13 @@ div[id*='tads-container-'] .tads-text {
 }
 
 .rewarded-modal-banner {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border-radius: 20px;
-  padding: 20px 16px;
-  color: white;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #f0fdf4 100%) !important;
+  border: 2px solid #3b82f6 !important;
+  border-radius: 22px !important;
+  padding: 22px 18px !important;
+  color: #0f172a !important;
   margin-bottom: 16px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.2);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.12) !important;
   position: relative;
   overflow: hidden;
 }
@@ -1144,40 +1154,41 @@ div[id*='tads-container-'] .tads-text {
   width: 140px;
   height: 140px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.4) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, transparent 70%) !important;
 }
 
 .rewarded-banner-badge {
   display: inline-block;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  padding: 3px 10px;
+  background: #2563eb !important;
+  padding: 4px 12px;
   border-radius: 999px;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  color: #93c5fd;
+  color: #ffffff !important;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
 .rewarded-banner-icon {
-  font-size: 2.8rem;
+  font-size: 3rem;
   margin-bottom: 8px;
-  filter: drop-shadow(0 4px 12px rgba(37, 99, 235, 0.5));
+  filter: drop-shadow(0 4px 12px rgba(37, 99, 235, 0.3));
 }
 
 .rewarded-banner-title {
-  font-size: 1.15rem;
-  font-weight: 900;
-  color: #ffffff;
-  margin-bottom: 6px;
+  font-size: 1.22rem !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+  margin-bottom: 6px !important;
 }
 
 .rewarded-banner-desc {
-  font-size: 0.8rem;
-  color: #cbd5e1;
-  line-height: 1.45;
+  font-size: 0.84rem !important;
+  color: #334155 !important;
+  line-height: 1.45 !important;
+  font-weight: 500 !important;
 }
 
 .rewarded-modal-progress {
@@ -1198,10 +1209,11 @@ div[id*='tads-container-'] .tads-text {
 }
 
 .rewarded-modal-status {
-  font-size: 0.78rem;
-  color: #64748b;
+  font-size: 0.82rem !important;
+  color: #475569 !important;
   margin-bottom: 18px;
-  line-height: 1.4;
+  line-height: 1.45;
+  font-weight: 600;
 }
 
 .btn-rewarded-modal {
@@ -1233,4 +1245,134 @@ div[id*='tads-container-'] .tads-text {
   50% { transform: scale(1.02); }
   100% { transform: scale(1); }
 }
+
+/* ======================================================== */
+/* TADS FULLSCREEN REWARDED AD OVERLAY (CLEAN LIGHT THEME)  */
+/* Eliminates dark black / transparent background completely */
+/* ======================================================== */
+body > .tads,
+div.tads {
+  background-color: #f1f5f9 !important;
+  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%) !important;
+  color: #0f172a !important;
+  opacity: 1 !important;
+  z-index: 2147483647 !important;
+}
+
+body > .tads::before,
+div.tads::before {
+  opacity: 0.12 !important;
+  background: url('https://telegram.org/img/tgme/pattern.svg') repeat !important;
+}
+
+div.tads .tads-container,
+body > .tads .tads-container {
+  width: 90% !important;
+  max-width: 400px !important;
+  margin: auto !important;
+  filter: drop-shadow(0 20px 35px rgba(15, 23, 42, 0.18)) !important;
+}
+
+div.tads .tads-wrapper,
+body > .tads .tads-wrapper {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-radius: 24px 24px 0 0 !important;
+  border: 1.5px solid rgba(226, 232, 240, 0.9) !important;
+  border-bottom: none !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+  overflow: hidden !important;
+}
+
+div.tads .tads-image,
+body > .tads .tads-image {
+  width: 100% !important;
+  max-height: 220px !important;
+  object-fit: cover !important;
+  border-radius: 24px 24px 0 0 !important;
+  background: #f8fafc !important;
+}
+
+div.tads .tads-title,
+body > .tads .tads-title {
+  padding: 14px 16px 6px !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  line-height: 1.35 !important;
+}
+
+div.tads .tads-text,
+body > .tads .tads-text {
+  padding: 0 16px 14px !important;
+  font-size: 0.9rem !important;
+  color: #334155 !important;
+  line-height: 1.45 !important;
+}
+
+div.tads .tads-ads,
+body > .tads .tads-ads {
+  padding: 0 16px 10px !important;
+  font-size: 0.72rem !important;
+  color: #94a3b8 !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+div.tads .tads-btn,
+body > .tads .tads-btn {
+  background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+  color: #ffffff !important;
+  font-size: 1.1rem !important;
+  font-weight: 800 !important;
+  line-height: 52px !important;
+  border-radius: 0 0 24px 24px !important;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4) !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: transform 0.15s ease, filter 0.15s ease !important;
+}
+
+div.tads .tads-btn:active,
+body > .tads .tads-btn:active {
+  transform: scale(0.98) !important;
+  filter: brightness(0.95) !important;
+}
+
+div.tads .tads-countdown,
+body > .tads .tads-countdown {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  padding: 5px 14px !important;
+  border-radius: 999px !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+}
+
+div.tads .tads-company a,
+body > .tads .tads-company a {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #2563eb !important;
+  border: 1px solid #bfdbfe !important;
+  font-weight: 700 !important;
+  padding: 5px 14px !important;
+  border-radius: 999px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+div.tads .tads-close-wrapper,
+body > .tads .tads-close-wrapper {
+  background: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
+}
+
+div.tads .tads-close,
+body > .tads .tads-close {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  font-weight: 900 !important;
+}
+
 

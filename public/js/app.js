@@ -49,9 +49,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       tg.ready();
       tg.expand();
       if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
+      if (tg.setHeaderColor) tg.setHeaderColor('#ffffff');
+      if (tg.setBackgroundColor) tg.setBackgroundColor('#f8fafc');
     } catch (e) {
       console.warn('Telegram WebApp SDK init warning:', e);
     }
+    try {
+      document.documentElement.style.setProperty('--tg-theme-bg-color', '#ffffff');
+      document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', '#f1f5f9');
+      document.documentElement.style.setProperty('--tg-theme-text-color', '#0f172a');
+      document.documentElement.style.setProperty('--tg-theme-button-color', '#2563eb');
+      document.documentElement.style.setProperty('--tg-theme-button-text-color', '#ffffff');
+    } catch (_) {}
   }
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -513,7 +522,10 @@ function switchTab(tabId) {
   } catch (_) {}
 
   if (tabId === 'home') updateUserUI();
-  if (tabId === 'earn') loadTasks();
+  if (tabId === 'earn') {
+    loadTasks();
+    initTadsTGB();
+  }
   if (tabId === 'refer') loadReferralData();
   if (tabId === 'wallet') {
     updateWithdrawalUI();
@@ -651,15 +663,35 @@ window.handleTadsAdClickReward = handleTadsAdClickReward;
 
 window.handleAdElementClick = async function(targetUrl, adId) {
   hapticFeedback('medium');
-  if (targetUrl) {
-    if (tg?.openLink && targetUrl.startsWith('http')) {
-      tg.openLink(targetUrl);
-    } else if (tg?.openTelegramLink && targetUrl.includes('t.me')) {
-      tg.openTelegramLink(targetUrl);
-    } else {
-      window.open(targetUrl, '_blank');
+  const userId = state.user?.id || '6656939308';
+  const cleanUrl = targetUrl || 'https://t.me/tadsagency';
+  const effectiveAdId = encodeURIComponent(adId || '28');
+
+  // Official TADS CPC Click Redirect Tracking URL
+  const trackingUrl = `https://backend.tads.me/redirect?url=${encodeURIComponent(cleanUrl)}&aid=${effectiveAdId}&wid=13007&uid=${encodeURIComponent(userId)}&ref=${encodeURIComponent(window.location.origin)}`;
+
+  try {
+    // Ping TADS click tracker to log CPC click
+    fetch(trackingUrl, { mode: 'no-cors', keepalive: true }).catch(() => {});
+  } catch (_) {}
+
+  if (tg?.openTelegramLink && cleanUrl.includes('t.me')) {
+    try {
+      tg.openTelegramLink(cleanUrl);
+    } catch (_) {
+      window.open(cleanUrl, '_blank');
     }
+  } else if (tg?.openLink) {
+    try {
+      tg.openLink(trackingUrl);
+    } catch (_) {
+      window.open(trackingUrl, '_blank');
+    }
+  } else {
+    window.open(trackingUrl, '_blank');
   }
+
+  // Credit user reward
   await handleTadsAdClickReward(adId);
 };
 
@@ -1041,7 +1073,13 @@ async function handleWatchAd() {
             }
           });
 
-          controller.showAd().catch((err) => {
+          controller.showAd().then(() => {
+            if (window.tads && window.tads.template && typeof controller.displayAds === 'function') {
+              setTimeout(() => {
+                try { controller.displayAds(); } catch (_) {}
+              }, 120);
+            }
+          }).catch((err) => {
             console.warn(`TADS showAd rejection (isDebug=${isDebug}):`, err);
             done(reject, err);
           });

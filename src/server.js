@@ -355,6 +355,56 @@ app.post('/api/ads/complete', async (req, res) => {
   res.json(result);
 });
 
+// Claim CPC Click Reward from TADS ad click (Generates high revenue by clicks)
+app.post('/api/ads/click-reward', async (req, res) => {
+  let userId = null;
+  const initData = req.headers['x-telegram-init-data'] || req.body?.initData;
+  if (initData) {
+    const authResult = validateTelegramInitData(initData);
+    if (authResult.valid && authResult.user?.id) {
+      userId = authResult.user.id;
+    }
+  }
+  if (!userId && req.body?.userId) userId = req.body.userId;
+  if (!userId && req.query?.userId) userId = req.query.userId;
+
+  if (!userId) {
+    return res.status(400).json({ success: false, message: 'Missing user identification' });
+  }
+
+  if (!db.isReady) {
+    await db.waitForReady().catch(() => {});
+  }
+  await db.ensureUserLoaded(userId);
+
+  if (!db.getUser(userId)) {
+    db.getOrCreateUser({ id: userId, first_name: 'Telegram User' });
+  }
+
+  const result = db.recordDirectAdReward(userId);
+  if (!result.success) {
+    return res.status(400).json(result);
+  }
+
+  const activeBot = getBot();
+  if (activeBot) {
+    const symbol = db.getSetting('currencySymbol') || '₹';
+    const msg =
+      `🎉 <b>Sponsor Visited!</b> ${symbol}${result.reward.toFixed(2)} was added to your balance.\n\n` +
+      `💰 <b>Balance:</b> ${result.balance.toFixed(2)}\n` +
+      `📅 <b>Ads today:</b> ${result.adsToday}`;
+    activeBot.api.sendMessage(userId, msg, { parse_mode: 'HTML' }).catch(() => {});
+  }
+
+  res.json({
+    success: true,
+    reward: result.reward,
+    balance: result.balance,
+    adsToday: result.adsToday,
+    cooldownSeconds: db.getSetting('adCooldownSeconds') || 20
+  });
+});
+
 // Update Wallet (UPI, PayPal, Bank)
 app.post('/api/wallet/update', telegramAuthMiddleware, (req, res) => {
   const { method, details } = req.body;

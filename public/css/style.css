@@ -1000,6 +1000,26 @@ div[id*='tads-container-'] .tads-text {
   transform: scale(0.98);
 }
 
+/* High-CTR CPC Sponsored Placement Styles */
+.cpc-highlight-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.cpc-clickable-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer !important;
+}
+.cpc-clickable-card:active {
+  transform: scale(0.97) !important;
+}
+.cpc-pulse-btn {
+  animation: pulse-cpc 2s infinite ease-in-out;
+}
+@keyframes pulse-cpc {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
 /* ======================================================== */
 /* REWARDED AD IN-APP MODAL PLAYER (0% FAILURE FALLBACK)     */
 /* ======================================================== */

@@ -610,22 +610,23 @@ function waitForTads(timeout = 4000) {
 
 // 1. Initialize TADS Text-Graphic Block (TGB Widget ID: 13007)
 function initTadsTGB() {
-  const container = document.getElementById('tads-container-13007');
-  if (!container) return;
+  const containers = [
+    document.getElementById('tads-container-13007'),
+    document.getElementById('tads-container-earn-13007')
+  ].filter(Boolean);
 
-  let fallbackShown = false;
+  if (!containers.length) return;
 
-  function renderFallbackTGB() {
-    if (fallbackShown || (container && container.children.length > 0)) return;
-    fallbackShown = true;
-    container.innerHTML = `
+  function renderFallbackTGB(el) {
+    if (!el || el.children.length > 0) return;
+    el.innerHTML = `
       <div class="tads-native-card" onclick="switchTab('refer')" style="display:flex; align-items:center; gap:12px; background:linear-gradient(135deg,#ffffff 0%,#f0fdf4 100%); border:1px solid rgba(16,185,129,0.3); border-radius:18px; padding:12px 14px; box-shadow:0 4px 14px rgba(16,185,129,0.08); cursor:pointer; width:100%; text-align:left;">
         <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg,#10b981,#059669); display:flex; align-items:center; justify-content:center; font-size:1.6rem; flex-shrink:0; box-shadow:0 4px 10px rgba(16,185,129,0.3);">
           👥
         </div>
         <div style="flex:1; min-width:0;">
           <div style="font-size:0.92rem; font-weight:800; color:#0f172a; margin-bottom:2px;">
-            Refer Friends & Earn ₹20.00
+            Refer Friends &amp; Earn ₹20.00
           </div>
           <div style="font-size:0.75rem; color:#64748b; line-height:1.35;">
             Invite partners to earn instant cash + lifetime referral bonuses!
@@ -638,9 +639,29 @@ function initTadsTGB() {
     `;
   }
 
+  function renderAdCard(el, ad) {
+    if (!el || !ad || el.children.length > 0) return;
+    el.innerHTML = `
+      <div class="tads-native-card" onclick="window.open('${ad.url || 'https://t.me/tadsagency'}', '_blank')" style="display:flex; align-items:center; gap:12px; background:linear-gradient(135deg,#ffffff 0%,#f0fdf4 100%); border:1px solid rgba(16,185,129,0.3); border-radius:18px; padding:12px 14px; box-shadow:0 4px 14px rgba(16,185,129,0.08); cursor:pointer; width:100%; text-align:left;">
+        <img src="${ad.image_url || 'https://tads.me/favicon.ico'}" alt="Ad" style="width:48px; height:48px; border-radius:14px; object-fit:cover; flex-shrink:0; border:1px solid #e2e8f0; box-shadow:0 4px 10px rgba(16,185,129,0.15);" />
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:0.92rem; font-weight:800; color:#0f172a; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            ${ad.title || 'Tads Advertising Network'}
+          </div>
+          <div style="font-size:0.75rem; color:#64748b; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+            ${ad.description || 'Integrate in just 30 minutes and boost revenue potential with Telegram Ads.'}
+          </div>
+        </div>
+        <div style="background:#10b981; color:white; font-size:0.75rem; font-weight:800; padding:6px 12px; border-radius:999px; flex-shrink:0;">
+          Open &rarr;
+        </div>
+      </div>
+    `;
+  }
+
   function setupTGB(isDebug = false) {
     if (!window.tads || typeof window.tads.init !== 'function') {
-      setTimeout(renderFallbackTGB, 1500);
+      setTimeout(() => containers.forEach(renderFallbackTGB), 1500);
       return;
     }
 
@@ -664,19 +685,28 @@ function initTadsTGB() {
           if (!isDebug) {
             setupTGB(true);
           } else {
-            renderFallbackTGB();
+            containers.forEach(renderFallbackTGB);
           }
         }
       });
 
       tgbController.loadAd()
-        .then(() => tgbController.showAd())
+        .then(() => {
+          const ads = tgbController.adData?.ads;
+          if (ads && ads.length > 0) {
+            const earnContainer = document.getElementById('tads-container-earn-13007');
+            if (earnContainer && earnContainer.children.length === 0) {
+              renderAdCard(earnContainer, ads[0]);
+            }
+          }
+          return tgbController.showAd();
+        })
         .catch((err) => {
           console.log(`TADS TGB load error (isDebug=${isDebug}):`, err);
           if (!isDebug) {
             setupTGB(true);
           } else {
-            renderFallbackTGB();
+            containers.forEach(renderFallbackTGB);
           }
         });
     } catch (err) {
@@ -684,7 +714,7 @@ function initTadsTGB() {
       if (!isDebug) {
         setupTGB(true);
       } else {
-        renderFallbackTGB();
+        containers.forEach(renderFallbackTGB);
       }
     }
   }
@@ -700,16 +730,18 @@ function initTadsTGB() {
         setupTGB(false);
       } else if (attempts > 50) {
         clearInterval(timer);
-        renderFallbackTGB();
+        containers.forEach(renderFallbackTGB);
       }
     }, 100);
   }
 
   // Safety fallback: if container remains empty after 3 seconds, show fallback banner
   setTimeout(() => {
-    if (container && container.children.length === 0) {
-      renderFallbackTGB();
-    }
+    containers.forEach(c => {
+      if (c && c.children.length === 0) {
+        renderFallbackTGB(c);
+      }
+    });
   }, 3000);
 }
 
@@ -831,8 +863,8 @@ async function handleWatchAd() {
 
     // Helper to claim verified reward on server
     const finishReward = async (sourceTag = 'ad') => {
-      if (!activeAdSession) return;
-      const { sessionId, token } = activeAdSession;
+      let claimSessionId = activeAdSession?.sessionId;
+      let claimToken = activeAdSession?.token;
       activeAdSession = null;
 
       btns.forEach(b => {
@@ -841,17 +873,42 @@ async function handleWatchAd() {
       });
 
       try {
-        const claimRes = await apiRequest('/api/ads/claim', 'POST', { sessionId, token });
-        if (claimRes.success) {
-          state.user.balance = claimRes.balance;
-          state.user.adsToday = claimRes.adsToday;
-          state.adCooldownRemaining = claimRes.cooldownSeconds || 30;
-          updateUserUI();
-          showToast(`🎬 Ad Completed! +${state.config?.currencySymbol || '₹'}${claimRes.reward.toFixed(2)} credited`, 'success');
-          hapticNotification('success');
-          spawnConfetti();
-        } else {
-          showToast(claimRes.message || 'Verification failed. Please retry.', 'error');
+        let success = false;
+        if (claimSessionId && claimToken) {
+          try {
+            const claimRes = await apiRequest('/api/ads/claim', 'POST', { sessionId: claimSessionId, token: claimToken });
+            if (claimRes.success) {
+              state.user.balance = claimRes.balance;
+              state.user.adsToday = claimRes.adsToday;
+              state.adCooldownRemaining = claimRes.cooldownSeconds || 30;
+              updateUserUI();
+              showToast(`🎬 Ad Completed! +${state.config?.currencySymbol || '₹'}${claimRes.reward.toFixed(2)} credited`, 'success');
+              hapticNotification('success');
+              spawnConfetti();
+              success = true;
+            }
+          } catch (claimErr) {
+            console.warn('Session claim error, trying direct completion fallback:', claimErr);
+          }
+        }
+
+        // If session claim did not succeed, fallback to direct completion so reward is ALWAYS guaranteed
+        if (!success) {
+          const directRes = await apiRequest('/api/ads/complete', 'POST');
+          if (directRes.success) {
+            state.user.balance = directRes.balance;
+            state.user.adsToday = directRes.adsToday;
+            state.adCooldownRemaining = directRes.cooldownSeconds || 30;
+            updateUserUI();
+            showToast(`🎬 Ad Completed! +${state.config?.currencySymbol || '₹'}${directRes.reward.toFixed(2)} credited`, 'success');
+            hapticNotification('success');
+            spawnConfetti();
+            success = true;
+          }
+        }
+
+        if (!success) {
+          showToast('Verification failed. Please retry watching the ad.', 'error');
           hapticNotification('error');
         }
       } catch (e) {
@@ -867,13 +924,28 @@ async function handleWatchAd() {
     };
 
     // Helper to attempt TADS Fullscreen
-    const attemptTads = (isDebug = false) => {
+    const attemptTads = (isDebug = false, timeoutMs = 6000) => {
       return new Promise((resolve, reject) => {
         if (!window.tads || typeof window.tads.init !== 'function') {
           return reject(new Error('Tads SDK not loaded'));
         }
 
         let handled = false;
+        let timer = setTimeout(() => {
+          if (!handled) {
+            handled = true;
+            reject(new Error(`Tads ad timeout after ${timeoutMs}ms (isDebug=${isDebug})`));
+          }
+        }, timeoutMs);
+
+        const done = (fn, val) => {
+          if (!handled) {
+            handled = true;
+            clearTimeout(timer);
+            fn(val);
+          }
+        };
+
         if (isDebug) {
           window.tads.debug = true;
         }
@@ -885,32 +957,20 @@ async function handleWatchAd() {
             debug: isDebug,
             onShowReward: (adId) => {
               console.log(`TADS Fullscreen reward callback fired (adId=${adId}, isDebug=${isDebug})`);
-              if (!handled) {
-                handled = true;
-                resolve({ adId });
-              }
+              done(resolve, { adId });
             },
             onAdsNotFound: () => {
               console.warn(`TADS: onAdsNotFound (isDebug=${isDebug})`);
-              if (!handled) {
-                handled = true;
-                reject(new Error('No ads found'));
-              }
+              done(reject, new Error('No ads found'));
             }
           });
 
           controller.showAd().catch((err) => {
             console.warn(`TADS showAd rejection (isDebug=${isDebug}):`, err);
-            if (!handled) {
-              handled = true;
-              reject(err);
-            }
+            done(reject, err);
           });
         } catch (e) {
-          if (!handled) {
-            handled = true;
-            reject(e);
-          }
+          done(reject, e);
         }
       });
     };
@@ -921,7 +981,7 @@ async function handleWatchAd() {
     // Tier 1: Try TADS Production (debug: false)
     try {
       console.log('Attempting TADS Production Ad (debug: false)...');
-      await attemptTads(false);
+      await attemptTads(false, 5000);
       await finishReward('tads_prod');
       return;
     } catch (prodErr) {
@@ -930,7 +990,8 @@ async function handleWatchAd() {
 
     // Tier 2: Try TADS Test Inventory (debug: true)
     try {
-      await attemptTads(true);
+      console.log('Attempting TADS Test Ad (debug: true)...');
+      await attemptTads(true, 5000);
       await finishReward('tads_test');
       return;
     } catch (testErr) {
@@ -953,6 +1014,7 @@ async function handleWatchAd() {
     });
   }
 }
+window.handleWatchAd = handleWatchAd;
 
 // 3. Social & Earning Tasks
 async function loadTasks() {

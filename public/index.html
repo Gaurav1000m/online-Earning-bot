@@ -64,14 +64,14 @@
   <!-- TAB 1: HOME -->
   <!-- ======================================================== -->
   <main id="tab-home" class="tab-pane active">
-    <!-- Google Certified Partner Trust Strip -->
-    <div class="google-partner-bar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding:6px 12px; background:#f1f3f4; border-radius:12px; font-size:0.72rem; color:#5f6368; font-weight:600;">
+    <!-- Official Partner Trust Strip -->
+    <div class="google-partner-bar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid var(--card-border); border-radius:12px; font-size:0.72rem; color:var(--text-muted); font-weight:600;">
       <div style="display:flex; align-items:center; gap:6px;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4z" fill="#1a73e8"/><path d="M10 15.5l-3.5-3.5 1.4-1.4 2.1 2.1 5.6-5.6 1.4 1.4L10 15.5z" fill="#ffffff"/></svg>
-        <span>Google Certified Partner &bull; Official Publisher</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4z" fill="#00aff0"/><path d="M10 15.5l-3.5-3.5 1.4-1.4 2.1 2.1 5.6-5.6 1.4 1.4L10 15.5z" fill="#0b0e14"/></svg>
+        <span>Official Verified Publisher &bull; Community Rewards</span>
       </div>
-      <div style="display:flex; align-items:center; gap:4px; color:#1e8e3e; font-weight:700;">
-        <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#1e8e3e;"></span>
+      <div style="display:flex; align-items:center; gap:4px; color:#00e676; font-weight:700;">
+        <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#00e676; box-shadow:0 0 6px #00e676;"></span>
         <span>Verified Payouts</span>
       </div>
     </div>
@@ -79,36 +79,36 @@
     <!-- User Profile Header -->
     <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
       <div style="display:flex; align-items:center; gap:12px;">
-        <div style="width:44px; height:44px; border-radius:50%; background:#e8f0fe; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.15rem; color:#1a73e8; border:2px solid #c2e7ff; box-shadow:0 1px 3px rgba(60,64,67,0.15);">
+        <div style="width:44px; height:44px; border-radius:50%; background:rgba(0,175,240,0.12); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.15rem; color:#00aff0; border:2px solid rgba(0,175,240,0.3); box-shadow:0 0 12px rgba(0,175,240,0.2);">
           👤
         </div>
         <div>
-          <div class="text-xs text-muted" style="letter-spacing:0.2px;">Google Account User</div>
+          <div class="text-xs text-muted" style="letter-spacing:0.2px;">Telegram Account</div>
           <div style="display:flex; align-items:center; gap:4px;">
             <div id="user-greeting-name" class="text-base font-bold" style="color:var(--text-main);">User</div>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="#1a73e8"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#00aff0"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
           </div>
         </div>
       </div>
       <div style="display:flex; gap:8px; align-items:center;">
-        <button id="admin-quick-btn" class="badge" style="display:none; background:#fef7e0; color:#b06000; border:1px solid #f9ab00; cursor:pointer;" onclick="location.href='/admin'">
+        <button id="admin-quick-btn" class="badge" style="display:none; background:rgba(255,171,0,0.15); color:#ffab00; border:1px solid rgba(255,171,0,0.35); cursor:pointer;" onclick="location.href='/admin'">
           ⚙️ Admin
         </button>
-        <div class="badge" style="background:#f1f3f4; color:#5f6368; font-weight:700; border:1px solid #dadce0;">
+        <div class="badge" style="background:rgba(255,255,255,0.05); color:var(--text-muted); font-weight:700; border:1px solid var(--card-border);">
           ID: <span id="user-profile-id">...</span>
         </div>
       </div>
     </header>
 
-    <!-- Main Balance Google Pay Style Card -->
+    <!-- Main Balance Electric Obsidian Card -->
     <section class="gradient-card" style="margin-bottom:18px;">
       <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div>
           <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-            <span class="text-xs font-bold" style="color:#5f6368; text-transform:uppercase; letter-spacing:0.8px;">Google Rewards Balance</span>
-            <span style="font-size:0.65rem; background:#e8f0fe; color:#1a73e8; padding:1px 6px; border-radius:6px; font-weight:700;">Direct UPI</span>
+            <span class="text-xs font-bold" style="color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px;">Total Available Balance</span>
+            <span style="font-size:0.65rem; background:rgba(0,175,240,0.15); color:#00aff0; padding:2px 8px; border-radius:6px; font-weight:700; border:1px solid rgba(0,175,240,0.3);">Direct UPI</span>
           </div>
-          <div class="text-3xl font-black" style="margin:2px 0; color:#202124;">
+          <div class="text-3xl font-black" style="margin:2px 0; color:#ffffff;">
             <span class="val-currency-symbol">₹</span><span class="user-balance">0.00</span>
           </div>
           <div class="text-xs text-muted">
@@ -120,8 +120,8 @@
         </button>
       </div>
 
-      <!-- Action Pill Buttons Row (Google Pay Style) -->
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; padding-top:12px; border-top:1px solid #e8eaed;">
+      <!-- Action Pill Buttons Row -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">
         <button class="btn btn-sm btn-secondary" onclick="handleAdElementClick('https://t.me/tadsagency', 'gpay_cpc_visit')" style="font-size:0.78rem; padding:8px 10px;">
           ⚡ Sponsor Visit (+₹5)
         </button>
@@ -130,36 +130,36 @@
         </button>
       </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; padding-top:10px; border-top:1px dashed #e8eaed;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; padding-top:10px; border-top:1px dashed rgba(255,255,255,0.08);">
         <div>
           <div class="text-xs text-muted">Total Earned</div>
-          <div class="text-sm font-bold" style="color:#1e8e3e;"><span class="val-currency-symbol">₹</span><span class="user-total-earned">0.00</span></div>
+          <div class="text-sm font-bold" style="color:#00e676;"><span class="val-currency-symbol">₹</span><span class="user-total-earned">0.00</span></div>
         </div>
         <div>
           <div class="text-xs text-muted">Total Withdrawn</div>
-          <div class="text-sm font-bold" style="color:#202124;"><span class="val-currency-symbol">₹</span><span class="user-total-withdrawn">0.00</span></div>
+          <div class="text-sm font-bold" style="color:#ffffff;"><span class="val-currency-symbol">₹</span><span class="user-total-withdrawn">0.00</span></div>
         </div>
       </div>
     </section>
 
     <!-- Quick Action Navigation Grid -->
     <section style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
-      <div class="card" data-switch-tab="earn" style="cursor:pointer; display:flex; align-items:center; gap:12px; padding:14px; border:1.5px solid #dadce0;">
-        <div style="font-size:1.6rem; background:#e8f0fe; color:#1a73e8; width:44px; height:44px; border-radius:14px; display:flex; align-items:center; justify-content:center;">
+      <div class="card" data-switch-tab="earn" style="cursor:pointer; display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--card-border);">
+        <div style="font-size:1.6rem; background:rgba(0,175,240,0.12); color:#00aff0; width:44px; height:44px; border-radius:14px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(0,175,240,0.25);">
           🎬
         </div>
         <div>
-          <div class="text-sm font-bold" style="color:#202124;">Watch Ads</div>
+          <div class="text-sm font-bold" style="color:#ffffff;">Watch Ads</div>
           <div class="text-xs text-muted">+<span class="val-currency-symbol">₹</span><span class="val-ad-reward">5.0</span> instant</div>
         </div>
       </div>
 
-      <div class="card" data-switch-tab="refer" style="cursor:pointer; display:flex; align-items:center; gap:12px; padding:14px; border:1.5px solid #dadce0;">
-        <div style="font-size:1.6rem; background:#e6f4ea; color:#1e8e3e; width:44px; height:44px; border-radius:14px; display:flex; align-items:center; justify-content:center;">
+      <div class="card" data-switch-tab="refer" style="cursor:pointer; display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--card-border);">
+        <div style="font-size:1.6rem; background:rgba(0,200,83,0.12); color:#00e676; width:44px; height:44px; border-radius:14px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(0,200,83,0.25);">
           👥
         </div>
         <div>
-          <div class="text-sm font-bold" style="color:#202124;">Refer & Earn</div>
+          <div class="text-sm font-bold" style="color:#ffffff;">Refer &amp; Earn</div>
           <div class="text-xs text-muted">+<span class="val-currency-symbol">₹</span><span class="val-referral-reward">20.0</span> per friend</div>
         </div>
       </div>
@@ -169,21 +169,21 @@
     <!-- TADS CPC SPONSORED PARTNER BLOCK (MAX REVENUE UNIT)      -->
     <!-- Official TADS Widget ID: 13007 (Cost Per Click Format)   -->
     <!-- ======================================================== -->
-    <section class="card tads-banner-card cpc-highlight-card" style="margin-bottom:18px; padding:16px; text-align:left; border:1.5px solid #c2e7ff; background:#ffffff; box-shadow:0 1px 4px rgba(60,64,67,0.12);">
+    <section class="card tads-banner-card cpc-highlight-card" style="margin-bottom:18px; padding:16px; text-align:left; border:1px solid rgba(0,175,240,0.35); background:var(--card-bg);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <div style="display:flex; align-items:center; gap:8px;">
-          <div style="width:30px; height:30px; border-radius:50%; background:#e8f0fe; display:flex; align-items:center; justify-content:center; color:#1a73e8; font-size:0.95rem; font-weight:800;">
+          <div style="width:32px; height:32px; border-radius:50%; background:rgba(0,175,240,0.15); display:flex; align-items:center; justify-content:center; color:#00aff0; font-size:1rem; font-weight:800; border:1px solid rgba(0,175,240,0.3);">
             💎
           </div>
           <div>
             <div style="display:flex; align-items:center; gap:6px;">
-              <span class="text-xs font-bold" style="color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px;">Highest CPC Partner</span>
-              <span style="font-size:0.65rem; background:#f1f3f4; color:#5f6368; padding:1px 6px; border-radius:4px; font-weight:700;">Ad ⓘ</span>
+              <span class="text-xs font-bold" style="color:#00aff0; text-transform:uppercase; letter-spacing:0.5px;">Highest CPC Partner</span>
+              <span style="font-size:0.65rem; background:rgba(255,255,255,0.06); color:var(--text-muted); padding:1px 6px; border-radius:4px; font-weight:700;">Ad ⓘ</span>
             </div>
             <div class="text-xs text-muted" style="margin-top:1px;">Tap sponsor to visit website &bull; Earn +₹5.00 cash</div>
           </div>
         </div>
-        <span class="badge" style="background:#1a73e8; color:#ffffff; font-size:0.75rem; font-weight:800; padding:4px 10px; border-radius:12px; box-shadow:0 2px 6px rgba(26,115,232,0.3);">
+        <span class="badge" style="background:#00aff0; color:#000000; font-size:0.75rem; font-weight:800; padding:4px 10px; border-radius:12px; box-shadow:0 0 10px rgba(0,175,240,0.4);">
           +₹5.00 / Click
         </span>
       </div>
@@ -192,11 +192,11 @@
       <div id="tads-container-13007"></div>
 
       <!-- High-CTR Fast Action Row -->
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; font-size:0.75rem; color:#5f6368; padding-top:8px; border-top:1px dashed #dadce0;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; font-size:0.75rem; color:var(--text-muted); padding-top:8px; border-top:1px dashed var(--card-border);">
         <span style="display:flex; align-items:center; gap:4px;">
-          <span style="color:#1e8e3e; font-weight:700;">✓ Verified Sponsor</span> &bull; 0s Wait
+          <span style="color:#00e676; font-weight:700;">✓ Verified Sponsor</span> &bull; 10s Exploration
         </span>
-        <button class="btn-text-action" onclick="handleAdElementClick('https://t.me/tadsagency', 'cpc_home_btn')" style="color:#1a73e8; font-weight:700; background:none; border:none; padding:0; cursor:pointer; font-size:0.75rem;">
+        <button class="btn-text-action" onclick="handleAdElementClick('https://t.me/tadsagency', 'cpc_home_btn')" style="color:#00aff0; font-weight:700; background:none; border:none; padding:0; cursor:pointer; font-size:0.75rem;">
           Tap to Visit &amp; Claim &rarr;
         </button>
       </div>
@@ -209,7 +209,7 @@
           <div class="streak-flame-icon">🔥</div>
           <div>
             <div style="display:flex; align-items:center; gap:6px;">
-              <h2 class="text-base font-black" style="margin:0; color:#0f172a;">Daily Streak Hub</h2>
+              <h2 class="text-base font-black" style="margin:0; color:#ffffff;">Daily Streak Hub</h2>
               <span class="streak-badge-count">🔥 <b id="streak-days-count">1</b> Day</span>
             </div>
             <div class="text-xs text-muted" style="margin-top:2px;">Check in daily & grow rewards up to ₹35.00!</div>
@@ -313,15 +313,15 @@
     <!-- ======================================================== -->
     <article class="publisher-content-hub" style="margin-bottom:24px;">
       <!-- Main Article Header -->
-      <header class="card" style="margin-bottom:16px; background:linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); border-color:#86efac;">
+      <header class="card" style="margin-bottom:16px; background:linear-gradient(135deg, #162032 0%, #111827 100%); border-color:rgba(0,175,240,0.35);">
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
           <span style="font-size:1.4rem;">📚</span>
-          <h2 class="text-base font-black" style="color:#0f172a; margin:0;">Platform Knowledge Base & Editorial Guide</h2>
+          <h2 class="text-base font-black" style="color:#ffffff; margin:0;">Platform Knowledge Base &amp; Editorial Guide</h2>
         </div>
         <p class="text-xs text-muted" style="line-height:1.5; margin:0;">
-          Welcome to the Easy & Fast Earn official educational portal. Our platform is dedicated to transparent digital community incentives, educational resources on online reward mechanisms, and fair advertising revenue distribution.
+          Welcome to the Easy &amp; Fast Earn official educational portal. Our platform is dedicated to transparent digital community incentives, educational resources on online reward mechanisms, and fair advertising revenue distribution.
         </p>
-        <div style="display:flex; gap:12px; margin-top:8px; font-size:0.72rem; color:#64748b; font-weight:600;">
+        <div style="display:flex; gap:12px; margin-top:8px; font-size:0.72rem; color:var(--text-muted); font-weight:600;">
           <span>✍️ Editorial Team</span> &bull;
           <span>📅 Updated: November 2026</span> &bull;
           <span>🛡️ Verified Publisher</span>
@@ -330,21 +330,21 @@
 
       <!-- Educational Article 1: Platform Mechanics -->
       <section class="card" style="margin-bottom:16px;">
-        <h3 class="text-sm font-bold" style="color:#0284c7; margin-bottom:8px;">1. Understanding the Digital Reward & Advertising Economy</h3>
+        <h3 class="text-sm font-bold" style="color:#00aff0; margin-bottom:8px;">1. Understanding the Digital Reward &amp; Advertising Economy</h3>
         <p class="text-xs text-muted" style="line-height:1.6; margin-bottom:10px;">
-          Modern web applications connect global advertisers with engaged communities through cost-per-mile (CPM) and cost-per-click (CPC) sponsorship agreements. Rather than retaining 100% of sponsorship proceeds, Easy & Fast Earn operates on an open-distribution protocol where verified community members receive direct shares of generated advertising revenue.
+          Modern web applications connect global advertisers with engaged communities through cost-per-mile (CPM) and cost-per-click (CPC) sponsorship agreements. Rather than retaining 100% of sponsorship proceeds, Easy &amp; Fast Earn operates on an open-distribution protocol where verified community members receive direct shares of generated advertising revenue.
         </p>
         <p class="text-xs text-muted" style="line-height:1.6; margin-bottom:10px;">
           When an authorized sponsor message or rewarded video plays via verified network partners such as <b>Tads</b> and <b>Google AdSense</b>, our micro-ledger records the verifiable engagement event. This ensures fair, tamper-proof rewards for genuine attention while providing advertisers with authenticated engagement metrics.
         </p>
-        <div style="background:#f8fafc; border-left:3px solid #0284c7; padding:10px 12px; border-radius:0 8px 8px 0; font-size:0.75rem; color:#475569; line-height:1.5;">
+        <div style="background:rgba(0,175,240,0.08); border-left:3px solid #00aff0; padding:10px 12px; border-radius:0 8px 8px 0; font-size:0.75rem; color:#8c9cb3; line-height:1.5;">
           💡 <b>Key Principle:</b> Revenue redistribution is contingent upon completed user sessions. Early cancellation or ad dismissal does not generate advertiser yield and therefore cannot be credited.
         </div>
       </section>
 
       <!-- Google AdSense In-Article Compliant Placement -->
       <div style="margin:20px 0; text-align:center;">
-        <div style="font-size:0.65rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:6px;">Advertisement</div>
+        <div style="font-size:0.65rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:6px;">Advertisement</div>
         <!-- Google AdSense Container inside rich publisher content -->
         <ins class="adsbygoogle"
              style="display:block"
@@ -360,39 +360,39 @@
 
       <!-- Educational Article 2: Safety, Anti-Fraud & Verification Standards -->
       <section class="card" style="margin-bottom:16px;">
-        <h3 class="text-sm font-bold" style="color:#10b981; margin-bottom:8px;">2. Community Safety, Verification Standards & Anti-Sybil Protection</h3>
+        <h3 class="text-sm font-bold" style="color:#00e676; margin-bottom:8px;">2. Community Safety, Verification Standards &amp; Anti-Sybil Protection</h3>
         <p class="text-xs text-muted" style="line-height:1.6; margin-bottom:10px;">
-          To safeguard our community and advertiser partners, Easy & Fast Earn deploys strict cryptographic session validations and server-side verification algorithms. These controls prevent malicious bot farms, automated scripts, and spoofed device signatures from exploiting the rewards pool:
+          To safeguard our community and advertiser partners, Easy &amp; Fast Earn deploys strict cryptographic session validations and server-side verification algorithms. These controls prevent malicious bot farms, automated scripts, and spoofed device signatures from exploiting the rewards pool:
         </p>
-        <ul style="padding-left:18px; font-size:0.75rem; color:#475569; line-height:1.6; margin-bottom:10px;">
+        <ul style="padding-left:18px; font-size:0.75rem; color:#8c9cb3; line-height:1.6; margin-bottom:10px;">
           <li style="margin-bottom:6px;"><b>HMAC-SHA256 Telegram Verification:</b> Every API payload is verified using Telegram’s cryptographic secret token to ensure genuine identity.</li>
           <li style="margin-bottom:6px;"><b>Channel Membership Validation:</b> Mandatory channel follow tasks verify live Telegram ChatMember status via real-time Bot API calls.</li>
           <li style="margin-bottom:6px;"><b>Anti-Abuse Cooldown Windows:</b> Consecutive ad view requests enforce rate-limiting intervals to encourage healthy screen usage.</li>
-          <li><b>Milestone Qualification (10 Referrals & 30 Ads):</b> Sybil-resistant thresholds guarantee user authenticity prior to initiating withdrawal dispatches.</li>
+          <li><b>Milestone Qualification (10 Referrals &amp; 30 Ads):</b> Sybil-resistant thresholds guarantee user authenticity prior to initiating withdrawal dispatches.</li>
         </ul>
       </section>
 
       <!-- Educational Article 3: Financial Transparency & Payout Protocols -->
       <section class="card" style="margin-bottom:16px;">
-        <h3 class="text-sm font-bold" style="color:#f59e0b; margin-bottom:8px;">3. Payout Architecture: Multi-Method Withdrawals & SLA</h3>
+        <h3 class="text-sm font-bold" style="color:#ffab00; margin-bottom:8px;">3. Payout Architecture: Multi-Method Withdrawals &amp; SLA</h3>
         <p class="text-xs text-muted" style="line-height:1.6; margin-bottom:10px;">
           Transparent ledger accounting guarantees that all balances reflect actual earned rewards. Users may link their preferred payout destination under the Wallet tab:
         </p>
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px; text-align:center;">
-          <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:10px 6px;">
+          <div style="background:#0e141e; border:1px solid var(--card-border); border-radius:10px; padding:10px 6px;">
             <div style="font-size:1.1rem; margin-bottom:2px;">🇮🇳</div>
-            <div class="text-xs font-bold" style="color:#0f172a;">UPI / VPA</div>
-            <div style="font-size:0.68rem; color:#64748b;">Instant / 1-12h</div>
+            <div class="text-xs font-bold" style="color:#ffffff;">UPI / VPA</div>
+            <div style="font-size:0.68rem; color:var(--text-muted);">Instant / 1-12h</div>
           </div>
-          <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:10px 6px;">
+          <div style="background:#0e141e; border:1px solid var(--card-border); border-radius:10px; padding:10px 6px;">
             <div style="font-size:1.1rem; margin-bottom:2px;">💳</div>
-            <div class="text-xs font-bold" style="color:#0f172a;">PayPal</div>
-            <div style="font-size:0.68rem; color:#64748b;">Global Payouts</div>
+            <div class="text-xs font-bold" style="color:#ffffff;">PayPal</div>
+            <div style="font-size:0.68rem; color:var(--text-muted);">Global Payouts</div>
           </div>
-          <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:10px 6px;">
+          <div style="background:#0e141e; border:1px solid var(--card-border); border-radius:10px; padding:10px 6px;">
             <div style="font-size:1.1rem; margin-bottom:2px;">🏦</div>
-            <div class="text-xs font-bold" style="color:#0f172a;">Bank Transfer</div>
-            <div style="font-size:0.68rem; color:#64748b;">NEFT / IMPS</div>
+            <div class="text-xs font-bold" style="color:#ffffff;">Bank Transfer</div>
+            <div style="font-size:0.68rem; color:var(--text-muted);">NEFT / IMPS</div>
           </div>
         </div>
         <p class="text-xs text-muted" style="line-height:1.5;">
@@ -402,36 +402,36 @@
 
       <!-- Educational Article 4: Frequently Asked Questions (FAQ) -->
       <section class="card" style="margin-bottom:18px;">
-        <h3 class="text-sm font-bold" style="color:#8b5cf6; margin-bottom:12px;">4. Frequently Asked Questions (FAQ)</h3>
+        <h3 class="text-sm font-bold" style="color:#bb86fc; margin-bottom:12px;">4. Frequently Asked Questions (FAQ)</h3>
         
         <div style="margin-bottom:10px;">
-          <div class="text-xs font-bold" style="color:#0f172a; margin-bottom:2px;">Q: Are there any fees or deposits required to participate?</div>
-          <p class="text-xs text-muted" style="line-height:1.5;">A: No. Easy & Fast Earn is completely free. We never request deposits, investments, or subscription fees. All community earnings originate exclusively from voluntary advertiser sponsorships.</p>
+          <div class="text-xs font-bold" style="color:#ffffff; margin-bottom:2px;">Q: Are there any fees or deposits required to participate?</div>
+          <p class="text-xs text-muted" style="line-height:1.5;">A: No. Easy &amp; Fast Earn is completely free. We never request deposits, investments, or subscription fees. All community earnings originate exclusively from voluntary advertiser sponsorships.</p>
         </div>
 
         <div style="margin-bottom:10px;">
-          <div class="text-xs font-bold" style="color:#0f172a; margin-bottom:2px;">Q: How does the 7-day daily streak progression work?</div>
+          <div class="text-xs font-bold" style="color:#ffffff; margin-bottom:2px;">Q: How does the 7-day daily streak progression work?</div>
           <p class="text-xs text-muted" style="line-height:1.5;">A: Check in every 24 hours to claim increasing daily streak bonuses (Day 1: ₹5, Day 2: ₹10, scaling to Day 7: ₹35). Missing more than 48 hours resets your streak to Day 1 to encourage consistency.</p>
         </div>
 
         <div>
-          <div class="text-xs font-bold" style="color:#0f172a; margin-bottom:2px;">Q: Why is withdrawal locked until 10 referrals and 30 ads?</div>
+          <div class="text-xs font-bold" style="color:#ffffff; margin-bottom:2px;">Q: Why is withdrawal locked until 10 referrals and 30 ads?</div>
           <p class="text-xs text-muted" style="line-height:1.5;">A: This milestone protocol ensures that automated bot accounts cannot immediately drain the rewards pool. Once achieved, instant withdrawals remain permanently unlocked for any amount.</p>
         </div>
       </section>
     </article>
 
     <!-- Compliance Footer Links -->
-    <footer style="margin:24px 0 16px; padding:16px 0; border-top:1.5px solid #e2e8f0; text-align:center;">
+    <footer style="margin:24px 0 16px; padding:16px 0; border-top:1.5px solid var(--card-border); text-align:center;">
       <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-bottom:12px;">
-        <a href="/about.html" style="color:#64748b; font-size:0.75rem; font-weight:600; text-decoration:none;">About Us</a>
-        <a href="/privacy.html" style="color:#64748b; font-size:0.75rem; font-weight:600; text-decoration:none;">Privacy Policy</a>
-        <a href="/terms.html" style="color:#64748b; font-size:0.75rem; font-weight:600; text-decoration:none;">Terms of Service</a>
-        <a href="/contact.html" style="color:#64748b; font-size:0.75rem; font-weight:600; text-decoration:none;">Contact Us</a>
-        <a href="/disclaimer.html" style="color:#64748b; font-size:0.75rem; font-weight:600; text-decoration:none;">Disclaimer</a>
+        <a href="/about.html" style="color:var(--text-muted); font-size:0.75rem; font-weight:600; text-decoration:none;">About Us</a>
+        <a href="/privacy.html" style="color:var(--text-muted); font-size:0.75rem; font-weight:600; text-decoration:none;">Privacy Policy</a>
+        <a href="/terms.html" style="color:var(--text-muted); font-size:0.75rem; font-weight:600; text-decoration:none;">Terms of Service</a>
+        <a href="/contact.html" style="color:var(--text-muted); font-size:0.75rem; font-weight:600; text-decoration:none;">Contact Us</a>
+        <a href="/disclaimer.html" style="color:var(--text-muted); font-size:0.75rem; font-weight:600; text-decoration:none;">Disclaimer</a>
       </div>
-      <div style="font-size:0.7rem; color:#64748b;">
-        &copy; 2026 Easy & Fast Earn &bull; All rights reserved.
+      <div style="font-size:0.7rem; color:var(--text-dim);">
+        &copy; 2026 Easy &amp; Fast Earn &bull; All rights reserved.
       </div>
     </footer>
   </main>
@@ -446,14 +446,14 @@
     </header>
 
     <!-- Rewarded Ads Section (Close ad to claim!) -->
-    <section class="card" style="margin-bottom:18px; text-align:center; padding:24px 18px;">
+    <section class="card" style="margin-bottom:18px; text-align:center; padding:24px 18px; border:1px solid rgba(0,175,240,0.35);">
       <div style="font-size:3.5rem; margin-bottom:8px;">🎬</div>
-      <h2 class="text-lg font-bold">Watch Ads & Earn</h2>
+      <h2 class="text-lg font-bold" style="color:#ffffff;">Watch Ads &amp; Earn</h2>
       <p class="text-xs text-muted" style="margin:6px 0 16px; line-height:1.45;">
-        Watch a short sponsored ad and close it (❌) to automatically credit ₹5.00 to your balance.
+        Watch a short sponsored ad, explore the sponsor for 10 seconds, and claim ₹5.00 automatically.
       </p>
 
-      <div style="display:inline-flex; align-items:center; gap:6px; background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:700; margin-bottom:16px;">
+      <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(0,200,83,0.15); color:#00e676; border:1px solid rgba(0,200,83,0.3); padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:700; margin-bottom:16px;">
         +<span class="val-currency-symbol">₹</span><span class="val-ad-reward">5.0</span> per Ad Completed
       </div>
 
@@ -461,12 +461,12 @@
         ▶️ Watch Sponsored Ad
       </button>
 
-      <div style="margin-top:8px; padding-top:14px; border-top:1px dashed #cbd5e1; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+      <div style="margin-top:8px; padding-top:14px; border-top:1px dashed var(--card-border); display:flex; align-items:center; justify-content:space-between; gap:10px;">
         <div style="text-align:left;">
-          <div style="font-size:0.84rem; font-weight:800; color:#0f172a;">⚡ Instant Sponsor Visit (+₹5.00)</div>
-          <div style="font-size:0.72rem; color:#64748b;">No video waiting &bull; 1-Tap instant payout</div>
+          <div style="font-size:0.84rem; font-weight:800; color:#ffffff;">⚡ Instant Sponsor Visit (+₹5.00)</div>
+          <div style="font-size:0.72rem; color:var(--text-muted);">Explore sponsor &bull; 10s instant payout</div>
         </div>
-        <button class="btn btn-sm btn-outline-primary cpc-pulse-btn" onclick="handleAdElementClick('https://t.me/tadsagency', 'fast_earn_btn')" style="font-size:0.78rem; font-weight:800; border-radius:12px; padding:6px 14px; white-space:nowrap; background:#eff6ff; color:#2563eb; border:1.5px solid #3b82f6; cursor:pointer;">
+        <button class="btn btn-sm btn-outline-primary cpc-pulse-btn" onclick="handleAdElementClick('https://t.me/tadsagency', 'fast_earn_btn')" style="font-size:0.78rem; font-weight:800; border-radius:12px; padding:6px 14px; white-space:nowrap; background:rgba(0,175,240,0.12); color:#00aff0; border:1.5px solid #00aff0; cursor:pointer;">
           Tap &amp; Claim &rarr;
         </button>
       </div>
@@ -479,16 +479,16 @@
     <!-- ======================================================== -->
     <!-- TADS CPC REWARDED CLICK TASK (EARN TAB PLACEMENT)        -->
     <!-- ======================================================== -->
-    <section class="card tads-banner-card cpc-highlight-card" style="margin-bottom:20px; padding:18px; text-align:left; border:1.5px solid #c2e7ff; background:#ffffff; box-shadow:0 1px 4px rgba(60,64,67,0.12);">
+    <section class="card tads-banner-card cpc-highlight-card" style="margin-bottom:20px; padding:18px; text-align:left; border:1px solid rgba(0,175,240,0.35); background:var(--card-bg);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <div style="display:flex; align-items:center; gap:8px;">
           <span style="font-size:1.5rem;">💎</span>
           <div>
-            <div class="text-xs font-bold" style="color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px;">Highest CPC Partner Task</div>
+            <div class="text-xs font-bold" style="color:#00aff0; text-transform:uppercase; letter-spacing:0.5px;">Highest CPC Partner Task</div>
             <div class="text-xs text-muted" style="margin-top:1px;">Tap sponsor card &amp; visit website to claim +₹5.00</div>
           </div>
         </div>
-        <span class="badge" style="background:#1a73e8; color:#ffffff; font-size:0.75rem; font-weight:800; padding:4px 10px; border-radius:12px; box-shadow:0 2px 6px rgba(26,115,232,0.3);">
+        <span class="badge" style="background:#00aff0; color:#000000; font-size:0.75rem; font-weight:800; padding:4px 10px; border-radius:12px; box-shadow:0 0 10px rgba(0,175,240,0.4);">
           +₹5.00 / Click
         </span>
       </div>
@@ -496,9 +496,9 @@
       <!-- TADS Container for Earn Section -->
       <div id="tads-container-earn-13007"></div>
 
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; font-size:0.72rem; color:#5f6368; padding-top:8px; border-top:1px dashed #dadce0;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; font-size:0.72rem; color:var(--text-muted); padding-top:8px; border-top:1px dashed var(--card-border);">
         <span>⚡ Tap card &bull; Visit sponsor &bull; Reward auto-credited</span>
-        <span style="color:#1e8e3e; font-weight:700;">Verified Payout ✅</span>
+        <span style="color:#00e676; font-weight:700;">Verified Payout ✅</span>
       </div>
     </section>
 
@@ -590,12 +590,12 @@
     </section>
 
     <!-- Weekly Leaderboard Prize Pool Banner -->
-    <section class="card" style="margin-bottom:16px; background:linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border:1.5px solid #d8b4fe;">
+    <section class="card" style="margin-bottom:16px; background:linear-gradient(135deg, #181226 0%, #120d1e 100%); border:1px solid rgba(156,39,176,0.35);">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div style="font-size:0.85rem; font-weight:800; color:#7c3aed; letter-spacing:0.5px;">
+        <div style="font-size:0.85rem; font-weight:800; color:#d8b4fe; letter-spacing:0.5px;">
           🏆 WEEKLY CASH PRIZE POOL (<span class="val-currency-symbol">₹</span>220+)
         </div>
-        <span class="badge" style="background:#ffffff; color:#7c3aed; border:1px solid #d8b4fe; font-size:0.7rem;">Every Sunday</span>
+        <span class="badge" style="background:rgba(156,39,176,0.2); color:#d8b4fe; border:1px solid rgba(156,39,176,0.3); font-size:0.7rem;">Every Sunday</span>
       </div>
 
       <div class="ref-prize-grid">
@@ -650,7 +650,7 @@
   <!-- ======================================================== -->
   <main id="tab-wallet" class="tab-pane">
     <header style="margin-bottom:16px;">
-      <h1 class="text-xl font-bold">💳 Wallet & Payouts</h1>
+      <h1 class="text-xl font-bold">💳 Wallet &amp; Payouts</h1>
       <p class="text-xs text-muted">Manage payout settings and submit withdrawal requests.</p>
     </header>
 
@@ -659,48 +659,48 @@
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <div>
           <div class="text-xs text-muted">Available Balance</div>
-          <div class="text-2xl font-black" style="margin-top:2px;">
+          <div class="text-2xl font-black" style="margin-top:2px; color:#ffffff;">
             <span class="val-currency-symbol">₹</span><span class="user-balance">0.00</span>
           </div>
         </div>
         <div style="text-align:right;">
           <div class="text-xs text-muted">Total Paid Out</div>
-          <div class="text-sm font-bold text-success"><span class="val-currency-symbol">₹</span><span class="user-total-withdrawn">0.00</span></div>
+          <div class="text-sm font-bold" style="color:#00e676;"><span class="val-currency-symbol">₹</span><span class="user-total-withdrawn">0.00</span></div>
         </div>
       </div>
     </section>
 
     <!-- Withdrawal Milestone Lock Card (Requirement: 10 Referrals + 30 Ads) -->
-    <section id="wd-lock-card" class="card" style="margin-bottom:16px; border-color:#fcd34d; background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);">
+    <section id="wd-lock-card" class="card" style="margin-bottom:16px; border:1px solid rgba(255,171,0,0.35); background:linear-gradient(135deg, #1f1708 0%, #140f05 100%);">
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
         <div style="font-size:1.8rem; background:rgba(245,158,11,0.2); width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
           🔒
         </div>
         <div>
-          <div class="text-sm font-black" style="color:#b45309;">Withdrawal Locked</div>
+          <div class="text-sm font-black" style="color:#ffb300;">Withdrawal Locked</div>
           <div class="text-xs text-muted">Complete milestones below to unlock instant payouts</div>
         </div>
       </div>
 
       <!-- Milestone 1: 10 Referrals -->
-      <div style="margin-bottom:12px; background:#ffffff; padding:12px; border-radius:12px; border:1.5px solid #e2e8f0; box-shadow:0 1px 3px rgba(15,23,42,0.03);">
+      <div style="margin-bottom:12px; background:#0e141e; padding:12px; border-radius:12px; border:1px solid var(--card-border);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <span class="text-xs font-semibold">👥 10 Referrals Required</span>
+          <span class="text-xs font-semibold" style="color:#ffffff;">👥 10 Referrals Required</span>
           <span id="wd-ref-progress-text" class="text-xs font-bold text-primary">0 / 10</span>
         </div>
         <div class="progress-bar">
-          <div id="wd-ref-progress-bar" class="progress-fill" style="width:0%; background:linear-gradient(90deg, #3b82f6, #06b6d4);"></div>
+          <div id="wd-ref-progress-bar" class="progress-fill" style="width:0%; background:linear-gradient(90deg, #00aff0, #00e676);"></div>
         </div>
       </div>
 
       <!-- Milestone 2: 30 Ads Watched -->
-      <div style="margin-bottom:14px; background:#ffffff; padding:12px; border-radius:12px; border:1.5px solid #e2e8f0; box-shadow:0 1px 3px rgba(15,23,42,0.03);">
+      <div style="margin-bottom:14px; background:#0e141e; padding:12px; border-radius:12px; border:1px solid var(--card-border);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <span class="text-xs font-semibold">🎬 30 Ads Watched Required</span>
-          <span id="wd-ad-progress-text" class="text-xs font-bold text-success">0 / 30</span>
+          <span class="text-xs font-semibold" style="color:#ffffff;">🎬 30 Ads Watched Required</span>
+          <span id="wd-ad-progress-text" class="text-xs font-bold" style="color:#00e676;">0 / 30</span>
         </div>
         <div class="progress-bar">
-          <div id="wd-ad-progress-bar" class="progress-fill" style="width:0%; background:linear-gradient(90deg, #10b981, #34d399);"></div>
+          <div id="wd-ad-progress-bar" class="progress-fill" style="width:0%; background:linear-gradient(90deg, #00e676, #00aff0);"></div>
         </div>
       </div>
 
@@ -715,10 +715,10 @@
     </section>
 
     <!-- Withdrawal Unlocked Banner -->
-    <div id="wd-unlocked-banner" style="display:none; align-items:center; gap:10px; padding:14px 16px; border-radius:16px; background:#ecfdf5; border:1.5px solid #a7f3d0; margin-bottom:16px; box-shadow:0 4px 12px rgba(16,185,129,0.1);">
+    <div id="wd-unlocked-banner" style="display:none; align-items:center; gap:10px; padding:14px 16px; border-radius:16px; background:#0d2318; border:1.5px solid rgba(0,200,83,0.35); margin-bottom:16px;">
       <span style="font-size:1.6rem;">🎉</span>
       <div>
-        <div class="text-sm font-bold text-success">Withdrawals Fully Unlocked!</div>
+        <div class="text-sm font-bold" style="color:#00e676;">Withdrawals Fully Unlocked!</div>
         <div class="text-xs text-muted">You have met the requirements and can withdraw any amount.</div>
       </div>
     </div>
@@ -730,11 +730,11 @@
         <span id="linked-account-pill" class="badge badge-approved" style="display:none; font-size:0.7rem;">Saved in MongoDB</span>
       </div>
 
-      <div id="linked-account-display" style="display:none; background:#f0fdf4; border:1.5px solid #bbf7d0; border-radius:12px; padding:10px 14px; margin-bottom:12px; font-size:0.8rem; color:#166534;">
+      <div id="linked-account-display" style="display:none; background:#0d2318; border:1px solid rgba(0,200,83,0.35); border-radius:12px; padding:10px 14px; margin-bottom:12px; font-size:0.8rem; color:#00e676;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <div>
-            <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#15803d;">Active Linked Account</div>
-            <div id="linked-account-val" style="font-weight:800; font-size:0.92rem; margin-top:2px;"></div>
+            <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#00e676;">Active Linked Account</div>
+            <div id="linked-account-val" style="font-weight:800; font-size:0.92rem; margin-top:2px; color:#ffffff;"></div>
           </div>
           <span style="font-size:1.4rem;">✅</span>
         </div>
@@ -847,17 +847,39 @@
           <span class="live-dot"></span> Verified Sponsor
         </div>
         <div id="rewarded-modal-timer-pill" class="rewarded-timer-pill">
-          ⏱️ Reward in <span id="rewarded-modal-seconds">8</span>s
+          ⏱️ Reward in <span id="rewarded-modal-seconds">10</span>s
         </div>
       </div>
 
-      <!-- Sponsor Visual Showcase with High-CTR Click Reward -->
-      <div class="rewarded-modal-banner cpc-clickable-card" onclick="handleAdElementClick('https://t.me/tadsagency', 'modal_banner')" style="cursor:pointer;" title="Tap to visit sponsor &amp; claim bonus reward">
-        <div class="rewarded-banner-badge" style="background:#2563eb; color:white;">🔥 Tap Sponsor to Earn (+₹5.00)</div>
-        <div class="rewarded-banner-icon">🎬</div>
-        <div class="rewarded-banner-title">Telegram Ads Network</div>
-        <div class="rewarded-banner-desc">
-          Tap here to visit our verified sponsor. Generates instant rewards and unlocks payout!
+      <!-- 10-Second Wait Instruction -->
+      <div style="background:rgba(0,175,240,0.08); border:1px solid rgba(0,175,240,0.25); border-radius:12px; padding:10px 12px; font-size:0.75rem; color:var(--text-muted); line-height:1.45; text-align:left; margin-bottom:12px;">
+        👉 <b>Explore Sponsor:</b> Tap an ad below, stay on the sponsor page for <b>10 seconds</b>, and claim your <b>₹5.00</b> reward!
+      </div>
+
+      <!-- Multi-Ad Cards inside Modal -->
+      <div class="rewarded-multi-ads">
+        <!-- Ad 1: Official Tads Partner -->
+        <div class="rewarded-modal-banner cpc-clickable-card" onclick="handleAdElementClick('https://t.me/tadsagency', 'modal_tads_ad')" title="Tap to explore sponsor &amp; claim reward">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span class="rewarded-banner-badge" style="background:#00aff0; color:#000; font-size:0.65rem; font-weight:800; padding:2px 8px; border-radius:6px;">🔥 Top CPC Sponsor</span>
+            <span style="font-size:0.72rem; color:#00e676; font-weight:800;">+₹5.00</span>
+          </div>
+          <div class="rewarded-banner-title">Tads Official Advertising Network</div>
+          <div class="rewarded-banner-desc">
+            Tap here to open verified sponsor. Stay 10 seconds to unlock your balance!
+          </div>
+        </div>
+
+        <!-- Ad 2: Web3 & Telegram Partner -->
+        <div class="rewarded-modal-banner cpc-clickable-card" onclick="handleAdElementClick('https://t.me/tadsagency', 'modal_web3_ad')" title="Tap to explore sponsor &amp; claim reward">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span class="rewarded-banner-badge" style="background:#00c853; color:#000; font-size:0.65rem; font-weight:800; padding:2px 8px; border-radius:6px;">⚡ Instant Partner</span>
+            <span style="font-size:0.72rem; color:#00e676; font-weight:800;">+₹5.00</span>
+          </div>
+          <div class="rewarded-banner-title">Premium Partner Channel Bonus</div>
+          <div class="rewarded-banner-desc">
+            Visit official channel sponsor. 100% verified instant payout tracking.
+          </div>
         </div>
       </div>
 
@@ -867,12 +889,12 @@
       </div>
 
       <div id="rewarded-modal-status" class="rewarded-modal-status">
-        Watching sponsored ad... Please wait for the timer to claim your ₹5.00 reward.
+        Watching sponsored ad... Stay on the sponsor page for 10 seconds to verify and claim.
       </div>
 
       <!-- Claim & Close Button -->
       <button id="rewarded-modal-action-btn" class="btn btn-rewarded-modal" disabled>
-        <span>⏳ Watching Ad (8s)...</span>
+        <span>⏳ Exploring Sponsor (10s)...</span>
       </button>
     </div>
   </div>

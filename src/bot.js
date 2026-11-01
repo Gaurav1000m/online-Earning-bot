@@ -462,17 +462,17 @@ export function initBot() {
 
       const keyboard = new InlineKeyboard();
       if (config.webAppUrl && config.webAppUrl.startsWith('https://')) {
-        keyboard.webApp('🎬 Open Sponsored Ad', adUrl).row();
+        keyboard.webApp(`🎬 Open Ad (+${symbol}${adReward.toFixed(2)})`, adUrl).row();
       } else {
-        keyboard.url('🎬 Open Sponsored Ad', adUrl).row();
+        keyboard.url(`🎬 Open Ad (+${symbol}${adReward.toFixed(2)})`, adUrl).row();
       }
-      keyboard.text('❌ Close Ad & Claim (+₹5)', 'claim_closed_ad');
+      keyboard.text('✅ Claimed Reward', 'claim_closed_ad');
 
       await ctx.reply(
-        `🎬 <b>Watch Ad & Earn</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `1️⃣ Tap <b>"Open Sponsored Ad"</b> below to view the ad.\n` +
-        `2️⃣ Watch the complete ad (at least 15–20s).\n` +
-        `3️⃣ When finished, tap <b>"Close Ad & Claim (❌)"</b> to credit your balance!\n\n` +
+        `🎬 <b>Watch & Explore Ads</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `1️⃣ Tap <b>"🎬 Open Ad (+${symbol}${adReward.toFixed(2)})"</b> below.\n` +
+        `2️⃣ Tap any sponsored ad and explore for <b>10 seconds</b>.\n` +
+        `3️⃣ Tap <b>Claim & Close</b> to credit <b>+${symbol}${adReward.toFixed(2)}</b> instantly!\n\n` +
         `💰 <b>Reward:</b> <b>+${symbol}${adReward.toFixed(2)}</b>`,
         { parse_mode: 'HTML', reply_markup: keyboard }
       );
@@ -1555,9 +1555,9 @@ async function handleWatchAdsAction(ctx) {
 
   const keyboard = new InlineKeyboard();
   if (config.webAppUrl && config.webAppUrl.startsWith('https://')) {
-    keyboard.webApp('🎬 Open Ad', `${config.webAppUrl}/ad.html?userId=${user.id}`).row();
+    keyboard.webApp(`🎬 Open Ad (+${symbol}${adReward.toFixed(2)})`, `${config.webAppUrl}/ad.html?userId=${user.id}`).row();
   } else {
-    keyboard.text('🎬 Open Ad', 'bot_watch_ad').row();
+    keyboard.text(`🎬 Open Ad (+${symbol}${adReward.toFixed(2)})`, 'bot_watch_ad').row();
   }
 
   // Note: Open Mini App button removed as requested

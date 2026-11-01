@@ -67,7 +67,7 @@ export const DEFAULT_TEMPLATES = {
     inline_buttons: []
   },
   WATCH_AD_MESSAGE: {
-    text: `🎬 <b>Watch Ads & Earn</b>\n\nWatch an advertisement and earn {{currency_symbol}}{{ad_reward}} for each completed ad. Reward is credited once you finish and close (❌) the ad. You can watch {{daily_ad_limit_text}} per day.\n\n📊 <b>Total ads watched:</b> {{total_ads_watched}}\n👀 <b>Ads watched today:</b> {{ads_today_display}}\n\nTap below to open the ad👇`,
+    text: `🎬 <b>Watch & Explore Ads</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n💰 <b>Reward:</b> <b>+{{currency_symbol}}{{ad_reward}}</b> per ad\n⚡ <b>Rule:</b> Tap <b>"🎬 Open Ad"</b> below, stay on the sponsor page for <b>10 seconds</b>, and your balance is credited instantly!\n\n📊 <b>Ads watched today:</b> {{ads_today_display}}\n\n👇 Tap below to start:`,
     media_type: 'none',
     media_url: '',
     inline_buttons: []
@@ -307,7 +307,7 @@ class Database {
     if (!state.message_templates.FORCE_JOIN_MESSAGE || state.message_templates.FORCE_JOIN_MESSAGE.text.includes('JOIN REQUIRED CHANNELS')) {
       state.message_templates.FORCE_JOIN_MESSAGE = DEFAULT_TEMPLATES.FORCE_JOIN_MESSAGE;
     }
-    if (!state.message_templates.WATCH_AD_MESSAGE || !state.message_templates.WATCH_AD_MESSAGE.text.includes('close (❌) the ad')) {
+    if (!state.message_templates.WATCH_AD_MESSAGE || !state.message_templates.WATCH_AD_MESSAGE.text.includes('10 seconds')) {
       state.message_templates.WATCH_AD_MESSAGE = DEFAULT_TEMPLATES.WATCH_AD_MESSAGE;
     }
     if (!state.message_templates.AD_SUCCESS_MESSAGE || state.message_templates.AD_SUCCESS_MESSAGE.text.includes('🎉 You earned') || state.message_templates.AD_SUCCESS_MESSAGE.text.includes('{{ads_today}}/{{daily_ad_limit}}')) {

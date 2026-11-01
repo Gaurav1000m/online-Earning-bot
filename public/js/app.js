@@ -49,16 +49,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       tg.ready();
       tg.expand();
       if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
-      if (tg.setHeaderColor) tg.setHeaderColor('#ffffff');
-      if (tg.setBackgroundColor) tg.setBackgroundColor('#f8fafc');
+      if (tg.setHeaderColor) tg.setHeaderColor('#0b0e14');
+      if (tg.setBackgroundColor) tg.setBackgroundColor('#0b0e14');
     } catch (e) {
       console.warn('Telegram WebApp SDK init warning:', e);
     }
     try {
-      document.documentElement.style.setProperty('--tg-theme-bg-color', '#ffffff');
-      document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', '#f1f5f9');
-      document.documentElement.style.setProperty('--tg-theme-text-color', '#0f172a');
-      document.documentElement.style.setProperty('--tg-theme-button-color', '#2563eb');
+      document.documentElement.style.setProperty('--tg-theme-bg-color', '#0b0e14');
+      document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', '#121824');
+      document.documentElement.style.setProperty('--tg-theme-text-color', '#f3f5f9');
+      document.documentElement.style.setProperty('--tg-theme-button-color', '#00aff0');
       document.documentElement.style.setProperty('--tg-theme-button-text-color', '#ffffff');
     } catch (_) {}
   }
@@ -703,17 +703,17 @@ function initTadsTGB() {
   function renderCard(el, ad) {
     if (!el || !ad || el.children.length > 0) return;
     el.innerHTML = `
-      <div class="tads-native-card cpc-clickable-card" onclick="handleAdElementClick('${ad.url || 'https://t.me/tadsagency'}', '${ad.id || 28}')" style="display:flex; align-items:center; gap:12px; background:#ffffff; border:1.5px solid #c2e7ff; border-radius:18px; padding:12px 14px; box-shadow:0 1px 3px rgba(60,64,67,0.12); cursor:pointer; width:100%; text-align:left;">
-        <img src="${ad.image_url || 'https://tads.me/favicon.ico'}" alt="Ad" style="width:50px; height:50px; border-radius:12px; object-fit:cover; flex-shrink:0; border:1px solid #dadce0; box-shadow:0 1px 3px rgba(0,0,0,0.08);" />
+      <div class="tads-native-card cpc-clickable-card" onclick="handleAdElementClick('${ad.url || 'https://t.me/tadsagency'}', '${ad.id || 28}')" style="display:flex; align-items:center; gap:12px; background:#121824; border:1px solid rgba(0,175,240,0.35); border-radius:18px; padding:12px 14px; box-shadow:0 4px 18px rgba(0,0,0,0.3); cursor:pointer; width:100%; text-align:left;">
+        <img src="${ad.image_url || 'https://tads.me/favicon.ico'}" alt="Ad" style="width:48px; height:48px; border-radius:12px; object-fit:cover; flex-shrink:0; border:1px solid rgba(0,175,240,0.3); box-shadow:0 0 10px rgba(0,175,240,0.2);" />
         <div style="flex:1; min-width:0;">
-          <div style="font-size:0.92rem; font-weight:700; color:#202124; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          <div style="font-size:0.92rem; font-weight:800; color:#ffffff; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
             ${ad.title || 'Tads Advertising Network'}
           </div>
-          <div style="font-size:0.75rem; color:#5f6368; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+          <div style="font-size:0.75rem; color:#8c9cb3; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
             ${ad.description || 'Tap to visit sponsor &amp; claim your ₹5.00 cash reward instantly!'}
           </div>
         </div>
-        <div class="cpc-pulse-btn" style="background:#1a73e8; color:white; font-size:0.78rem; font-weight:700; padding:8px 14px; border-radius:999px; flex-shrink:0; box-shadow:0 2px 6px rgba(26,115,232,0.3);">
+        <div class="cpc-pulse-btn" style="background:linear-gradient(135deg, #00aff0, #0070f3); color:white; font-size:0.78rem; font-weight:800; padding:8px 14px; border-radius:999px; flex-shrink:0; box-shadow:0 4px 12px rgba(0,175,240,0.35);">
           Tap &amp; Earn &rarr;
         </div>
       </div>
@@ -723,19 +723,19 @@ function initTadsTGB() {
   function renderFallbackTGB(el) {
     if (!el || el.children.length > 0) return;
     el.innerHTML = `
-      <div class="tads-native-card cpc-clickable-card" onclick="handleAdElementClick('https://t.me/tadsagency', 'fallback_13007')" style="display:flex; align-items:center; gap:12px; background:#ffffff; border:1.5px solid #c2e7ff; border-radius:18px; padding:12px 14px; box-shadow:0 1px 3px rgba(60,64,67,0.12); cursor:pointer; width:100%; text-align:left;">
-        <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg,#1a73e8,#34a853); display:flex; align-items:center; justify-content:center; font-size:1.6rem; flex-shrink:0; box-shadow:0 2px 8px rgba(26,115,232,0.25); color:white;">
+      <div class="tads-native-card cpc-clickable-card" onclick="handleAdElementClick('https://t.me/tadsagency', 'fallback_13007')" style="display:flex; align-items:center; gap:12px; background:#121824; border:1px solid rgba(0,175,240,0.35); border-radius:18px; padding:12px 14px; box-shadow:0 4px 18px rgba(0,0,0,0.3); cursor:pointer; width:100%; text-align:left;">
+        <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg,#00aff0,#00c853); display:flex; align-items:center; justify-content:center; font-size:1.6rem; flex-shrink:0; box-shadow:0 0 14px rgba(0,175,240,0.3); color:white;">
           💎
         </div>
         <div style="flex:1; min-width:0;">
-          <div style="font-size:0.92rem; font-weight:700; color:#202124; margin-bottom:2px;">
+          <div style="font-size:0.92rem; font-weight:800; color:#ffffff; margin-bottom:2px;">
             Visit Sponsored Partner (+₹5.00)
           </div>
-          <div style="font-size:0.75rem; color:#5f6368; line-height:1.35;">
-            Tap here to open our partner sponsor and credit ₹5.00 to your wallet!
+          <div style="font-size:0.75rem; color:#8c9cb3; line-height:1.35;">
+            Tap here to open verified sponsor. Stay 10s to credit ₹5.00 to wallet!
           </div>
         </div>
-        <div class="cpc-pulse-btn" style="background:#1a73e8; color:white; font-size:0.78rem; font-weight:700; padding:8px 14px; border-radius:999px; flex-shrink:0; box-shadow:0 2px 6px rgba(26,115,232,0.3);">
+        <div class="cpc-pulse-btn" style="background:linear-gradient(135deg, #00aff0, #0070f3); color:white; font-size:0.78rem; font-weight:800; padding:8px 14px; border-radius:999px; flex-shrink:0; box-shadow:0 4px 12px rgba(0,175,240,0.35);">
           Claim ₹5 &rarr;
         </div>
       </div>
@@ -848,8 +848,8 @@ function showInAppRewardedModal(onCompleted) {
 
   if (inAppModalTimer) clearInterval(inAppModalTimer);
 
-  let remaining = 8;
-  const total = 8;
+  let remaining = 10;
+  const total = 10;
 
   modal.style.display = 'flex';
   requestAnimationFrame(() => {
@@ -861,10 +861,10 @@ function showInAppRewardedModal(onCompleted) {
     timerPill.innerHTML = `⏱️ Reward in <span id="rewarded-modal-seconds">${remaining}</span>s`;
   }
   if (progressFill) progressFill.style.width = '0%';
-  if (statusEl) statusEl.textContent = 'Watching sponsored ad... Please wait for the timer to claim your ₹5.00 reward.';
+  if (statusEl) statusEl.textContent = 'Watching sponsored ad... Stay on the sponsor page for 10 seconds to verify and claim.';
   if (actionBtn) {
     actionBtn.disabled = true;
-    actionBtn.innerHTML = `<span>⏳ Watching Ad (${remaining}s)...</span>`;
+    actionBtn.innerHTML = `<span>⏳ Exploring Sponsor (${remaining}s)...</span>`;
   }
 
   const dismissModal = () => {
@@ -884,17 +884,17 @@ function showInAppRewardedModal(onCompleted) {
     if (progressFill) progressFill.style.width = `${pct}%`;
 
     if (actionBtn && remaining > 0) {
-      actionBtn.innerHTML = `<span>⏳ Watching Ad (${remaining}s)...</span>`;
+      actionBtn.innerHTML = `<span>⏳ Exploring Sponsor (${remaining}s)...</span>`;
     }
 
     if (remaining <= 0) {
       clearInterval(inAppModalTimer);
       if (timerPill) {
         timerPill.classList.add('unlocked');
-        timerPill.innerHTML = '✅ Reward Ready!';
+        timerPill.innerHTML = '✅ 10s Verified!';
       }
       if (statusEl) {
-        statusEl.innerHTML = '🎉 Ad completed! Tap below to claim your <b>₹5.00</b> reward now.';
+        statusEl.innerHTML = '🎉 <b>10s Complete!</b> Tap below to claim your <b>₹5.00</b> reward now.';
       }
       if (actionBtn) {
         actionBtn.disabled = false;

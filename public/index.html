@@ -39,6 +39,11 @@
   }
   </script>
 
+  <!-- Google Fonts: Google Sans & Roboto -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
   <!-- Custom Modern Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -59,76 +64,141 @@
   <!-- TAB 1: HOME -->
   <!-- ======================================================== -->
   <main id="tab-home" class="tab-pane active">
+    <!-- Google Certified Partner Trust Strip -->
+    <div class="google-partner-bar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding:6px 12px; background:#f1f3f4; border-radius:12px; font-size:0.72rem; color:#5f6368; font-weight:600;">
+      <div style="display:flex; align-items:center; gap:6px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4z" fill="#1a73e8"/><path d="M10 15.5l-3.5-3.5 1.4-1.4 2.1 2.1 5.6-5.6 1.4 1.4L10 15.5z" fill="#ffffff"/></svg>
+        <span>Google Certified Partner &bull; Official Publisher</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:4px; color:#1e8e3e; font-weight:700;">
+        <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#1e8e3e;"></span>
+        <span>Verified Payouts</span>
+      </div>
+    </div>
+
     <!-- User Profile Header -->
-    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
       <div style="display:flex; align-items:center; gap:12px;">
-        <div style="width:46px; height:46px; border-radius:50%; background:linear-gradient(135deg, #3b82f6, #06b6d4); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.25rem; color:white; box-shadow:0 6px 16px rgba(59,130,246,0.4); border:2px solid rgba(255,255,255,0.15);">
+        <div style="width:44px; height:44px; border-radius:50%; background:#e8f0fe; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.15rem; color:#1a73e8; border:2px solid #c2e7ff; box-shadow:0 1px 3px rgba(60,64,67,0.15);">
           👤
         </div>
         <div>
-          <div class="text-xs text-muted" style="letter-spacing:0.3px;">Welcome back,</div>
-          <div id="user-greeting-name" class="text-base font-bold" style="color:var(--text-main);">User</div>
+          <div class="text-xs text-muted" style="letter-spacing:0.2px;">Google Account User</div>
+          <div style="display:flex; align-items:center; gap:4px;">
+            <div id="user-greeting-name" class="text-base font-bold" style="color:var(--text-main);">User</div>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#1a73e8"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          </div>
         </div>
       </div>
       <div style="display:flex; gap:8px; align-items:center;">
-        <button id="admin-quick-btn" class="badge" style="display:none; background:rgba(245,158,11,0.2); color:#fbbf24; border:1px solid rgba(245,158,11,0.35); cursor:pointer;" onclick="location.href='/admin'">
+        <button id="admin-quick-btn" class="badge" style="display:none; background:#fef7e0; color:#b06000; border:1px solid #f9ab00; cursor:pointer;" onclick="location.href='/admin'">
           ⚙️ Admin
         </button>
-        <div class="badge badge-approved">
+        <div class="badge" style="background:#f1f3f4; color:#5f6368; font-weight:700; border:1px solid #dadce0;">
           ID: <span id="user-profile-id">...</span>
         </div>
       </div>
     </header>
 
-    <!-- Main Balance Gradient Card -->
+    <!-- Main Balance Google Pay Style Card -->
     <section class="gradient-card" style="margin-bottom:18px;">
       <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div>
-          <div class="text-xs" style="opacity:0.85; text-transform:uppercase; letter-spacing:0.6px; font-weight:700;">Available Balance</div>
-          <div class="text-3xl font-black" style="margin:4px 0 2px;">
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+            <span class="text-xs font-bold" style="color:#5f6368; text-transform:uppercase; letter-spacing:0.8px;">Google Rewards Balance</span>
+            <span style="font-size:0.65rem; background:#e8f0fe; color:#1a73e8; padding:1px 6px; border-radius:6px; font-weight:700;">Direct UPI</span>
+          </div>
+          <div class="text-3xl font-black" style="margin:2px 0; color:#202124;">
             <span class="val-currency-symbol">₹</span><span class="user-balance">0.00</span>
           </div>
-          <div class="text-xs" style="opacity:0.85;">
-            ≈ <span class="user-balance">0.00</span> <span class="val-currency-name">Points</span>
+          <div class="text-xs text-muted">
+            ≈ <span class="user-balance">0.00</span> <span class="val-currency-name">Points</span> &bull; 1 Point = ₹1.00
           </div>
         </div>
-        <button class="btn btn-sm" data-switch-tab="wallet" onclick="switchTab('wallet')" style="background:rgba(255,255,255,0.2); color:white; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.25); font-weight:700;">
+        <button class="btn btn-sm btn-primary" data-switch-tab="wallet" onclick="switchTab('wallet')">
           💸 Withdraw
         </button>
       </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.18);">
+      <!-- Action Pill Buttons Row (Google Pay Style) -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; padding-top:12px; border-top:1px solid #e8eaed;">
+        <button class="btn btn-sm btn-secondary" onclick="handleAdElementClick('https://t.me/tadsagency', 'gpay_cpc_visit')" style="font-size:0.78rem; padding:8px 10px;">
+          ⚡ Sponsor Visit (+₹5)
+        </button>
+        <button class="btn btn-sm btn-tonal-green" onclick="switchTab('earn')" style="font-size:0.78rem; padding:8px 10px;">
+          🎬 Watch Ads (+₹5)
+        </button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; padding-top:10px; border-top:1px dashed #e8eaed;">
         <div>
-          <div class="text-xs" style="opacity:0.8;">Total Earned</div>
-          <div class="text-sm font-bold"><span class="val-currency-symbol">₹</span><span class="user-total-earned">0.00</span></div>
+          <div class="text-xs text-muted">Total Earned</div>
+          <div class="text-sm font-bold" style="color:#1e8e3e;"><span class="val-currency-symbol">₹</span><span class="user-total-earned">0.00</span></div>
         </div>
         <div>
-          <div class="text-xs" style="opacity:0.8;">Total Withdrawn</div>
-          <div class="text-sm font-bold"><span class="val-currency-symbol">₹</span><span class="user-total-withdrawn">0.00</span></div>
+          <div class="text-xs text-muted">Total Withdrawn</div>
+          <div class="text-sm font-bold" style="color:#202124;"><span class="val-currency-symbol">₹</span><span class="user-total-withdrawn">0.00</span></div>
         </div>
       </div>
     </section>
 
     <!-- Quick Action Navigation Grid -->
     <section style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
-      <div class="card" data-switch-tab="earn" style="cursor:pointer; display:flex; align-items:center; gap:12px; padding:14px;">
-        <div style="font-size:1.8rem; background:rgba(59,130,246,0.15); width:44px; height:44px; border-radius:14px; display:flex; align-items:center; justify-content:center;">
+      <div class="card" data-switch-tab="earn" style="cursor:pointer; display:flex; align-items:center; gap:12px; padding:14px; border:1.5px solid #dadce0;">
+        <div style="font-size:1.6rem; background:#e8f0fe; color:#1a73e8; width:44px; height:44px; border-radius:14px; display:flex; align-items:center; justify-content:center;">
           🎬
         </div>
         <div>
-          <div class="text-sm font-bold">Watch Ads</div>
+          <div class="text-sm font-bold" style="color:#202124;">Watch Ads</div>
           <div class="text-xs text-muted">+<span class="val-currency-symbol">₹</span><span class="val-ad-reward">5.0</span> instant</div>
         </div>
       </div>
 
-      <div class="card" data-switch-tab="refer" style="cursor:pointer; display:flex; align-items:center; gap:12px; padding:14px;">
-        <div style="font-size:1.8rem; background:rgba(16,185,129,0.15); width:44px; height:44px; border-radius:14px; display:flex; align-items:center; justify-content:center;">
+      <div class="card" data-switch-tab="refer" style="cursor:pointer; display:flex; align-items:center; gap:12px; padding:14px; border:1.5px solid #dadce0;">
+        <div style="font-size:1.6rem; background:#e6f4ea; color:#1e8e3e; width:44px; height:44px; border-radius:14px; display:flex; align-items:center; justify-content:center;">
           👥
         </div>
         <div>
-          <div class="text-sm font-bold">Refer & Earn</div>
+          <div class="text-sm font-bold" style="color:#202124;">Refer & Earn</div>
           <div class="text-xs text-muted">+<span class="val-currency-symbol">₹</span><span class="val-referral-reward">20.0</span> per friend</div>
         </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- TADS CPC SPONSORED PARTNER BLOCK (MAX REVENUE UNIT)      -->
+    <!-- Official TADS Widget ID: 13007 (Cost Per Click Format)   -->
+    <!-- ======================================================== -->
+    <section class="card tads-banner-card cpc-highlight-card" style="margin-bottom:18px; padding:16px; text-align:left; border:1.5px solid #c2e7ff; background:#ffffff; box-shadow:0 1px 4px rgba(60,64,67,0.12);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="width:30px; height:30px; border-radius:50%; background:#e8f0fe; display:flex; align-items:center; justify-content:center; color:#1a73e8; font-size:0.95rem; font-weight:800;">
+            💎
+          </div>
+          <div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="text-xs font-bold" style="color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px;">Highest CPC Partner</span>
+              <span style="font-size:0.65rem; background:#f1f3f4; color:#5f6368; padding:1px 6px; border-radius:4px; font-weight:700;">Ad ⓘ</span>
+            </div>
+            <div class="text-xs text-muted" style="margin-top:1px;">Tap sponsor to visit website &bull; Earn +₹5.00 cash</div>
+          </div>
+        </div>
+        <span class="badge" style="background:#1a73e8; color:#ffffff; font-size:0.75rem; font-weight:800; padding:4px 10px; border-radius:12px; box-shadow:0 2px 6px rgba(26,115,232,0.3);">
+          +₹5.00 / Click
+        </span>
+      </div>
+
+      <!-- Official TADS Container for Widget ID 13007 on Home Tab -->
+      <div id="tads-container-13007"></div>
+
+      <!-- High-CTR Fast Action Row -->
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; font-size:0.75rem; color:#5f6368; padding-top:8px; border-top:1px dashed #dadce0;">
+        <span style="display:flex; align-items:center; gap:4px;">
+          <span style="color:#1e8e3e; font-weight:700;">✓ Verified Sponsor</span> &bull; 0s Wait
+        </span>
+        <button class="btn-text-action" onclick="handleAdElementClick('https://t.me/tadsagency', 'cpc_home_btn')" style="color:#1a73e8; font-weight:700; background:none; border:none; padding:0; cursor:pointer; font-size:0.75rem;">
+          Tap to Visit &amp; Claim &rarr;
+        </button>
       </div>
     </section>
 
@@ -407,28 +477,28 @@
     </section>
 
     <!-- ======================================================== -->
-    <!-- TADS CPC REWARDED CLICK TASK (MAX REVENUE SECTION)       -->
+    <!-- TADS CPC REWARDED CLICK TASK (EARN TAB PLACEMENT)        -->
     <!-- ======================================================== -->
-    <section class="card tads-banner-card cpc-highlight-card" style="margin-bottom:20px; padding:18px; text-align:left; border:2px solid #3b82f6; background:linear-gradient(135deg, #eff6ff 0%, #ffffff 100%); box-shadow:0 8px 24px rgba(37,99,235,0.12);">
+    <section class="card tads-banner-card cpc-highlight-card" style="margin-bottom:20px; padding:18px; text-align:left; border:1.5px solid #c2e7ff; background:#ffffff; box-shadow:0 1px 4px rgba(60,64,67,0.12);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <div style="display:flex; align-items:center; gap:8px;">
           <span style="font-size:1.5rem;">💎</span>
           <div>
-            <div class="text-xs font-black" style="color:#1d4ed8; text-transform:uppercase; letter-spacing:0.6px;">Highest CPC Partner Task</div>
+            <div class="text-xs font-bold" style="color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px;">Highest CPC Partner Task</div>
             <div class="text-xs text-muted" style="margin-top:1px;">Tap sponsor card &amp; visit website to claim +₹5.00</div>
           </div>
         </div>
-        <span class="badge" style="background:#2563eb; color:#ffffff; font-size:0.75rem; font-weight:900; padding:4px 10px; border-radius:12px; box-shadow:0 2px 8px rgba(37,99,235,0.35);">
+        <span class="badge" style="background:#1a73e8; color:#ffffff; font-size:0.75rem; font-weight:800; padding:4px 10px; border-radius:12px; box-shadow:0 2px 6px rgba(26,115,232,0.3);">
           +₹5.00 / Click
         </span>
       </div>
 
-      <!-- Official TADS Container for Widget ID 13007 in Watch Ads Section -->
-      <div id="tads-container-13007"></div>
+      <!-- TADS Container for Earn Section -->
+      <div id="tads-container-earn-13007"></div>
 
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; font-size:0.72rem; color:#64748b; padding-top:8px; border-top:1px dashed #cbd5e1;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; font-size:0.72rem; color:#5f6368; padding-top:8px; border-top:1px dashed #dadce0;">
         <span>⚡ Tap card &bull; Visit sponsor &bull; Reward auto-credited</span>
-        <span style="color:#059669; font-weight:800;">Verified Payout ✅</span>
+        <span style="color:#1e8e3e; font-weight:700;">Verified Payout ✅</span>
       </div>
     </section>
 

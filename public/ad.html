@@ -11,17 +11,22 @@
   <!-- Tads Widget SDK -->
   <script src="https://w.tads.me/widget.js"></script>
 
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
   <style>
     :root {
-      --bg: #f8fafc;
-      --card-bg: rgba(255, 255, 255, 0.96);
-      --card-border: rgba(226, 232, 240, 0.9);
-      --primary: #2563eb;
-      --primary-gradient: linear-gradient(135deg, #2563eb, #06b6d4);
-      --success: #10b981;
-      --success-gradient: linear-gradient(135deg, #10b981, #059669);
-      --text-main: #0f172a;
-      --text-muted: #64748b;
+      --bg: #f8fafd;
+      --card-bg: #ffffff;
+      --card-border: #dadce0;
+      --primary: #1a73e8;
+      --primary-gradient: linear-gradient(135deg, #1a73e8, #1557b0);
+      --success: #1e8e3e;
+      --success-gradient: linear-gradient(135deg, #1e8e3e, #137333);
+      --text-main: #202124;
+      --text-muted: #5f6368;
     }
 
     * {
@@ -33,13 +38,8 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #f8fafc;
-      background-image:
-        radial-gradient(circle at 10% 20%, rgba(255, 59, 48, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 90% 15%, rgba(0, 152, 234, 0.1) 0%, transparent 45%),
-        radial-gradient(circle at 50% 80%, rgba(16, 185, 129, 0.09) 0%, transparent 50%),
-        radial-gradient(circle at 85% 75%, rgba(139, 92, 246, 0.09) 0%, transparent 45%);
+      font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      background: #f8fafd;
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
@@ -50,15 +50,14 @@
     }
 
     .ad-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(20px);
+      background: #ffffff;
       border: 1.5px solid var(--card-border);
-      border-radius: 28px;
-      padding: 28px 22px;
+      border-radius: 24px;
+      padding: 26px 20px;
       max-width: 390px;
       width: 100%;
       text-align: center;
-      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+      box-shadow: 0 1px 3px 0 rgba(60,64,67,0.12), 0 4px 14px 2px rgba(60,64,67,0.06);
       position: relative;
       overflow: hidden;
     }
@@ -70,30 +69,30 @@
       left: 0;
       right: 0;
       height: 4px;
-      background: linear-gradient(90deg, #ff3b30, #ff9500, #ffcc00, #10b981, #0098ea, #8b5cf6, #ff2d55);
+      background: linear-gradient(90deg, #4285f4 0%, #ea4335 33%, #fbbc05 66%, #34a853 100%);
     }
 
     .ad-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      color: #2563eb;
+      background: #e8f0fe;
+      border: 1px solid #c2e7ff;
+      color: #1a73e8;
       padding: 6px 14px;
       border-radius: 999px;
       font-size: 0.78rem;
-      font-weight: 800;
-      letter-spacing: 0.6px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
       text-transform: uppercase;
       margin-bottom: 14px;
     }
 
     .ad-title {
-      font-size: 1.45rem;
-      font-weight: 900;
+      font-size: 1.4rem;
+      font-weight: 700;
       margin-bottom: 6px;
-      color: #0f172a;
+      color: #202124;
     }
 
     .ad-desc {

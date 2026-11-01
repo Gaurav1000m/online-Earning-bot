@@ -1,66 +1,75 @@
 /**
- * Easy & Fast Earn - White & Multicolor RGB Theme
- * Luxury Light Glassmorphism with Chromatic RGB Rainbow Accents
+ * Easy & Fast Earn - Google Professional App UI (Material 3)
+ * Inspired by Google Pay, Google Rewards & Google Play Design System
  */
 
 :root {
-  /* Color Palette - White Base */
-  --bg-color: #f8fafc;
-  --bg-radial: radial-gradient(circle at 10% 8%, rgba(255, 59, 48, 0.09) 0%, transparent 40%),
-               radial-gradient(circle at 90% 12%, rgba(0, 152, 234, 0.09) 0%, transparent 40%),
-               radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.07) 0%, transparent 50%),
-               radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.09) 0%, transparent 45%),
-               radial-gradient(circle at 15% 88%, rgba(245, 158, 11, 0.09) 0%, transparent 45%),
-               #f8fafc;
+  /* Google Official Brand Colors (Material 3) */
+  --google-blue: #1a73e8;
+  --google-blue-hover: #1557b0;
+  --google-blue-container: #e8f0fe;
+  --google-blue-text: #1967d2;
+  --google-green: #1e8e3e;
+  --google-green-container: #e6f4ea;
+  --google-green-text: #137333;
+  --google-yellow: #f9ab00;
+  --google-yellow-container: #fef7e0;
+  --google-yellow-text: #b06000;
+  --google-red: #d93025;
+  --google-red-container: #fce8e6;
+  --google-red-text: #c5221f;
 
-  /* Card Surfaces - White Glass */
-  --card-bg: rgba(255, 255, 255, 0.94);
+  /* Surfaces & Canvas */
+  --bg-color: #f8fafd;
+  --card-bg: #ffffff;
   --card-bg-elevated: #ffffff;
-  --card-border: rgba(226, 232, 240, 0.9);
-  --card-border-rgb: linear-gradient(135deg, #ff3b30, #ff9500, #10b981, #00d2ff, #7928ca);
+  --card-border: #dadce0;
+  --card-border-hover: #1a73e8;
 
-  /* Typography - High Contrast Graphite */
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --text-dim: #94a3b8;
+  /* High Contrast Typography */
+  --text-main: #202124;
+  --text-muted: #5f6368;
+  --text-dim: #80868b;
 
-  /* RGB Rainbow Gradients */
-  --rgb-gradient: linear-gradient(135deg, #ff3b30 0%, #ff9500 22%, #10b981 48%, #0098ea 74%, #8b5cf6 100%);
-  --rgb-glow: 0 8px 25px rgba(0, 152, 234, 0.35);
+  /* Google 4-Color Identity Accent */
+  --google-strip: linear-gradient(90deg, #4285f4 0%, #ea4335 33%, #fbbc05 66%, #34a853 100%);
+  --rgb-gradient: linear-gradient(90deg, #4285f4 0%, #ea4335 33%, #fbbc05 66%, #34a853 100%);
 
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-gradient: linear-gradient(135deg, #2563eb 0%, #06b6d4 55%, #10b981 100%);
-  --primary-glow: rgba(37, 99, 235, 0.35);
+  /* Primary Themes mapped to Google Brand */
+  --primary: #1a73e8;
+  --primary-hover: #1557b0;
+  --primary-gradient: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
+  --primary-glow: rgba(26, 115, 232, 0.25);
 
-  --success: #10b981;
-  --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --success-glow: rgba(16, 185, 129, 0.35);
+  --success: #1e8e3e;
+  --success-gradient: linear-gradient(135deg, #1e8e3e 0%, #137333 100%);
+  --success-glow: rgba(30, 142, 62, 0.25);
 
-  --warning: #f59e0b;
-  --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-
-  --danger: #ef4444;
+  --warning: #f9ab00;
+  --warning-gradient: linear-gradient(135deg, #f9ab00 0%, #d97706 100%);
+  --danger: #d93025;
   --purple: #8b5cf6;
 
-  /* Floating Nav */
-  --nav-bg: rgba(255, 255, 255, 0.94);
-  --shadow-card: 0 10px 28px -4px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
-  --shadow-dock: 0 16px 40px rgba(15, 23, 42, 0.12), 0 2px 10px rgba(0, 0, 0, 0.04);
+  /* Navigation & Elevation Shadows */
+  --nav-bg: #ffffff;
+  --shadow-card: 0 1px 3px 0 rgba(60,64,67,0.12), 0 1px 2px 0 rgba(60,64,67,0.08);
+  --shadow-elevated: 0 2px 6px 2px rgba(60,64,67,0.15);
+  --shadow-dock: 0 -2px 10px rgba(60,64,67,0.06);
 
-  --radius-2xl: 26px;
+  --radius-2xl: 24px;
   --radius-xl: 20px;
   --radius-lg: 16px;
   --radius-md: 12px;
   --radius-sm: 8px;
+  --radius-pill: 9999px;
 
-  /* Telegram Theme Variable Overrides (guarantees external SDKs like TADS render clean light backgrounds) */
+  /* Telegram Theme Variable Overrides (Clean Light Surfaces for TADS) */
   --tg-theme-bg-color: #ffffff;
-  --tg-theme-secondary-bg-color: #f1f5f9;
-  --tg-theme-text-color: #0f172a;
-  --tg-theme-hint-color: #64748b;
-  --tg-theme-link-color: #2563eb;
-  --tg-theme-button-color: #2563eb;
+  --tg-theme-secondary-bg-color: #f8fafd;
+  --tg-theme-text-color: #202124;
+  --tg-theme-hint-color: #5f6368;
+  --tg-theme-link-color: #1a73e8;
+  --tg-theme-button-color: #1a73e8;
   --tg-theme-button-text-color: #ffffff;
 }
 
@@ -73,9 +82,8 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background: var(--bg-radial);
-  background-attachment: fixed;
+  font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, Roboto, 'Segoe UI', Arial, sans-serif;
+  background: #f8fafd;
   color: var(--text-main);
   min-height: 100vh;
   padding-bottom: calc(108px + env(safe-area-inset-bottom, 0px));
@@ -94,102 +102,96 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(15, 23, 42, 0.15);
+  background: rgba(95, 99, 104, 0.2);
   border-radius: 4px;
 }
 
-/* White Glassmorphism Card with RGB Accents */
+/* Google Material 3 Surface Card */
 .card {
-  background: var(--card-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1.5px solid var(--card-border);
+  background: #ffffff;
+  border: 1.5px solid #dadce0;
   border-radius: var(--radius-xl);
   padding: 18px;
   box-shadow: var(--shadow-card);
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, border-color 0.18s ease;
   position: relative;
   overflow: hidden;
 }
 
 .card:hover {
-  border-color: rgba(37, 99, 235, 0.3);
-  box-shadow: 0 14px 34px -4px rgba(15, 23, 42, 0.12);
+  border-color: #bdc1c6;
+  box-shadow: 0 2px 8px rgba(60,64,67,0.12);
 }
 
 .card:active {
   transform: scale(0.99);
 }
 
-/* RGB Rainbow Card Border Utility */
+/* Google Rainbow Card Header Utility */
 .card-rgb {
   position: relative;
   background: #ffffff;
   border-radius: var(--radius-xl);
   padding: 18px;
+  border: 1.5px solid #dadce0;
   box-shadow: var(--shadow-card);
 }
 
 .card-rgb::before {
   content: '';
   position: absolute;
-  inset: -1.5px;
-  border-radius: calc(var(--radius-xl) + 1.5px);
-  padding: 1.5px;
-  background: var(--rgb-gradient);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--google-strip);
 }
 
-/* Hero Balance Card - Chromatic RGB Luxury */
+/* Google Pay Style Hero Balance Card */
 .gradient-card {
-  background: linear-gradient(135deg, #1e1b4b 0%, #2563eb 40%, #06b6d4 72%, #10b981 100%);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: #ffffff;
+  color: #202124;
+  border: 1.5px solid #dadce0;
   border-radius: var(--radius-2xl);
-  padding: 24px 22px;
-  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.35), 0 4px 12px rgba(6, 182, 212, 0.2);
+  padding: 22px 20px;
+  box-shadow: 0 1px 3px 0 rgba(60,64,67,0.12), 0 4px 14px 2px rgba(60,64,67,0.06);
   position: relative;
   overflow: hidden;
 }
 
-.gradient-card::after {
+.gradient-card::before {
   content: '';
   position: absolute;
-  top: -60%;
-  right: -30%;
-  width: 240px;
-  height: 240px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.25) 0%, transparent 70%);
-  pointer-events: none;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--google-strip);
 }
 
-/* Buttons - Tactile RGB & Modern Light Styling */
+/* Buttons - Google Material 3 Styling */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 14px 22px;
-  border-radius: var(--radius-lg);
-  font-weight: 800;
-  font-size: 0.95rem;
+  padding: 13px 22px;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: 0.92rem;
   letter-spacing: 0.2px;
   cursor: pointer;
   border: none;
   outline: none;
   width: 100%;
   text-align: center;
-  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.15s cubic-bezier(0.2, 0, 0, 1);
   position: relative;
   overflow: hidden;
 }
 
 .btn:active:not(:disabled) {
-  transform: scale(0.96);
-  filter: brightness(1.08);
+  transform: scale(0.97);
 }
 
 .btn:disabled {
@@ -201,9 +203,14 @@ body {
 
 /* Button Variants */
 .btn-primary {
-  background: var(--primary-gradient);
+  background: var(--primary);
   color: #ffffff;
-  box-shadow: 0 8px 24px var(--primary-glow);
+  box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  box-shadow: 0 4px 10px rgba(26, 115, 232, 0.4);
 }
 
 .btn-primary::after {
@@ -239,33 +246,44 @@ body {
 }
 
 .btn-secondary {
-  background: #ffffff;
-  color: #0f172a;
-  border: 1.5px solid #e2e8f0;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  background: var(--google-blue-container);
+  color: var(--google-blue-text);
+  border: 1px solid #c2e7ff;
+  font-weight: 700;
 }
 
 .btn-secondary:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: #d3e3fd;
+  border-color: #a8c7fa;
+}
+
+.btn-tonal-green {
+  background: var(--google-green-container);
+  color: var(--google-green-text);
+  border: 1px solid #ceead6;
+  font-weight: 700;
+}
+
+.btn-tonal-green:hover {
+  background: #cbf0d7;
 }
 
 .btn-success {
-  background: var(--success-gradient);
+  background: var(--google-green);
   color: #ffffff;
-  box-shadow: 0 8px 22px var(--success-glow);
+  box-shadow: 0 2px 6px rgba(30, 142, 62, 0.3);
 }
 
 .btn-danger {
-  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  background: var(--google-red);
   color: #ffffff;
-  box-shadow: 0 8px 22px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 2px 6px rgba(217, 48, 37, 0.3);
 }
 
 .btn-sm {
-  padding: 8px 14px;
+  padding: 8px 16px;
   font-size: 0.82rem;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   width: auto;
 }
 

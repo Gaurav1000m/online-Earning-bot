@@ -539,12 +539,26 @@ function setupWithdrawalTabs() {
 }
 
 function setupEventListeners() {
-  document.getElementById('claim-bonus-btn')?.addEventListener('click', handleClaimBonus);
-  document.getElementById('watch-ad-btn')?.addEventListener('click', handleWatchAd);
-  document.getElementById('watch-ad-btn-page')?.addEventListener('click', handleWatchAd);
-  document.getElementById('copy-ref-btn')?.addEventListener('click', handleCopyRefLink);
-  document.getElementById('share-ref-btn')?.addEventListener('click', handleShareRefLink);
-  document.getElementById('submit-withdraw-btn')?.addEventListener('click', handleSubmitWithdrawal);
+  const attachButtonHandler = (id, fn) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let handled = false;
+    el.addEventListener('pointerdown', (e) => {
+      handled = true;
+      fn(e);
+      setTimeout(() => { handled = false; }, 350);
+    });
+    el.addEventListener('click', (e) => {
+      if (!handled) fn(e);
+    });
+  };
+
+  attachButtonHandler('claim-bonus-btn', handleClaimBonus);
+  attachButtonHandler('watch-ad-btn', handleWatchAd);
+  attachButtonHandler('watch-ad-btn-page', handleWatchAd);
+  attachButtonHandler('copy-ref-btn', handleCopyRefLink);
+  attachButtonHandler('share-ref-btn', handleShareRefLink);
+  attachButtonHandler('submit-withdraw-btn', handleSubmitWithdrawal);
 
   document.querySelectorAll('.quick-amt-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -916,10 +930,27 @@ async function handleWatchAd() {
         showToast('Network error while claiming reward.', 'error');
       } finally {
         isAdPlaying = false;
-        btns.forEach(b => {
-          b.disabled = false;
-          b.innerHTML = '🎬 Watch Ad';
-        });
+        const btnHome = document.getElementById('watch-ad-btn');
+        const btnPage = document.getElementById('watch-ad-btn-page');
+        if (state.adCooldownRemaining > 0) {
+          if (btnHome) {
+            btnHome.disabled = true;
+            btnHome.innerHTML = `⏳ Next in ${state.adCooldownRemaining}s`;
+          }
+          if (btnPage) {
+            btnPage.disabled = true;
+            btnPage.innerHTML = `⏳ Next Ad in ${state.adCooldownRemaining}s`;
+          }
+        } else {
+          if (btnHome) {
+            btnHome.disabled = false;
+            btnHome.innerHTML = '🎬 Watch Ad';
+          }
+          if (btnPage) {
+            btnPage.disabled = false;
+            btnPage.innerHTML = '▶️ Watch Sponsored Ad';
+          }
+        }
       }
     };
 
@@ -1008,10 +1039,16 @@ async function handleWatchAd() {
     showToast(err.message || 'Ad playback cancelled.', 'warning');
     activeAdSession = null;
     isAdPlaying = false;
-    btns.forEach(b => {
-      b.disabled = false;
-      b.innerHTML = '🎬 Watch Ad';
-    });
+    const btnHome = document.getElementById('watch-ad-btn');
+    const btnPage = document.getElementById('watch-ad-btn-page');
+    if (btnHome) {
+      btnHome.disabled = state.adCooldownRemaining > 0;
+      btnHome.innerHTML = state.adCooldownRemaining > 0 ? `⏳ Next in ${state.adCooldownRemaining}s` : '🎬 Watch Ad';
+    }
+    if (btnPage) {
+      btnPage.disabled = state.adCooldownRemaining > 0;
+      btnPage.innerHTML = state.adCooldownRemaining > 0 ? `⏳ Next Ad in ${state.adCooldownRemaining}s` : '▶️ Watch Sponsored Ad';
+    }
   }
 }
 window.handleWatchAd = handleWatchAd;

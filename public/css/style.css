@@ -1006,7 +1006,7 @@ div[id*='tads-container-'] .tads-text {
 .rewarded-ad-modal {
   position: fixed;
   inset: 0;
-  z-index: 999999;
+  z-index: 2147483640 !important;
   display: flex;
   align-items: center;
   justify-content: center;

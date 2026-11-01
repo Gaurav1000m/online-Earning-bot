@@ -480,15 +480,33 @@ export function initBot() {
 
     bot.callbackQuery('claim_closed_ad', async (ctx) => {
       const user = ctx.from;
+      const dbUser = db.getUser(user.id);
+      const symbol = db.getSetting('currencySymbol') || '₹';
+      const now = Date.now();
+
+      // Check if reward was already credited recently (within last 60 seconds from ad.html or app.js)
+      if (dbUser && dbUser.last_ad_timestamp && (now - dbUser.last_ad_timestamp) < 60000) {
+        await ctx.answerCallbackQuery({ text: '✅ Ad already credited to your balance!' });
+        try { await ctx.deleteMessage(); } catch {}
+        const dailyLimit = parseInt(db.getSetting('dailyAdLimit') || '0', 10);
+        const limitSuffix = dailyLimit > 0 ? `/${dailyLimit}` : '';
+        return ctx.reply(
+          `✅ <b>Ad Completed & Credited!</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+          `💰 <b>Balance:</b> ${symbol}${(dbUser.balance || 0).toFixed(2)}\n` +
+          `📅 <b>Ads watched today:</b> ${dbUser.ads_today || 0}${limitSuffix}`,
+          { parse_mode: 'HTML' }
+        );
+      }
+
       const check = db.canWatchAd(user.id);
       if (!check.canWatch) {
         return ctx.answerCallbackQuery({ text: check.reason, show_alert: true });
       }
 
       const startTime = getUserAdWatchStartTime(user.id);
-      const elapsedSec = (Date.now() - startTime) / 1000;
-      if (elapsedSec < 15) {
-        const remaining = Math.ceil(15 - elapsedSec);
+      const elapsedSec = (now - startTime) / 1000;
+      if (elapsedSec < 8) {
+        const remaining = Math.ceil(8 - elapsedSec);
         return ctx.answerCallbackQuery({
           text: `⏳ You must finish watching the ad! Please wait ${remaining}s before claiming.`,
           show_alert: true
@@ -500,7 +518,6 @@ export function initBot() {
         await ctx.answerCallbackQuery({ text: '🎉 Ad completed & reward credited!' });
         try { await ctx.deleteMessage(); } catch {}
 
-        const symbol = db.getSetting('currencySymbol') || '₹';
         const dailyLimit = parseInt(db.getSetting('dailyAdLimit') || '0', 10);
         const limitSuffix = dailyLimit > 0 ? `/${dailyLimit}` : '';
 

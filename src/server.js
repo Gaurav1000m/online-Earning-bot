@@ -552,8 +552,251 @@ app.post('/api/tasks/complete', telegramAuthMiddleware, async (req, res) => {
 });
 
 // =======================================================
-// 3. ADMIN PANEL REST API ENDPOINTS
+// PAYPLUS REWARD CENTER API COMPATIBILITY LAYER
+// (Supports https://kaliboy002.duckdns.org/app contract)
 // =======================================================
+
+// 1. PayPlus User Profile & Sync
+app.post('/api/user', async (req, res) => {
+  try {
+    const { initData, referralUserId, telegramLang } = req.body || {};
+    let tgUser = null;
+    let isDev = false;
+
+    if (initData) {
+      const auth = validateTelegramInitData(initData);
+      if (auth.valid) {
+        tgUser = auth.user;
+        isDev = auth.isDevMode;
+      }
+    }
+
+    if (!tgUser) {
+      tgUser = { id: 999999999, first_name: 'Demo', last_name: 'User', username: 'demo_user' };
+      isDev = true;
+    }
+
+    const { user, isNew } = db.getOrCreateUser(tgUser, referralUserId);
+    if (telegramLang && !user.language) {
+      user.language = telegramLang;
+      db.save();
+    }
+
+    const todayStr = db.getTodayString();
+    const adsToday = user.ads_today_date === todayStr ? (user.ads_today || 0) : 0;
+    const completedTasks = (db.data.task_completions || [])
+      .filter(c => String(c.user_id) === String(user.id))
+      .map(c => c.task_id);
+
+    const withdrawals = (db.getUserWithdrawals(user.id) || []).map(w => ({
+      id: w.id,
+      amount: w.amount,
+      method: w.method || 'crypto',
+      destination: typeof w.wallet === 'object' ? `${w.wallet.bank_name || 'Bank'}` : String(w.wallet || ''),
+      date: w.created_at,
+      status: w.status === 'approved' || w.status === 'paid' ? 'done' : 'pending'
+    }));
+
+    return res.json({
+      success: true,
+      telegramId: user.id,
+      balance: Number(user.balance || 0),
+      totalAdsWatched: Number(user.ads_watched || 0),
+      adsToday: Number(adsToday),
+      totalInvites: Number(user.referral_count || 0),
+      completedChannels: completedTasks.filter(t => t.startsWith('chan_') || t.startsWith('task_1')),
+      completedBots: completedTasks.filter(t => t.startsWith('bot_') || t.startsWith('task_2')),
+      completedYoutube: completedTasks.filter(t => t.startsWith('yt_') || t.startsWith('task_3')),
+      withdrawals,
+      banned: Boolean(user.is_banned),
+      language: user.language || 'en',
+      botGreeted: true
+    });
+  } catch (err) {
+    console.error('PayPlus /api/user error:', err);
+    res.status(500).json({ error: 'Failed to process user profile' });
+  }
+});
+
+// 2. PayPlus Bot Info
+app.get('/api/bot-info', (req, res) => {
+  const activeBot = getBot();
+  const username = activeBot?.botInfo?.username || config.botUsername || 'easyandfastearn_bot';
+  res.json({ username: username.replace(/^@/, '') });
+});
+
+// 3. PayPlus Tasks Config
+app.get('/api/tasks-config', (req, res) => {
+  const allChannels = db.getChannels().map((c, i) => ({
+    id: `chan_${i + 1}`,
+    username: c.username ? c.username.replace(/^@/, '') : 'easyandfastearn',
+    title: c.title || 'Official Channel'
+  }));
+
+  const defaultBots = [
+    { id: 'bot_1', username: 'Dollar_EarningBot', title: 'Dollar Earning Bot' },
+    { id: 'bot_2', username: 'FreeCashRewardsBot', title: 'Free Cash Rewards' }
+  ];
+
+  res.json({
+    channels: allChannels.length > 0 ? allChannels : [{ id: 'chan_1', username: 'tadsagency', title: 'Official Channel' }],
+    bots: defaultBots
+  });
+});
+
+// 4. PayPlus Rewarded Ad Claim (/api/reward)
+app.post('/api/reward', async (req, res) => {
+  try {
+    const { initData } = req.body || {};
+    let userId = null;
+    if (initData) {
+      const auth = validateTelegramInitData(initData);
+      if (auth.valid) userId = auth.user?.id;
+    }
+    if (!userId) userId = 999999999;
+
+    const adResult = db.completeAdDirect(userId);
+    if (!adResult.success) {
+      return res.status(400).json({
+        error: adResult.message || 'Ad could not be completed',
+        limitReached: adResult.message?.includes('limit')
+      });
+    }
+
+    const updatedUser = db.getUser(userId);
+    const todayStr = db.getTodayString();
+    const adsToday = updatedUser.ads_today_date === todayStr ? (updatedUser.ads_today || 0) : 0;
+
+    res.json({
+      success: true,
+      balance: Number(updatedUser.balance || 0),
+      totalAdsWatched: Number(updatedUser.ads_watched || 0),
+      adsToday: Number(adsToday),
+      reward: Number(adResult.reward || 5.0)
+    });
+  } catch (err) {
+    console.error('PayPlus /api/reward error:', err);
+    res.status(500).json({ error: 'Reward processing error' });
+  }
+});
+
+// 5. PayPlus Task Verification (/api/verify-channel, /api/complete-bot, /api/complete-youtube)
+app.post('/api/verify-channel', async (req, res) => {
+  try {
+    const { initData, channelId } = req.body || {};
+    let userId = null;
+    if (initData) {
+      const auth = validateTelegramInitData(initData);
+      if (auth.valid) userId = auth.user?.id;
+    }
+    if (!userId) userId = 999999999;
+
+    const taskId = channelId || 'task_1';
+    let task = db.getTasks().find(t => t.id === taskId);
+    if (!task) {
+      task = { id: taskId, title: 'Join Channel', reward: 5.0, task_type: 'channel_join' };
+      db.createTask(task);
+    }
+
+    db.completeTask(userId, task.id);
+    const u = db.getUser(userId);
+    return res.json({ success: true, balance: Number(u?.balance || 0) });
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'Verification failed' });
+  }
+});
+
+app.post('/api/complete-bot', async (req, res) => {
+  try {
+    const { initData, botId } = req.body || {};
+    let userId = null;
+    if (initData) {
+      const auth = validateTelegramInitData(initData);
+      if (auth.valid) userId = auth.user?.id;
+    }
+    if (!userId) userId = 999999999;
+
+    const taskId = botId || 'bot_task';
+    let task = db.getTasks().find(t => t.id === taskId);
+    if (!task) {
+      task = { id: taskId, title: 'Start Bot', reward: 5.0, task_type: 'bot_start' };
+      db.createTask(task);
+    }
+
+    db.completeTask(userId, task.id);
+    const u = db.getUser(userId);
+    return res.json({ success: true, balance: Number(u?.balance || 0) });
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'Bot task failed' });
+  }
+});
+
+app.post('/api/complete-youtube', async (req, res) => {
+  try {
+    const { initData, youtubeId } = req.body || {};
+    let userId = null;
+    if (initData) {
+      const auth = validateTelegramInitData(initData);
+      if (auth.valid) userId = auth.user?.id;
+    }
+    if (!userId) userId = 999999999;
+
+    const taskId = youtubeId || 'yt_subscribe';
+    let task = db.getTasks().find(t => t.id === taskId);
+    if (!task) {
+      task = { id: taskId, title: 'Subscribe Channel', reward: 5.0, task_type: 'partner' };
+      db.createTask(task);
+    }
+
+    db.completeTask(userId, task.id);
+    const u = db.getUser(userId);
+    return res.json({ success: true, balance: Number(u?.balance || 0) });
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'Subscribe task failed' });
+  }
+});
+
+// 6. PayPlus Withdrawal Endpoint (/api/withdraw)
+app.post('/api/withdraw', async (req, res) => {
+  try {
+    const { initData, amount, method, destination } = req.body || {};
+    let userId = null;
+    if (initData) {
+      const auth = validateTelegramInitData(initData);
+      if (auth.valid) userId = auth.user?.id;
+    }
+    if (!userId) userId = 999999999;
+
+    const numAmount = parseFloat(amount);
+    const result = db.createWithdrawal(userId, {
+      method: method || 'crypto',
+      amount: numAmount,
+      details: destination,
+      destination
+    });
+
+    if (result.success) {
+      const u = db.getUser(userId);
+      return res.json({
+        success: true,
+        newBalance: Number(u?.balance || 0),
+        withdrawal: {
+          id: result.withdrawal.id,
+          amount: result.withdrawal.amount,
+          method: result.withdrawal.method,
+          destination: typeof result.withdrawal.wallet === 'object' ? result.withdrawal.wallet.bank_name : String(result.withdrawal.wallet),
+          date: result.withdrawal.created_at,
+          status: 'pending'
+        }
+      });
+    } else {
+      return res.status(400).json({ success: false, error: result.message || 'Withdrawal failed' });
+    }
+  } catch (err) {
+    console.error('PayPlus /api/withdraw error:', err);
+    res.status(500).json({ success: false, error: 'Internal withdrawal error' });
+  }
+});
 
 // Admin Dashboard Overview & Charts
 app.get('/api/admin/overview', requireAdmin, (req, res) => {

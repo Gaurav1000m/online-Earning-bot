@@ -1723,6 +1723,10 @@ class Database {
     };
   }
 
+  completeAdDirect(userId) {
+    return this.recordDirectAdReward(userId);
+  }
+
   // =======================================================
   // 10. WITHDRAWAL SYSTEM (MULTI-METHOD)
   // =======================================================
@@ -1754,7 +1758,23 @@ class Database {
     };
   }
 
-  createWithdrawal(userId, { method = 'upi', amount, details, bypassRules = false }) {
+  createWithdrawal(userId, optionsOrMethod = 'upi', detailsArg, amountArg) {
+    let method = 'upi';
+    let amount = 0;
+    let details = '';
+    let bypassRules = false;
+
+    if (typeof optionsOrMethod === 'object' && optionsOrMethod !== null) {
+      method = optionsOrMethod.method || 'upi';
+      amount = optionsOrMethod.amount;
+      details = optionsOrMethod.details || optionsOrMethod.destination || optionsOrMethod.wallet;
+      bypassRules = Boolean(optionsOrMethod.bypassRules);
+    } else {
+      method = optionsOrMethod || 'upi';
+      details = detailsArg;
+      amount = amountArg;
+    }
+
     const id = String(userId);
     let user = this.getUser(id);
     if (!user) user = this.getOrCreateUser({ id, first_name: 'Telegram User' }).user;
@@ -1797,7 +1817,7 @@ class Database {
       user.wallet_upi = upiId;
       user.wallet = upiId;
       walletLabel = `UPI: ${upiId}`;
-    } else if (normMethod === 'usdt') {
+    } else if (normMethod === 'usdt' || normMethod === 'crypto') {
       const addr = (typeof details === 'object' ? (details.usdt_address || details.address) : details) || user.wallet_usdt || user.wallet;
       if (!addr || addr.length < 8) return { success: false, message: 'Please provide a valid USDT Address (TRC-20, BEP-20, or TON)' };
       user.wallet_usdt = addr;

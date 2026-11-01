@@ -28,12 +28,12 @@ if (process.env.VERCEL && !fs.existsSync(DB_PATH)) {
 
 export const DEFAULT_TEMPLATES = {
   START_MESSAGE: {
-    text: `👋 <b>Welcome, {{first_name}}!</b>\n\n🌟 Welcome to the <b>Refer & Earn Bot</b>.\n\n💡 <b>How to Earn:</b>\n• 👥 <b>Refer Friends:</b> Earn <b>{{currency_symbol}}{{referral_reward}}</b> per valid invite\n• 🎬 <b>Watch Ads:</b> Earn <b>{{currency_symbol}}{{ad_reward}}</b> per ad\n• 🎁 <b>Daily Bonus:</b> Streak rewards up to <b>{{currency_symbol}}35</b>\n• 📋 <b>Tasks:</b> High-reward social tasks\n• 💸 <b>Instant Withdrawal:</b> Fast payouts to UPI, PayPal & Bank\n\n👇 <i>Choose an option from the menu below to start earning!</i>`,
+    text: `👋 <b>Welcome, {{first_name}}!</b>\n\n💵 <b>Earn Free Money Easily & Fast!</b>\n\n💰 <b>Earning Rates:</b>\n• 👤 <b>Per Invite:</b> {{currency_symbol}}{{referral_reward}} (~$1.00 USD)\n• 🎁 <b>Daily Bonus:</b> {{currency_symbol}}{{daily_bonus}} (~$0.50 USD)\n• 🎬 <b>Watch Ads:</b> {{currency_symbol}}{{ad_reward}} per ad\n• 📋 <b>Tasks:</b> High-yield partner tasks\n\n💳 <b>Supported Payouts:</b>\nUSDT (TRC20/BEP20/TON), UPI, PayPal, Mobile Recharge & Gaming Credits (PUBG UC).\n\n👇 <i>Choose an option from the menu below to start!</i>`,
     media_type: 'none',
     media_url: '',
     inline_buttons: [
       [{ text: '🚀 Open Mini App', web_app: true, url: '' }],
-      [{ text: '👥 Invite Friends', url: 'https://t.me/share/url?url={{referral_link}}&text=Maine+iss+bot+se+₹{{referral_reward}}+kamaye.+Aap+bhi+try+karein!+🎁🚀' }]
+      [{ text: '👥 Invite Friends', url: 'https://t.me/share/url?url={{referral_link}}&text=Earn+free+money+daily+with+instant+payouts!+🎁💵' }]
     ]
   },
   FORCE_JOIN_MESSAGE: {
@@ -313,7 +313,7 @@ class Database {
     if (!state.message_templates.AD_SUCCESS_MESSAGE || state.message_templates.AD_SUCCESS_MESSAGE.text.includes('🎉 You earned') || state.message_templates.AD_SUCCESS_MESSAGE.text.includes('{{ads_today}}/{{daily_ad_limit}}')) {
       state.message_templates.AD_SUCCESS_MESSAGE = DEFAULT_TEMPLATES.AD_SUCCESS_MESSAGE;
     }
-    if (!state.message_templates.START_MESSAGE || state.message_templates.START_MESSAGE.text.includes('0.50')) {
+    if (!state.message_templates.START_MESSAGE || !state.message_templates.START_MESSAGE.text.includes('Earn Free Money')) {
       state.message_templates.START_MESSAGE = DEFAULT_TEMPLATES.START_MESSAGE;
     }
     if (!state.message_templates.TASK_MESSAGE || state.message_templates.TASK_MESSAGE.text.includes('Select a task below')) {
@@ -1790,24 +1790,45 @@ class Database {
     }
 
     let walletLabel = '';
-    if (method === 'upi') {
+    const normMethod = (method || 'upi').toLowerCase();
+    if (normMethod === 'upi') {
       const upiId = (typeof details === 'object' ? details.upi_id : details) || user.wallet_upi || user.wallet;
       if (!upiId || upiId.length < 3) return { success: false, message: 'Please provide a valid UPI ID' };
       user.wallet_upi = upiId;
       user.wallet = upiId;
       walletLabel = `UPI: ${upiId}`;
-    } else if (method === 'paypal') {
+    } else if (normMethod === 'usdt') {
+      const addr = (typeof details === 'object' ? (details.usdt_address || details.address) : details) || user.wallet_usdt || user.wallet;
+      if (!addr || addr.length < 8) return { success: false, message: 'Please provide a valid USDT Address (TRC-20, BEP-20, or TON)' };
+      user.wallet_usdt = addr;
+      user.wallet = addr;
+      walletLabel = `USDT: ${addr}`;
+    } else if (normMethod === 'paypal' || normMethod === 'payeer') {
       const email = (typeof details === 'object' ? details.paypal_email : details) || user.wallet_paypal || user.wallet;
       if (!email || !email.includes('@')) return { success: false, message: 'Please provide a valid PayPal email' };
       user.wallet_paypal = email;
       user.wallet = email;
       walletLabel = `PayPal: ${email}`;
-    } else if (method === 'bank') {
+    } else if (normMethod === 'mobile_recharge' || normMethod === 'mobile') {
+      const phone = (typeof details === 'object' ? (details.phone || details.number) : details) || user.wallet_mobile || user.wallet;
+      if (!phone || phone.length < 6) return { success: false, message: 'Please provide a valid mobile number and operator' };
+      user.wallet_mobile = phone;
+      user.wallet = phone;
+      walletLabel = `Mobile Recharge: ${phone}`;
+    } else if (normMethod === 'pubg_uc' || normMethod === 'pubg' || normMethod === 'gaming') {
+      const charId = (typeof details === 'object' ? (details.player_id || details.game_id) : details) || user.wallet_pubg || user.wallet;
+      if (!charId || charId.length < 3) return { success: false, message: 'Please provide a valid PUBG / Player ID' };
+      user.wallet_pubg = charId;
+      user.wallet = charId;
+      walletLabel = `PUBG UC: ${charId}`;
+    } else if (normMethod === 'bank') {
       const bank = typeof details === 'object' ? details : (user.wallet_bank || {});
       if (!bank.account_number || !bank.ifsc) return { success: false, message: 'Please provide Bank Account Number and IFSC' };
       user.wallet_bank = bank;
       walletLabel = `Bank: ${bank.bank_name || ''} A/C ${bank.account_number} (IFSC: ${bank.ifsc})`;
       user.wallet = walletLabel;
+    } else {
+      walletLabel = `${normMethod.toUpperCase()}: ${typeof details === 'object' ? JSON.stringify(details) : details}`;
     }
 
     const reqId = `WD-${Date.now().toString().slice(-6)}-${Math.floor(1000 + Math.random() * 9000)}`;

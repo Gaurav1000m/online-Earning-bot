@@ -39,7 +39,7 @@ const state = {
   adTimer: null,
   nextClaimAt: 0,
   adCooldownRemaining: 0,
-  selectedWdMethod: 'upi'
+  selectedWdMethod: 'usdt'
 };
 
 // Initialize App
@@ -278,6 +278,13 @@ function updateUserUI() {
   document.querySelectorAll('.user-total-earned').forEach(el => el.textContent = earnedNum.toFixed(2));
   document.querySelectorAll('.user-total-withdrawn').forEach(el => el.textContent = withdrawnNum.toFixed(2));
 
+  // Dual Currency: USD Equivalent calculation
+  const balUsd = (balNum / 83).toFixed(2);
+  const userBalUsdEl = document.getElementById('user-balance-usd');
+  if (userBalUsdEl) userBalUsdEl.textContent = balUsd;
+  const walletBalUsdEl = document.getElementById('wallet-balance-usd');
+  if (walletBalUsdEl) walletBalUsdEl.textContent = balUsd;
+
   // Daily Ad progress
   const adsProgressText = document.getElementById('ads-progress-text');
   const adsProgressBar = document.getElementById('ads-progress-bar');
@@ -319,8 +326,11 @@ function updateWithdrawalUI() {
   };
 
   // Pre-fill saved wallet / account details from MongoDB so data is never blank
+  const usdtInput = document.getElementById('input-usdt-address');
   const upiInput = document.getElementById('input-upi-id');
   const paypalInput = document.getElementById('input-paypal-email');
+  const mobileInput = document.getElementById('input-mobile-number');
+  const pubgInput = document.getElementById('input-pubg-id');
   const bankNameInput = document.getElementById('input-bank-name');
   const bankAccInput = document.getElementById('input-bank-acc');
   const bankIfscInput = document.getElementById('input-bank-ifsc');
@@ -328,11 +338,20 @@ function updateWithdrawalUI() {
   const linkedAccountPill = document.getElementById('linked-account-pill');
   const linkedAccountVal = document.getElementById('linked-account-val');
 
+  if (usdtInput && !usdtInput.value) {
+    usdtInput.value = u.wallet_usdt || (u.wallet && (u.wallet.startsWith('T') || u.wallet.startsWith('0x') || u.wallet.startsWith('EQ') || u.wallet.startsWith('UQ')) ? u.wallet : '');
+  }
   if (upiInput && !upiInput.value) {
-    upiInput.value = u.wallet_upi || (u.wallet && !u.wallet.includes('@email') && !u.wallet.includes('A/C:') ? u.wallet : '');
+    upiInput.value = u.wallet_upi || (u.wallet && !u.wallet.includes('@email') && !u.wallet.includes('A/C:') && !u.wallet.startsWith('0x') && !u.wallet.startsWith('T') ? u.wallet : '');
   }
   if (paypalInput && !paypalInput.value) {
     paypalInput.value = u.wallet_paypal || (u.wallet && (u.wallet.includes('@gmail') || u.wallet.includes('@yahoo') || u.wallet.includes('@outlook') || u.wallet.includes('@email')) ? u.wallet : '');
+  }
+  if (mobileInput && !mobileInput.value) {
+    mobileInput.value = u.wallet_mobile || '';
+  }
+  if (pubgInput && !pubgInput.value) {
+    pubgInput.value = u.wallet_pubg || '';
   }
   if (u.wallet_bank) {
     if (typeof u.wallet_bank === 'object') {
@@ -343,10 +362,10 @@ function updateWithdrawalUI() {
   }
 
   // Display active linked account banner if previously saved
-  let linkedText = u.wallet_upi || u.wallet_paypal;
+  let linkedText = u.wallet_usdt ? `🪙 USDT: ${u.wallet_usdt}` : (u.wallet_upi ? `🇮🇳 UPI: ${u.wallet_upi}` : (u.wallet_paypal ? `💳 PayPal: ${u.wallet_paypal}` : (u.wallet_mobile ? `📱 Mobile: ${u.wallet_mobile}` : (u.wallet_pubg ? `🎮 PUBG: ${u.wallet_pubg}` : ''))));
   if (!linkedText && u.wallet_bank) {
     linkedText = typeof u.wallet_bank === 'object'
-      ? `${u.wallet_bank.bank_name || 'Bank'} (A/C: ${u.wallet_bank.account_number || ''})`
+      ? `🏦 ${u.wallet_bank.bank_name || 'Bank'} (A/C: ${u.wallet_bank.account_number || ''})`
       : String(u.wallet_bank);
   }
   if (!linkedText && u.wallet) {
@@ -543,9 +562,11 @@ function setupWithdrawalTabs() {
       const method = btn.getAttribute('data-method');
       state.selectedWdMethod = method;
 
-      document.getElementById('field-upi').style.display = method === 'upi' ? 'block' : 'none';
-      document.getElementById('field-paypal').style.display = method === 'paypal' ? 'block' : 'none';
-      document.getElementById('field-bank').style.display = method === 'bank' ? 'block' : 'none';
+      const allMethods = ['usdt', 'upi', 'paypal', 'mobile', 'pubg', 'bank'];
+      allMethods.forEach(m => {
+        const fieldEl = document.getElementById(`field-${m}`);
+        if (fieldEl) fieldEl.style.display = (m === method) ? 'block' : 'none';
+      });
     });
   });
 }
@@ -1447,15 +1468,24 @@ async function handleSubmitWithdrawal() {
 
   const amountInput = document.getElementById('withdraw-amount-input');
   const amount = parseFloat(amountInput.value);
-  const method = state.selectedWdMethod;
+  const method = state.selectedWdMethod || 'usdt';
 
   let details = '';
-  if (method === 'upi') {
+  if (method === 'usdt') {
+    details = document.getElementById('input-usdt-address')?.value.trim();
+    if (!details || details.length < 8) return showToast('Please enter a valid USDT Wallet Address (TRC-20 / BEP-20 / TON)', 'warning');
+  } else if (method === 'upi') {
     details = document.getElementById('input-upi-id')?.value.trim();
-    if (!details || details.length < 3) return showToast('Please enter a valid UPI ID', 'warning');
+    if (!details || details.length < 3) return showToast('Please enter a valid UPI ID (e.g. mobile@paytm)', 'warning');
   } else if (method === 'paypal') {
     details = document.getElementById('input-paypal-email')?.value.trim();
-    if (!details || !details.includes('@')) return showToast('Please enter a valid PayPal email', 'warning');
+    if (!details || details.length < 3) return showToast('Please enter a valid PayPal or Payeer account', 'warning');
+  } else if (method === 'mobile' || method === 'mobile_recharge') {
+    details = document.getElementById('input-mobile-number')?.value.trim();
+    if (!details || details.length < 8) return showToast('Please enter your mobile number & operator for recharge', 'warning');
+  } else if (method === 'pubg' || method === 'pubg_uc') {
+    details = document.getElementById('input-pubg-id')?.value.trim();
+    if (!details || details.length < 4) return showToast('Please enter your PUBG Player ID or Free Fire UID', 'warning');
   } else if (method === 'bank') {
     const bankName = document.getElementById('input-bank-name')?.value.trim();
     const accNumber = document.getElementById('input-bank-acc')?.value.trim();
@@ -1519,16 +1549,35 @@ async function loadWithdrawalHistory() {
       if (item.status === 'approved' || item.status === 'paid') badgeClass = 'badge-approved';
       else if (item.status === 'rejected') badgeClass = 'badge-rejected';
 
+      const methodIcons = {
+        usdt: '🪙 USDT',
+        upi: '🇮🇳 UPI',
+        paypal: '💳 PayPal',
+        payeer: '💳 Payeer',
+        mobile_recharge: '📱 Mobile',
+        mobile: '📱 Mobile',
+        pubg_uc: '🎮 PUBG UC',
+        pubg: '🎮 PUBG UC',
+        bank: '🏦 Bank'
+      };
+      const methodLabel = methodIcons[item.method] || (item.method ? item.method.toUpperCase() : 'PAYOUT');
+      const walletDisplay = typeof item.wallet === 'object'
+        ? `${item.wallet.bank_name || 'Bank'} (${item.wallet.account_number || ''})`
+        : String(item.wallet || '');
+
       return `
-        <div style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:14px; padding:12px 14px; margin-bottom:10px; box-shadow:0 2px 6px rgba(15,23,42,0.03);">
+        <div style="background:var(--card-bg, #101622); border:1px solid var(--card-border, #1c2738); border-radius:14px; padding:12px 14px; margin-bottom:10px; box-shadow:0 2px 6px rgba(0,0,0,0.3);">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <span class="text-xs font-semibold text-muted">#${item.id}</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="text-xs font-bold" style="color:#00aff0;">#${item.id}</span>
+              <span class="badge" style="background:rgba(255,255,255,0.06); color:var(--text-muted); font-size:0.68rem; padding:2px 6px; border:1px solid var(--card-border);">${methodLabel}</span>
+            </div>
             <span class="badge ${badgeClass}">${item.status.toUpperCase()}</span>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-              <div class="text-base font-bold" style="color:#0f172a;">${state.config?.currencySymbol || '₹'}${item.amount}</div>
-              <div class="text-xs text-muted">${item.wallet}</div>
+              <div class="text-base font-bold" style="color:#ffffff;">${state.config?.currencySymbol || '₹'}${item.amount} <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">(≈ $${(item.amount / 83).toFixed(2)})</span></div>
+              <div class="text-xs text-muted" style="max-width:210px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px;">${walletDisplay}</div>
             </div>
             <div class="text-xs text-muted">${new Date(item.created_at).toLocaleDateString()}</div>
           </div>

@@ -44,15 +44,18 @@ export function buildMainMenuKeyboard() {
   const s = db.getSettings();
   const btnBalance = s.btn_balance || '💰 My Balance';
   const btnWithdraw = s.btn_withdraw || '💸 Withdraw';
-  const btnAds = s.btn_ads || '🎬 Watch Ads';
   const btnRefer = s.btn_refer || '👥 Invite Friends';
   const btnBonus = s.btn_bonus || '🎁 Bonus';
+  const btnAds = s.btn_ads || '🎬 Watch Ads';
   const btnTasks = s.btn_tasks || '📋 Tasks';
+  const btnMiniApp = '🚀 Open Mini App';
+  const btnSupport = '💬 Support';
 
   return new Keyboard()
     .text(btnBalance).text(btnWithdraw).row()
-    .text(btnAds).text(btnRefer).row()
-    .text(btnBonus).text(btnTasks).row()
+    .text(btnRefer).text(btnBonus).row()
+    .text(btnAds).text(btnTasks).row()
+    .text(btnMiniApp).text(btnSupport).row()
     .resized();
 }
 
@@ -426,6 +429,30 @@ export function initBot() {
       await handleTasksAction(ctx);
     });
 
+    // Open Mini App Handler
+    bot.hears(/Open Mini App|Launch App/i, async (ctx) => {
+      const keyboard = new InlineKeyboard()
+        .webApp('🚀 Launch Mini App', config.webAppUrl);
+      await ctx.reply(
+        `🚀 <b>Launch Dollar Earning Mini App</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `Access your live dashboard, watch ads, track referrals, and withdraw anytime!`,
+        { parse_mode: 'HTML', reply_markup: keyboard }
+      );
+    });
+
+    // Support Handler
+    bot.hears(/Support/i, async (ctx) => {
+      const supportUser = config.supportUsername || 'gaurav_tnwr00';
+      const keyboard = new InlineKeyboard()
+        .url('💬 Contact Support', `https://t.me/${supportUser}`);
+      await ctx.reply(
+        `💬 <b>Support & Assistance</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `Need help with withdrawals, rewards, or tasks? Our support team is here to help.\n\n` +
+        `👤 <b>Admin Support:</b> @${supportUser}`,
+        { parse_mode: 'HTML', reply_markup: keyboard }
+      );
+    });
+
     // =======================================================
     // 4. Inline Callback Queries for Sub-features
     // =======================================================
@@ -557,8 +584,8 @@ export function initBot() {
       }
     });
 
-    // Withdrawal Method Pickers
-    bot.callbackQuery(/^wd_method_(upi|paypal|bank)$/, async (ctx) => {
+    // Withdrawal Method Pickers (All 5 methods supported)
+    bot.callbackQuery(/^wd_method_(upi|paypal|bank|usdt|mobile|pubg)$/, async (ctx) => {
       const method = ctx.match[1];
       const user = ctx.from;
       const dbUser = db.getUser(user.id);
@@ -584,10 +611,16 @@ export function initBot() {
       setUserState(user.id, { step: 'awaiting_payment_details', method });
 
       let promptMsg = '';
-      if (method === 'upi') {
-        promptMsg = `📱 <b>Enter your UPI ID</b> (e.g. <code>user@paytm</code> or <code>mobile@oksbi</code>):`;
+      if (method === 'usdt') {
+        promptMsg = `🪙 <b>Enter your USDT Wallet Address:</b>\n(Supports TRC-20, BEP-20, or TON Network)\n\nExample: <code>TPrpjMyS8fV1fCTEhp3gm8Kf4fD8zRKRJR</code>`;
+      } else if (method === 'upi') {
+        promptMsg = `📱 <b>Enter your UPI ID:</b>\n(e.g. <code>user@paytm</code> or <code>mobile@oksbi</code>)`;
       } else if (method === 'paypal') {
-        promptMsg = `📧 <b>Enter your PayPal Email Address:</b>`;
+        promptMsg = `📧 <b>Enter your PayPal / Payeer Email Address:</b>`;
+      } else if (method === 'mobile') {
+        promptMsg = `📱 <b>Enter your Mobile Number & Operator:</b>\n(e.g. <code>+91 9876543210 (Jio/Airtel)</code>)`;
+      } else if (method === 'pubg') {
+        promptMsg = `🎮 <b>Enter your PUBG / Game Character ID:</b>\n(e.g. <code>5376204155</code>)`;
       } else if (method === 'bank') {
         promptMsg = `🏦 <b>Enter your Bank Details in this format:</b>\n\n<code>Account Name, Account Number, IFSC Code, Bank Name</code>`;
       }
@@ -911,14 +944,21 @@ export function initBot() {
       // Notify the user on Telegram
       try {
         if (reviewStatus === 'approved') {
+          const receiptKeyboard = new InlineKeyboard()
+            .webApp('🚀 Open Mini App', config.webAppUrl)
+            .text('💰 Check Balance', 'menu_balance');
+
           await bot.api.sendMessage(
             item.user_id,
-            `🎉 <b>Withdrawal Approved!</b>\n━━━━━━━━━━━━━━━━━━━━━\n` +
-            `🆔 Request ID: <code>${item.id}</code>\n` +
-            `💰 Amount: <b>${symbol}${item.amount}</b>\n` +
-            `💳 Destination: <code>${item.wallet}</code>\n\n` +
-            `Funds have been successfully transferred! Thank you for using our bot. 🙌`,
-            { parse_mode: 'HTML' }
+            `☑️ <b>New Successful Withdraw</b>\n\n` +
+            `👤 <b>User:</b> ${item.name || 'User'}\n` +
+            `🆔 <b>User ID:</b> <code>${item.user_id}</code>\n` +
+            `💰 <b>Amount:</b> ${symbol}${item.amount.toFixed(2)}\n` +
+            `💳 <b>Method:</b> ${item.method.toUpperCase()}\n` +
+            `📝 <b>Details:</b> <code>${item.wallet}</code>\n` +
+            `📊 <b>Status:</b> Paid\n\n` +
+            `🎉 <i>Funds have been successfully transferred to your account!</i>`,
+            { parse_mode: 'HTML', reply_markup: receiptKeyboard }
           );
         } else {
           await bot.api.sendMessage(
@@ -1496,9 +1536,14 @@ async function handleWithdrawAction(ctx) {
   };
 
   const keyboard = new InlineKeyboard()
+    .text('🪙 USDT (Crypto)', 'wd_method_usdt')
     .text('🇮🇳 UPI', 'wd_method_upi')
+    .row()
     .text('💳 PayPal', 'wd_method_paypal')
-    .text('🏦 Bank Transfer', 'wd_method_bank')
+    .text('📱 Mobile Recharge', 'wd_method_mobile')
+    .row()
+    .text('🎮 PUBG UC', 'wd_method_pubg')
+    .text('🏦 Bank', 'wd_method_bank')
     .row()
     .webApp('🚀 Open Mini App Wallet', `${config.webAppUrl}?tab=wallet`);
 

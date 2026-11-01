@@ -1953,16 +1953,32 @@
             try {
                 const tgb = window.tads.init({
                     widgetId: 13007,
+                    id: 13007,
                     type: 'static',
                     debug: false,
-                    onClickReward: (adId) => {
-                        console.log('TGB ad clicked:', adId);
+                    onClickReward: async (adId) => {
+                        console.log('TGB ad clicked (CPC):', adId);
+                        try {
+                            const res = await fetch('/api/reward', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ initData: tg.initData, adType: 'tads_tgb_cpc' })
+                            });
+                            const data = await res.json();
+                            if (data.balance !== undefined) {
+                                balanceDiv.textContent = `$${data.balance.toFixed(2)}`;
+                                showEarnToast();
+                                showToast('🎉 +$0.30 Bonus: Partner visit verified!', 'success');
+                            }
+                        } catch (e) {}
                     },
                     onAdsNotFound: () => {
-                        container.innerHTML = '<div style="font-size:11px;color:#777;padding:12px;text-align:center;">Sponsored Partner Offers Available Soon</div>';
+                        container.innerHTML = '<div style="font-size:11px;color:#888;padding:12px;text-align:center;">Sponsored Partner Offers Available Soon</div>';
                     }
                 });
-                tgb.loadAd().then(() => tgb.showAd()).catch(() => {});
+                tgb.loadAd().then(() => tgb.showAd()).catch((err) => {
+                    console.log('TGB ad display error:', err);
+                });
             } catch (e) {
                 console.warn('TGB init error:', e);
             }
@@ -2279,8 +2295,9 @@
             setAdDarkBackdrop(true);
 
             try {
-                const controller = window.tads.init({
+                const controller = window.tads.controllers?.[13008] || window.tads.init({
                     widgetId: 13008,
+                    id: 13008,
                     type: 'fullscreen',
                     debug: false,
                     onShowReward: (adId) => {

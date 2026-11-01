@@ -383,7 +383,7 @@ export function initBot() {
         `ℹ️ <b>Refer & Earn Bot Help</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +
         `• <b>💰 My Balance:</b> View current balance & statistics\n` +
         `• <b>💸 Withdraw:</b> Request instant payout via UPI, PayPal or Bank\n` +
-        `• <b>🎬 Watch Ads:</b> Watch sponsored GigaPub ads to earn money\n` +
+        `• <b>🎬 Watch Ads:</b> Watch sponsored Tads ads to earn money\n` +
         `• <b>👥 Invite Friends:</b> Share invite link to earn referral bonuses\n` +
         `• <b>🎁 Bonus:</b> Claim your daily cash reward\n` +
         `• <b>📋 Tasks:</b> Complete high-paying partner tasks\n\n` +
@@ -458,12 +458,15 @@ export function initBot() {
 
       const symbol = db.getSetting('currencySymbol') || '₹';
       const adReward = db.getSetting('adReward') || 5.0;
-      const smartLink = config.adsterraSmartLink || 'https://arwf.org/4/ef8f2a6df3e5243a89a484add434af25';
+      const adUrl = `${config.webAppUrl}/ad.html?userId=${user.id}`;
 
-      const keyboard = new InlineKeyboard()
-        .url('🎬 Open Sponsored Ad', smartLink)
-        .row()
-        .text('❌ Close Ad & Claim (+₹5)', 'claim_closed_ad');
+      const keyboard = new InlineKeyboard();
+      if (config.webAppUrl && config.webAppUrl.startsWith('https://')) {
+        keyboard.webApp('🎬 Open Sponsored Ad', adUrl).row();
+      } else {
+        keyboard.url('🎬 Open Sponsored Ad', adUrl).row();
+      }
+      keyboard.text('❌ Close Ad & Claim (+₹5)', 'claim_closed_ad');
 
       await ctx.reply(
         `🎬 <b>Watch Ad & Earn</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n` +

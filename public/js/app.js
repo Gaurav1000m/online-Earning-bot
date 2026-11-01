@@ -107,12 +107,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('Initial data load error:', err);
   }
 
-  // Load GigaPub with the configured project ID
-  if (state.config?.gigaPubProjectId && window.GigaPub) {
-    window.GigaPub.init(state.config.gigaPubProjectId).catch(() => {});
-  }
+  // Initialize TADS Text-Graphic Block Widget (ID: 13007)
+  initTadsTGB();
 
-  // Register Service Worker for Monetag push notifications (sw.js)
+  // Register clean PWA service worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   }
@@ -568,7 +566,78 @@ async function handleClaimBonus() {
   btn.innerHTML = '<span>🎁 Claim Daily Streak Bonus</span>';
 }
 
-// 2. Watch Rewarded Ad with GigaPub Integration (window.showGiga)
+// TADS Ad Network Controllers (TGB: #13007, Fullscreen: #13008)
+let tadsFullscreenController = null;
+let activeAdSession = null;
+
+function waitForTads(timeout = 5000) {
+  return new Promise((resolve) => {
+    if (window.tads && typeof window.tads.init === 'function') {
+      return resolve(true);
+    }
+    const start = Date.now();
+    const iv = setInterval(() => {
+      if (window.tads && typeof window.tads.init === 'function') {
+        clearInterval(iv);
+        resolve(true);
+      } else if (Date.now() - start > timeout) {
+        clearInterval(iv);
+        resolve(false);
+      }
+    }, 50);
+  });
+}
+
+// Initialize TADS Text-Graphic Block (TGB Widget ID: 13007)
+function initTadsTGB() {
+  const container = document.getElementById('tads-container-13007');
+  if (!container) return;
+
+  function setupTGB() {
+    if (!window.tads || typeof window.tads.init !== 'function') return;
+    try {
+      const tgbController = window.tads.init({
+        widgetId: 13007,
+        type: 'static',
+        debug: false,
+        onShowReward: (adId) => {
+          console.log('TADS TGB Showed:', adId);
+        },
+        onClickReward: (adId) => {
+          console.log('TADS TGB Clicked:', adId);
+        },
+        onAdsNotFound: () => {
+          console.log('TADS TGB: No ads found to show');
+        }
+      });
+
+      tgbController.loadAd()
+        .then(() => tgbController.showAd())
+        .catch((err) => {
+          console.log('TADS TGB load error:', err);
+        });
+    } catch (err) {
+      console.warn('TADS TGB exception:', err);
+    }
+  }
+
+  if (window.tads && typeof window.tads.init === 'function') {
+    setupTGB();
+  } else {
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts++;
+      if (window.tads && typeof window.tads.init === 'function') {
+        clearInterval(timer);
+        setupTGB();
+      } else if (attempts > 60) {
+        clearInterval(timer);
+      }
+    }, 100);
+  }
+}
+
+// 2. Watch Rewarded Ad with TADS Fullscreen Integration (#13008)
 async function handleWatchAd() {
   const btns = [
     document.getElementById('watch-ad-btn'),
@@ -597,50 +666,76 @@ async function handleWatchAd() {
       return;
     }
 
-    // 2. Call official GigaPub SDK (ID: 8839)
-    const triggerAd = () => {
-      if (typeof window.showGiga === 'function') {
-        return window.showGiga();
-      }
-      if (window.GigaPub && typeof window.GigaPub.showRewardedAd === 'function') {
-        return window.GigaPub.showRewardedAd();
-      }
-      // If no SDK is initialized in current view, navigate to ad player
-      window.location.href = `/ad.html?userId=${state.user?.id || ''}`;
-      return new Promise(() => {});
+    activeAdSession = {
+      sessionId: sessionRes.sessionId,
+      token: sessionRes.token
     };
 
-    await triggerAd()
-      .then(async () => {
-        // Reward logic here
-        btns.forEach(b => b.innerHTML = '✨ Verifying Reward...');
-        const claimRes = await apiRequest('/api/ads/claim', 'POST', {
-          sessionId: sessionRes.sessionId,
-          token: sessionRes.token
-        });
+    // 2. Wait for Tads SDK to be ready
+    const tadsReady = await waitForTads();
+    if (!tadsReady || !window.tads || typeof window.tads.init !== 'function') {
+      window.location.href = `/ad.html?userId=${state.user?.id || ''}`;
+      return;
+    }
 
-        if (claimRes.success) {
-          state.user.balance = claimRes.balance;
-          state.user.adsToday = claimRes.adsToday;
-          state.adCooldownRemaining = claimRes.cooldownSeconds || 30;
-          updateUserUI();
-          showToast(`🎬 Ad Watched! +${state.config?.currencySymbol || '₹'}${claimRes.reward}`, 'success');
-          hapticNotification('success');
-          spawnConfetti();
-        } else {
-          showToast(claimRes.message || 'Verification failed.', 'error');
-          hapticNotification('error');
+    // 3. Initialize TADS Fullscreen Rewarded Controller
+    if (!tadsFullscreenController) {
+      tadsFullscreenController = window.tads.init({
+        widgetId: 13008,
+        type: 'fullscreen',
+        debug: false,
+        onShowReward: async (adId) => {
+          console.log('TADS Fullscreen ad watched, rewarding user:', adId);
+          if (activeAdSession) {
+            const { sessionId, token } = activeAdSession;
+            activeAdSession = null;
+            btns.forEach(b => b.innerHTML = '✨ Verifying Reward...');
+
+            const claimRes = await apiRequest('/api/ads/claim', 'POST', {
+              sessionId,
+              token
+            });
+
+            if (claimRes.success) {
+              state.user.balance = claimRes.balance;
+              state.user.adsToday = claimRes.adsToday;
+              state.adCooldownRemaining = claimRes.cooldownSeconds || 30;
+              updateUserUI();
+              showToast(`🎬 Ad Watched! +${state.config?.currencySymbol || '₹'}${claimRes.reward}`, 'success');
+              hapticNotification('success');
+              spawnConfetti();
+            } else {
+              showToast(claimRes.message || 'Verification failed.', 'error');
+              hapticNotification('error');
+            }
+          }
+
+          btns.forEach(b => {
+            b.disabled = false;
+            b.innerHTML = '🎬 Watch Ad';
+          });
+        },
+        onAdsNotFound: () => {
+          console.warn('TADS: No ads found to show');
+          showToast('No ads available right now. Please try again in a few moments.', 'warning');
+          activeAdSession = null;
+          btns.forEach(b => {
+            b.disabled = false;
+            b.innerHTML = '🎬 Watch Ad';
+          });
         }
-      })
-      .catch((e) => {
-        // Handle errors here
-        console.warn('GigaPub Ad playback error:', e);
-        showToast(e?.message || 'Ad playback cancelled or closed.', 'warning');
       });
+    }
+
+    // 4. Show Fullscreen Ad Overlay
+    await tadsFullscreenController.showAd();
   } catch (err) {
-    showToast(err.message || 'Ad playback error.', 'warning');
+    console.error('TADS showAd error:', err);
+    showToast(err.message || 'Ad playback cancelled or closed.', 'warning');
+    activeAdSession = null;
   } finally {
     btns.forEach(b => {
+      b.disabled = false;
       b.innerHTML = '🎬 Watch Ad';
     });
   }

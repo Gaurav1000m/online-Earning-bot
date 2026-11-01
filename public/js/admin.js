@@ -691,43 +691,44 @@ window.distributeWeeklyRewards = async function() {
 
 async function loadGigaPubSettings() {
   const s = adminState.settings;
-  document.getElementById('gp-enabled').value = s.gigaPubEnabled !== false ? 'true' : 'false';
-  document.getElementById('gp-project-id').value = s.gigaPubProjectId || '';
-  document.getElementById('gp-ad-reward').value = s.adReward || 5.0;
-  document.getElementById('gp-daily-limit').value = s.dailyAdLimit || 20;
-  document.getElementById('gp-cooldown').value = s.adCooldownSeconds || 30;
-  document.getElementById('gp-max-daily-earnings').value = s.maxDailyAdEarnings || 100.0;
-  document.getElementById('gp-monetag-zone').value = s.monetagZoneId || '12128125';
-  document.getElementById('gp-adsterra-enabled').value = s.adsterraEnabled !== false ? 'true' : 'false';
-  document.getElementById('gp-adsterra-smartlink').value = s.adsterraSmartlink || 'https://arwf.org/4/ef8f2a6df3e5243a89a484add434af25';
+  const gpEnabled = document.getElementById('gp-enabled');
+  if (gpEnabled) gpEnabled.value = s.gigaPubEnabled !== false ? 'true' : 'false';
+  const tgbId = document.getElementById('tads-tgb-id');
+  if (tgbId) tgbId.value = s.tadsTgbWidgetId || '13007';
+  const fsId = document.getElementById('tads-fs-id');
+  if (fsId) fsId.value = s.tadsFullscreenWidgetId || '13008';
+  const adReward = document.getElementById('gp-ad-reward');
+  if (adReward) adReward.value = s.adReward || 5.0;
+  const dailyLimit = document.getElementById('gp-daily-limit');
+  if (dailyLimit) dailyLimit.value = s.dailyAdLimit || 20;
+  const cooldown = document.getElementById('gp-cooldown');
+  if (cooldown) cooldown.value = s.adCooldownSeconds || 30;
+  const maxEarnings = document.getElementById('gp-max-daily-earnings');
+  if (maxEarnings) maxEarnings.value = s.maxDailyAdEarnings || 100.0;
 }
 
 window.saveGigaPubSettings = async function() {
-  const gigaPubEnabled = document.getElementById('gp-enabled').value === 'true';
-  const gigaPubProjectId = document.getElementById('gp-project-id').value.trim();
-  const adReward = parseFloat(document.getElementById('gp-ad-reward').value);
-  const dailyAdLimit = parseInt(document.getElementById('gp-daily-limit').value, 10);
-  const adCooldownSeconds = parseInt(document.getElementById('gp-cooldown').value, 10);
-  const maxDailyAdEarnings = parseFloat(document.getElementById('gp-max-daily-earnings').value);
-  const monetagZoneId = document.getElementById('gp-monetag-zone').value.trim();
-  const adsterraEnabled = document.getElementById('gp-adsterra-enabled').value === 'true';
-  const adsterraSmartlink = document.getElementById('gp-adsterra-smartlink').value.trim();
+  const gigaPubEnabled = document.getElementById('gp-enabled')?.value === 'true';
+  const tadsTgbWidgetId = document.getElementById('tads-tgb-id')?.value.trim() || '13007';
+  const tadsFullscreenWidgetId = document.getElementById('tads-fs-id')?.value.trim() || '13008';
+  const adReward = parseFloat(document.getElementById('gp-ad-reward')?.value || 5.0);
+  const dailyAdLimit = parseInt(document.getElementById('gp-daily-limit')?.value || 20, 10);
+  const adCooldownSeconds = parseInt(document.getElementById('gp-cooldown')?.value || 30, 10);
+  const maxDailyAdEarnings = parseFloat(document.getElementById('gp-max-daily-earnings')?.value || 100.0);
 
   const payload = {
     gigaPubEnabled,
-    gigaPubProjectId,
+    tadsTgbWidgetId,
+    tadsFullscreenWidgetId,
     adReward,
     dailyAdLimit,
     adCooldownSeconds,
-    maxDailyAdEarnings,
-    monetagZoneId,
-    adsterraEnabled,
-    adsterraSmartlink
+    maxDailyAdEarnings
   };
 
   const res = await adminFetch('/api/admin/settings', 'POST', { settings: payload });
   if (res.success) {
-    showToast('✅ All Ad Network settings saved!', 'success');
+    showToast('✅ Tads & Ad Network settings saved!', 'success');
     adminState.settings = { ...adminState.settings, ...payload };
   } else {
     showToast('Failed to save Ad Network settings', 'error');

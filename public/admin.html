@@ -401,26 +401,32 @@
       </div>
     </section>
 
-    <!-- SECTION 5: ADS MANAGEMENT (GIGAPUB, ADSTERRA & MONETAG) -->
+    <!-- SECTION 5: ADS MANAGEMENT (TADS & GOOGLE ADSENSE) -->
     <section id="sec-gigapub" class="admin-section" style="display: none;">
       <div class="card" style="max-width: 680px;">
         <h3 class="card-title">🎬 Ad Networks & Monetization Settings</h3>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
-          Configure GigaPub rewarded video, Monetag, and Adsterra multi-format ads and verify connectivity.
+          Configure Tads Rewarded & TGB ads, Google AdSense verification, and reward economy rules.
         </p>
 
-        <h4 style="font-size: 0.95rem; margin: 10px 0 12px; font-weight: 700; color: #38bdf8;">1. GigaPub Rewarded Video</h4>
+        <h4 style="font-size: 0.95rem; margin: 10px 0 12px; font-weight: 700; color: #38bdf8;">1. Tads Native Ad Network</h4>
         <div class="form-group">
-          <label class="form-label">GigaPub Integration Status</label>
+          <label class="form-label">Tads Integration Status</label>
           <select id="gp-enabled" class="input">
             <option value="true">Active (ON)</option>
             <option value="false">Disabled (OFF)</option>
           </select>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">GigaPub Project ID</label>
-          <input id="gp-project-id" type="text" class="input" placeholder="e.g. 12345 or your-project-id">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">TADS TGB Widget ID</label>
+            <input id="tads-tgb-id" type="text" class="input" value="13007">
+          </div>
+          <div class="form-group">
+            <label class="form-label">TADS Fullscreen Widget ID</label>
+            <input id="tads-fs-id" type="text" class="input" value="13008">
+          </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -445,34 +451,18 @@
           </div>
         </div>
 
-        <h4 style="font-size: 0.95rem; margin: 20px 0 12px; font-weight: 700; color: #34d399;">2. Monetag Direct Integration</h4>
+        <h4 style="font-size: 0.95rem; margin: 20px 0 12px; font-weight: 700; color: #34d399;">2. Google AdSense Verification</h4>
         <div class="form-group">
-          <label class="form-label">Monetag Zone ID</label>
-          <input id="gp-monetag-zone" type="text" class="input" placeholder="12128125">
+          <label class="form-label">Google AdSense Publisher ID</label>
+          <input id="adsense-pub-id" type="text" class="input" readonly value="ca-pub-3576643094354429">
         </div>
-
-        <h4 style="font-size: 0.95rem; margin: 20px 0 12px; font-weight: 700; color: #f59e0b;">3. Adsterra Multi-Format Ads</h4>
-        <div class="form-group">
-          <label class="form-label">Adsterra Ads Status</label>
-          <select id="gp-adsterra-enabled" class="input">
-            <option value="true">Active (ON)</option>
-            <option value="false">Disabled (OFF)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Adsterra Smartlink URL</label>
-          <input id="gp-adsterra-smartlink" type="text" class="input" placeholder="https://arwf.org/4/ef8f2a6df3e5243a89a484add434af25">
-        </div>
-        <div style="font-size: 0.78rem; color: var(--text-muted); background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; margin-bottom: 16px;">
-          Includes active placements: Popunder, Native Banner, 468x60, 160x300, 320x50, 728x90, 160x600, 300x250, and Social Bar.
+        <div style="font-size: 0.78rem; color: #10b981; background: rgba(16,185,129,0.08); padding: 10px; border-radius: 8px; margin-bottom: 16px; border: 1px solid rgba(16,185,129,0.2);">
+          ✅ Publisher Knowledge Base & Transparency Articles are actively published on the main page to satisfy Google AdSense policy.
         </div>
 
         <div style="display: flex; gap: 12px; margin-top: 12px;">
           <button class="btn btn-primary" onclick="saveGigaPubSettings()">
-            💾 Save All Ad Settings
-          </button>
-          <button class="btn btn-secondary" onclick="testGigaPubIntegration()">
-            🧪 Test GigaPub Integration
+            💾 Save Ad Settings
           </button>
         </div>
 

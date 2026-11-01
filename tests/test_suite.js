@@ -228,6 +228,15 @@ async function runTestSuite() {
     // Test 14f: GigaPub Project ID is set to 8839
     assert(config.gigaPubProjectId === '8839', 'Test 14f: GigaPub Project ID is 8839');
 
+    // Test 14g: TADS TGB Widget ID is set to 13007
+    assert(config.tadsTgbWidgetId === '13007', 'Test 14g: TADS TGB Widget ID is 13007');
+
+    // Test 14h: TADS Fullscreen Widget ID is set to 13008
+    assert(config.tadsFullscreenWidgetId === '13008', 'Test 14h: TADS Fullscreen Widget ID is 13008');
+
+    // Test 14i: Google AdSense Publisher ID is set
+    assert(config.adsensePublisherId === 'ca-pub-3576643094354429', 'Test 14i: Google AdSense Publisher ID is ca-pub-3576643094354429');
+
     // ----------------------------------------------------
     // TEST 15: Daily Streak Bonus Claim
     // ----------------------------------------------------

@@ -234,6 +234,10 @@ const DEFAULT_STATE = {
     dailyAdLimit: config.dailyAdLimit,
     maxDailyAdEarnings: config.maxDailyAdEarnings,
 
+    tadsTgbWidgetId: config.tadsTgbWidgetId || '13007',
+    tadsFullscreenWidgetId: config.tadsFullscreenWidgetId || '13008',
+    adsensePublisherId: config.adsensePublisherId || 'ca-pub-3576643094354429',
+
     gigaPubEnabled: true,
     gigaPubProjectId: config.gigaPubProjectId,
     gigaPubApiKey: config.gigaPubApiKey,
@@ -1644,7 +1648,7 @@ class Database {
       amount: adReward,
       type: 'AD_REWARD',
       referenceId: adEventId,
-      description: `GigaPub Ad completed (Session ${sessionId})`
+      description: `Rewarded Ad completed (Session ${sessionId})`
     });
 
     this.data.ad_logs.push({
@@ -1695,7 +1699,7 @@ class Database {
       amount: adReward,
       type: 'AD_REWARD',
       referenceId: adEventId,
-      description: 'GigaPub Ad completed'
+      description: 'Rewarded Ad completed'
     });
 
     this.data.ad_logs.push({

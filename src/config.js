@@ -43,7 +43,12 @@ export const config = {
   botUsername: (process.env.BOT_USERNAME || 'easyandfastearn_bot').replace(/^@/, '').trim(),
   supportUsername: (process.env.SUPPORT_USERNAME || 'gaurav_tnwr00').replace(/^@/, '').trim(),
 
-  // GigaPub Ads
+  // Tads Native Ad Network (TGB #13007, Fullscreen #13008)
+  tadsTgbWidgetId: process.env.TADS_TGB_WIDGET_ID || '13007',
+  tadsFullscreenWidgetId: process.env.TADS_FULLSCREEN_WIDGET_ID || '13008',
+  adsensePublisherId: process.env.ADSENSE_PUB_ID || 'ca-pub-3576643094354429',
+
+  // GigaPub Ads (Legacy fallback)
   gigaPubProjectId,
   gigaPubApiKey: process.env.GIGAPUB_API_KEY || '',
   gigaPubAppId: process.env.GIGAPUB_APP_ID || '',
